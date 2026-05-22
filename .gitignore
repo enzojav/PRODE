@@ -1,0 +1,19 @@
+# Dependencias
+node_modules/
+
+# Base de datos (se genera al correr)
+backend/data/
+
+# Build del frontend
+
+
+# Variables de entorno
+.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
