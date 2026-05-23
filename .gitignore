@@ -1,19 +1,9 @@
-# Dependencias
 node_modules/
-
-# Base de datos (se genera al correr)
 backend/data/
-
-# Build del frontend
-
-
-# Variables de entorno
 .env
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
+.env.save
+.env.save.1
 *.log
 npm-debug.log*
+.DS_Store
+Thumbs.db
