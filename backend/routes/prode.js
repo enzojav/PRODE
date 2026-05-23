@@ -106,4 +106,3 @@ router.get('/standings', requireAuth, async (req, res) => {
 });
 
 module.exports = router;
-EOF

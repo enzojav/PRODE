@@ -79,4 +79,3 @@ router.get('/me', require('../middleware/auth').requireAuth, async (req, res) =>
 });
 
 module.exports = router;
-EOF

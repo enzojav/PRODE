@@ -58,4 +58,3 @@ router.get('/courses', requireAuth, async (req, res) => {
 });
 
 module.exports = router;
-EOF
