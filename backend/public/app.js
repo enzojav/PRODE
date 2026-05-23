@@ -62,32 +62,44 @@ function initLocalData() {
 function persistNews()    { lsSet(LS.NEWS,    localNews); }
 function persistMembers() { lsSet(LS.MEMBERS, localMembers); }
 
+window.addEventListener('DOMContentLoaded', () => {
+  initLocalData();
+  const session = lsGet(LS.SESSION, null);
+  if (session) { const user = findUser(session); if (user) { currentUser = user; bootApp(); return; } }
+  showAuthScreen();
+});
 
-async function doLogin() {
+function showAuthScreen() {
+  document.getElementById('ls').style.display          = 'none';
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('app-shell').style.display   = 'none';
+}
+function showApp() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app-shell').style.display   = 'flex';
+}
+
+function switchAuthTab(tab) {
+  ['login','register'].forEach(t => {
+    document.getElementById('auth-' + t).style.display = t === tab ? 'block' : 'none';
+    document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+  });
+  document.getElementById('auth-error').textContent = '';
+}
+
+function doLogin() {
   const username = document.getElementById('l-user').value.trim();
   const password = document.getElementById('l-pass').value;
   const errEl    = document.getElementById('auth-error');
   if (!username || !password) { errEl.textContent = 'Completá todos los campos.'; return; }
-
-  try {
-    const res  = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
-    });
-    const data = await res.json();
-    if (!res.ok) { errEl.textContent = data.error || 'Error al iniciar sesión.'; return; }
-
-    localStorage.setItem('qh_token', data.token);
-    currentUser = data.user;
-    lsSet(LS.SESSION, data.user);
-    bootApp();
-  } catch {
-    errEl.textContent = 'No se pudo conectar al servidor.';
-  }
+  const user = findUser(username);
+  if (!user || user.password !== password) { errEl.textContent = 'Usuario o contraseña incorrectos.'; return; }
+  currentUser = user;
+  lsSet(LS.SESSION, username);
+  bootApp();
 }
 
-async function doRegister() {
+function doRegister() {
   const displayName = document.getElementById('r-name').value.trim();
   const username    = document.getElementById('r-user').value.trim();
   const password    = document.getElementById('r-pass').value;
@@ -95,98 +107,27 @@ async function doRegister() {
   const errEl       = document.getElementById('auth-error');
   if (!displayName || !username || !password || !password2) { errEl.textContent = 'Completá todos los campos.'; return; }
   if (password !== password2) { errEl.textContent = 'Las contraseñas no coinciden.'; return; }
-
-  try {
-    const res  = await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password, displayName }),
-    });
-    const data = await res.json();
-    if (!res.ok) { errEl.textContent = data.error || 'Error al registrarse.'; return; }
-
-    localStorage.setItem('qh_token', data.token);
-    currentUser = data.user;
-    lsSet(LS.SESSION, data.user);
-    bootApp();
-  } catch {
-    errEl.textContent = 'No se pudo conectar al servidor.';
-  }
+  if (password.length < 4)    { errEl.textContent = 'La contraseña debe tener al menos 4 caracteres.'; return; }
+  if (findUser(username))     { errEl.textContent = 'Ese usuario ya existe.'; return; }
+  const users = getUsers();
+  const newUser = { username, password, displayName, role:'player', color: AVATAR_COLORS[users.length % AVATAR_COLORS.length] };
+  users.push(newUser);
+  saveUsers(users);
+  const standings = getStandings();
+  standings.push({ name: displayName, username, pts:0, ok:0, tot:0 });
+  saveStandings(standings);
+  currentUser = newUser;
+  lsSet(LS.SESSION, username);
+  bootApp();
 }
 
 function doLogout() {
   currentUser = null;
-  localStorage.removeItem('qh_token');
   localStorage.removeItem(LS.SESSION);
   showAuthScreen();
   document.getElementById('l-user').value = '';
   document.getElementById('l-pass').value = '';
   document.getElementById('auth-error').textContent = '';
-}
-
-async function init() {
-  document.getElementById('ls').style.display = 'flex';
-  const token = localStorage.getItem('qh_token');
-  const saved = lsGet(LS.SESSION, null);
-
-  if (token && saved) {
-    try {
-      const res = await fetch('/api/auth/me', {
-        headers: { 'Authorization': 'Bearer ' + token }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        currentUser = data.user;
-        lsSet(LS.SESSION, data.user);
-        initLocalData();
-        bootApp();
-        return;
-      }
-    } catch {}
-    // Token inválido o expirado
-    localStorage.removeItem('qh_token');
-    localStorage.removeItem(LS.SESSION);
-  }
-
-  document.getElementById('ls').style.display = 'none';
-  showAuthScreen();
-}
-
-// ── STANDINGS — leer users desde la API ───────────────────────
-async function recalcAllStandings() {
-  let users = [];
-  try {
-    const res = await fetch('/api/users', {
-      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('qh_token') }
-    });
-    if (res.ok) users = await res.json();
-  } catch {
-    // fallback: al menos incluir al usuario actual
-    users = currentUser ? [currentUser] : [];
-  }
-
-  const standings = [];
-  users.forEach(u => {
-    const preds = getUserPreds(u.username);
-    let pts = 0, ok = 0, tot = 0;
-    DB_MATCHES.forEach(m => {
-      if (!m.result) return;
-      const pred = preds[m.id];
-      if (!pred) return;
-      const pWinner = pred.winner || pred;
-      const pGH = pred.goalsHome !== undefined ? pred.goalsHome : null;
-      const pGA = pred.goalsAway !== undefined ? pred.goalsAway : null;
-      tot++;
-      const exactHome = pGH !== null && pGH === m.goalsHome;
-      const exactAway = pGA !== null && pGA === m.goalsAway;
-      if (exactHome && exactAway) { pts += 10; ok++; }
-      else if (pWinner === m.result) { pts += 5; ok++; }
-    });
-    if (getUserSubmitted(u.username)) {
-      standings.push({ name: u.displayName, username: u.username, pts, ok, tot });
-    }
-  });
-  saveStandings(standings);
 }
 
 function bootApp() {
@@ -758,6 +699,3 @@ document.addEventListener('keydown', e => {
     if (loginVisible) doLogin(); else doRegister();
   }
 });
-
-// Arrancar la app
-init();
