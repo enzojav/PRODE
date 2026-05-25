@@ -1686,16 +1686,6 @@ tbody tr:hover td { background: var(--bg3); }
 .admin-result-preview { font-size: .72rem; color: rgba(255,255,255,.35); font-style: italic; margin-left: 6px; }
 .admin-result-preview.has-result { color: #3ae8b0; font-style: normal; font-weight: 600; }
 
-/* ── USER ROWS (gestión de usuarios) ── */
-.user-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border);
-}
-.user-row:last-child { border-bottom: none; }
-
 /* Status bar */
 .status-bar {
   display: flex;

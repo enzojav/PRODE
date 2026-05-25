@@ -139,15 +139,9 @@ async function doRegister() {
   if (password.length < 4)    { errEl.textContent = 'La contraseña debe tener al menos 4 caracteres.'; return; }
   try {
     const data = await api('POST', '/auth/register', { username, password, displayName });
-    // YA NO hace login automático — espera aprobación
-    errEl.style.color = 'var(--accent)';
-    errEl.textContent = data.message || 'Cuenta creada. Esperá la aprobación del administrador.';
-    // Limpiar form después de 3 segundos y volver al login
-    setTimeout(() => {
-      switchAuthTab('login');
-      errEl.textContent = '';
-      errEl.style.color = '';
-    }, 3500);
+    sessionStorage.setItem('qh_token', data.token);
+    currentUser = data.user;
+    bootApp();
   } catch (e) { errEl.textContent = e.message || 'Error al registrarse.'; }
 }
 
@@ -190,7 +184,7 @@ function updateUserBadge() {
   document.querySelector('.uin .ur').textContent   = u.role === 'admin' ? '⚙ Administrador' : '⚽ Jugador';
 }
 
-const SECTION_TITLES = { dashboard:'Dashboard', score:'Score Balance', training:'Capacitaciones', news:'Noticias', prode:'Prode ⚽', members:'Miembros', users:'Usuarios' };
+const SECTION_TITLES = { dashboard:'Dashboard', score:'Score Balance', training:'Capacitaciones', news:'Noticias', prode:'Prode ⚽', members:'Miembros' };
 const ADD_ACTIONS    = { news: () => openNewsModal(), members: () => openMemberModal() };
 
 function navigateTo(sec) {
@@ -676,111 +670,6 @@ async function savePrediction(matchId, result, homeScore, awayScore) {
     localPreds[matchId] = saved;
     renderProde();
   } catch(e) { toast(e.message, 'e'); }
-}
-
-// ══════════════════════════════════════════════════════════════
-//  USUARIOS (solo admin)
-// ══════════════════════════════════════════════════════════════
-
-async function renderUsers() {
-  try {
-    const users = await api('GET', '/auth/users');
-
-    const pending = users.filter(u => u.status === 'pending');
-    const active  = users.filter(u => u.status === 'active');
-    const banned  = users.filter(u => u.status === 'banned');
-
-    const userSection = document.getElementById('s-users');
-    if (!userSection) return;
-
-    userSection.innerHTML = `
-
-      <!-- Pendientes -->
-      <div class="card" style="margin-bottom:16px">
-        <div class="ctit" style="display:flex;align-items:center;gap:8px">
-          ⏳ Pendientes de aprobación
-          ${pending.length ? `<span style="background:var(--accent);color:#fff;font-size:.7rem;padding:2px 8px;border-radius:99px;font-weight:600">${pending.length}</span>` : ''}
-        </div>
-        ${pending.length === 0
-          ? '<p style="color:var(--text3);font-size:.85rem;margin-top:8px">No hay usuarios pendientes.</p>'
-          : `<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
-              ${pending.map(u => `
-                <div class="user-row">
-                  <div class="av" style="background:#FFB81C;width:34px;height:34px;font-size:.7rem;flex-shrink:0">${ini(u.display_name)}</div>
-                  <div style="flex:1">
-                    <div style="font-weight:500;font-size:.9rem">${u.display_name}</div>
-                    <div style="font-size:.75rem;color:var(--text3)">@${u.username} · Registrado ${new Date(u.created_at).toLocaleDateString('es-AR')}</div>
-                  </div>
-                  <div style="display:flex;gap:6px">
-                    <button class="btn btn-a" style="font-size:.75rem;padding:6px 12px" onclick="setUserStatus(${u.id},'active')">✓ Aprobar</button>
-                    <button class="btn btn-o" style="font-size:.75rem;padding:6px 12px;color:var(--accent2)" onclick="deleteUser(${u.id},'${u.display_name.replace(/'/g,"\\'")}')">✕ Rechazar</button>
-                  </div>
-                </div>`).join('')}
-            </div>`}
-      </div>
-
-      <!-- Activos -->
-      <div class="card" style="margin-bottom:16px">
-        <div class="ctit">✅ Usuarios activos</div>
-        ${active.length === 0
-          ? '<p style="color:var(--text3);font-size:.85rem;margin-top:8px">Sin usuarios activos.</p>'
-          : `<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
-              ${active.map(u => `
-                <div class="user-row">
-                  <div class="av" style="background:${avc(u.id)};width:34px;height:34px;font-size:.7rem;flex-shrink:0">${ini(u.display_name)}</div>
-                  <div style="flex:1">
-                    <div style="font-weight:500;font-size:.9rem">${u.display_name}</div>
-                    <div style="font-size:.75rem;color:var(--text3)">@${u.username}</div>
-                  </div>
-                  <div style="display:flex;gap:6px">
-                    <button class="btn btn-o" style="font-size:.75rem;padding:6px 12px" onclick="setUserStatus(${u.id},'banned')">🚫 Banear</button>
-                    <button class="btn btn-o" style="font-size:.75rem;padding:6px 12px;color:var(--accent2)" onclick="deleteUser(${u.id},'${u.display_name.replace(/'/g,"\\'")}')">🗑 Eliminar</button>
-                  </div>
-                </div>`).join('')}
-            </div>`}
-      </div>
-
-      <!-- Baneados -->
-      ${banned.length > 0 ? `
-      <div class="card">
-        <div class="ctit">🚫 Usuarios baneados</div>
-        <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
-          ${banned.map(u => `
-            <div class="user-row">
-              <div class="av" style="background:#555;width:34px;height:34px;font-size:.7rem;flex-shrink:0">${ini(u.display_name)}</div>
-              <div style="flex:1">
-                <div style="font-weight:500;font-size:.9rem;color:var(--text3)">${u.display_name}</div>
-                <div style="font-size:.75rem;color:var(--text3)">@${u.username}</div>
-              </div>
-              <div style="display:flex;gap:6px">
-                <button class="btn btn-o" style="font-size:.75rem;padding:6px 12px" onclick="setUserStatus(${u.id},'active')">↩ Reactivar</button>
-                <button class="btn btn-o" style="font-size:.75rem;padding:6px 12px;color:var(--accent2)" onclick="deleteUser(${u.id},'${u.display_name.replace(/'/g,"\\'")}')">🗑 Eliminar</button>
-              </div>
-            </div>`).join('')}
-        </div>
-      </div>` : ''}`;
-
-  } catch (e) {
-    toast('Error al cargar usuarios: ' + e.message, 'e');
-  }
-}
-
-async function setUserStatus(id, status) {
-  try {
-    await api('PUT', '/auth/users/' + id + '/status', { status });
-    const msgs = { active: 'Usuario aprobado ✓', banned: 'Usuario baneado', pending: 'Usuario movido a pendiente' };
-    toast(msgs[status] || 'Estado actualizado', 's');
-    renderUsers();
-  } catch (e) { toast(e.message, 'e'); }
-}
-
-async function deleteUser(id, name) {
-  if (!confirm(`¿Eliminás a ${name}? Esta acción no se puede deshacer.`)) return;
-  try {
-    await api('DELETE', '/auth/users/' + id);
-    toast(name + ' eliminado', 'e');
-    renderUsers();
-  } catch (e) { toast(e.message, 'e'); }
 }
 
 // ══════════════════════════════════════════════════════════════
