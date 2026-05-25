@@ -201,7 +201,7 @@ function navigateTo(sec) {
   const addBtn = document.getElementById('addbtn');
   if (currentUser.role === 'admin' && ADD_ACTIONS[sec]) { addBtn.style.display = ''; addBtn.onclick = ADD_ACTIONS[sec]; }
   else { addBtn.style.display = 'none'; }
-  ({ dashboard:renderDashboard, score:renderScore, training:renderTraining, news:renderNews, prode:renderProde, members:renderMembers, users:renderUsers })[sec]?.();
+  ({ dashboard:renderDashboard, score:renderScore, training:renderTraining, news:renderNews, prode:renderProde, members:renderMembers })[sec]?.();
 }
 
 function setupNav() {
