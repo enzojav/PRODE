@@ -134,3 +134,4 @@ node scripts/import-matches.js
 
 O más fácil: conectarse a la DB directamente con un cliente SQLite
 y hacer el INSERT masivo desde el database.js original.
+# quality-hub
