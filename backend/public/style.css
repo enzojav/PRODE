@@ -1722,7 +1722,7 @@ object-fit: contain;
 .sb { position: relative; transition: width .25s ease; }
 
 /* Sidebar colapsado */
-.sb.collapsed { width: 60px; }
+.sb.collapsed { width: 80px; }
 .sb.collapsed .sb-logo .lt,
 .sb.collapsed .sb-logo .ls,
 .sb.collapsed .sb-grp,
