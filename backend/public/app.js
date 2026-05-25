@@ -16,7 +16,7 @@ let scorePeriod    = 'Abr 2026';
 let newsFilter     = '';
 let editingMemberId = null;
 
-// ── API helper ────────────────────────────────────s────────────
+// ── API helper ────────────────────────────────────────────────
 async function api(method, path, body) {
   const token = sessionStorage.getItem('qh_token');
   const opts = {
@@ -651,11 +651,11 @@ function renderAdminProdePanel() {
                 : '→ Empate')
               : '(sin resultado)'}
           </span>
+          <button class="btn btn-o" style="font-size:.7rem;padding:4px 8px;color:var(--accent2)"
+            onclick="resetMatchResult(${m.id})" title="Borrar resultado">✕</button>
         </div>
       </div>`).join('')}`;
 }
-<button class="btn btn-o" style="font-size:.7rem;padding:4px 8px;color:var(--accent2)" 
-  onclick="resetMatchResult(${m.id})" title="Borrar resultado">✕</button>
 
 async function resetMatchResult(matchId) {
   if (!confirm('¿Borrás el resultado de este partido?')) return;
@@ -664,7 +664,7 @@ async function resetMatchResult(matchId) {
     toast('Resultado borrado', 's');
     renderProde();
   } catch(e) { toast(e.message, 'e'); }
-}  
+}
 
 async function setMatchResult(matchId, side, value) {
   const m = localMatches.find(x => x.id === matchId);
