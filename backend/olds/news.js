@@ -12,12 +12,12 @@ router.get('/', requireAuth, async (req, res) => {
 });
 
 router.post('/', requireAuth, requireAdmin, async (req, res) => {
-  const { title, body, category, emoji, author, image_url } = req.body;
+  const { title, body, category, emoji, author } = req.body;
   if (!title) return res.status(400).json({ error: 'El título es requerido.' });
   try {
     const { rows } = await db.query(
-      'INSERT INTO news (title, body, category, emoji, author, image_url) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-      [title, body, category, emoji, author, image_url || null]
+      'INSERT INTO news (title, body, category, emoji, author) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [title, body, category, emoji, author]
     );
     res.json(rows[0]);
   } catch (e) {

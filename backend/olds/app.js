@@ -173,7 +173,7 @@ function applyRole() {
   const isAdmin = currentUser.role === 'admin';
   document.querySelectorAll('.ni[data-s]').forEach(el => {
     const s = el.dataset.s;
-    if (s === 'prode') { el.style.display = ''; return; }
+    if (s === 'prode' || s === 'news') { el.style.display = ''; return; }
     el.style.display = isAdmin ? '' : 'none';
   });
   document.querySelectorAll('.sb-grp').forEach(g => { if (!isAdmin) g.style.display = 'none'; });
@@ -329,6 +329,7 @@ async function renderNews() {
 
   if (hero) {
     document.getElementById('news-hero').innerHTML = `
+      ${newsMediaHTML(hero.image_url)}
       <div class="hero-emoji">${hero.emoji || '📋'}</div>
       <span class="hero-tag">${hero.category}</span>
       <div class="hero-title">${hero.title}</div>
@@ -342,6 +343,7 @@ async function renderNews() {
 
   document.getElementById('news-cards').innerHTML = sorted.slice(1).map(n => `
     <div class="ncard">
+      ${newsMediaHTML(n.image_url)}
       <div class="ncard-top"><span class="ncard-emoji">${n.emoji || '📋'}</span><span class="ncard-tag">${n.category}</span></div>
       <div class="ncard-title">${n.title}</div>
       <div class="ncard-meta">Por ${n.author}
@@ -352,23 +354,34 @@ async function renderNews() {
     </div>`).join('');
 }
 
-function setNewsFilter(cat) { newsFilter = cat === 'Todos' ? '' : cat; renderNews(); }
+function newsMediaHTML(url) {
+  if (!url) return '';
+  // YouTube
+  const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?/]+)/);
+  if (yt) return `<div class="news-media"><iframe src="https://www.youtube.com/embed/${yt[1]}" frameborder="0" allowfullscreen></iframe></div>`;
+  // Vimeo
+  const vi = url.match(/vimeo\.com\/(\d+)/);
+  if (vi) return `<div class="news-media"><iframe src="https://player.vimeo.com/video/${vi[1]}" frameborder="0" allowfullscreen></iframe></div>`;
+  // Imagen o gif
+  return `<div class="news-media"><img src="${url}" alt="" onerror="this.parentElement.style.display='none'"></div>`;
+}
 
 function openNewsModal() {
-  ['n-title','n-body','n-author'].forEach(id => document.getElementById(id).value = '');
+  ['n-title','n-body','n-author','n-image'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('n-emoji').value = '📋';
   document.getElementById('n-modal').classList.add('open');
 }
 
 async function saveNews() {
-  const title  = document.getElementById('n-title').value.trim();
-  const body   = document.getElementById('n-body').value.trim();
-  const cat    = document.getElementById('n-cat').value;
-  const emoji  = document.getElementById('n-emoji').value || '📋';
-  const author = document.getElementById('n-author').value.trim() || currentUser.displayName;
+  const title     = document.getElementById('n-title').value.trim();
+  const body      = document.getElementById('n-body').value.trim();
+  const cat       = document.getElementById('n-cat').value;
+  const emoji     = document.getElementById('n-emoji').value || '📋';
+  const author    = document.getElementById('n-author').value.trim() || currentUser.displayName;
+  const image_url = document.getElementById('n-image').value.trim() || null;
   if (!title || !body) { toast('Completá título y contenido', 'e'); return; }
   try {
-    await api('POST', '/news', { title, body, category: cat, emoji, author });
+    await api('POST', '/news', { title, body, category: cat, emoji, author, image_url });
     closeM('n-modal'); renderNews(); toast('Noticia publicada', 's');
   } catch(e) { toast(e.message, 'e'); }
 }
