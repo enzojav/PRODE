@@ -1690,7 +1690,7 @@ tbody tr:hover td { background: var(--bg3); }
 #intro-screen {
   position: fixed;
   inset: 0;
-  background: #0a0d14;
+  background: #060910;
   display: flex;
   align-items: center;
   justify-content: center;
