@@ -1,11 +1,33 @@
 const { Pool } = require('pg');
-
+ 
+// Validar que DATABASE_URL esté seteada ANTES de intentar conectar
+if (!process.env.DATABASE_URL) {
+  console.error('❌ Error iniciando DB: DATABASE_URL no está definida en las variables de entorno.');
+  console.error('   En Railway: agregá el plugin de PostgreSQL y linkealó a este servicio.');
+  process.exit(1);
+}
+ 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  // Timeouts para evitar que cuelgue en silencio
+  connectionTimeoutMillis: 10000,
+  idleTimeoutMillis: 30000,
 });
-
+ 
 async function initDB() {
+  // Test de conexión explícito para ver el error real
+  try {
+    await pool.query('SELECT 1');
+    console.log('✅ Conexión a PostgreSQL exitosa');
+  } catch (e) {
+    console.error('❌ No se pudo conectar a PostgreSQL:');
+    console.error('   Mensaje:', e.message);
+    console.error('   Código:', e.code);
+    console.error('   DATABASE_URL empieza con:', (process.env.DATABASE_URL || '').substring(0, 30) + '...');
+    process.exit(1);
+  }
+ 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
       id           SERIAL PRIMARY KEY,
@@ -64,7 +86,7 @@ async function initDB() {
       submitted  BOOLEAN DEFAULT false
     );
   `);
-
+ 
   // Migraciones para DBs ya existentes
   const alterQueries = [
     "ALTER TABLE prode_matches     ADD COLUMN IF NOT EXISTS home_flag  TEXT DEFAULT ''",
@@ -72,17 +94,14 @@ async function initDB() {
     "ALTER TABLE prode_matches     ADD COLUMN IF NOT EXISTS time       TEXT DEFAULT ''",
     "ALTER TABLE prode_matches     ADD COLUMN IF NOT EXISTS venue      TEXT DEFAULT ''",
     "ALTER TABLE prode_predictions ADD COLUMN IF NOT EXISTS result     TEXT",
-    // Campo status en users: pending | active | banned
     "ALTER TABLE users             ADD COLUMN IF NOT EXISTS status     TEXT DEFAULT 'pending'",
   ];
   for (const q of alterQueries) {
     await pool.query(q).catch(() => {});
   }
-
-  // El admin siempre está activo
+ 
   await pool.query("UPDATE users SET status = 'active' WHERE role = 'admin'").catch(() => {});
-
-  // Crear admin por defecto si no existe
+ 
   const { rows } = await pool.query("SELECT id FROM users WHERE username = 'admin'");
   if (rows.length === 0) {
     const bcrypt = require('bcryptjs');
@@ -93,13 +112,13 @@ async function initDB() {
     );
     console.log('✅ Admin creado');
   }
-
+ 
   console.log('✅ Base de datos lista');
 }
-
+ 
 initDB().catch(err => {
-  console.error('❌ Error iniciando DB:', err.message);
+  console.error('❌ Error iniciando DB:', err.message || err);
   process.exit(1);
 });
-
+ 
 module.exports = pool;
