@@ -152,4 +152,17 @@ router.get('/standings', requireAuth, async (req, res) => {
   }
 });
 
+router.delete('/matches/:id/result', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { rows } = await db.query(
+      'UPDATE prode_matches SET home_score=NULL, away_score=NULL WHERE id=$1 RETURNING *',
+      [req.params.id]
+    );
+    if (!rows[0]) return res.status(404).json({ error: 'Partido no encontrado.' });
+    res.json(rows[0]);
+  } catch (e) {
+    res.status(500).json({ error: 'Error interno del servidor.' });
+  }
+});
+
 module.exports = router;

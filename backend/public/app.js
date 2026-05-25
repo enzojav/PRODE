@@ -654,6 +654,17 @@ function renderAdminProdePanel() {
         </div>
       </div>`).join('')}`;
 }
+<button class="btn btn-o" style="font-size:.7rem;padding:4px 8px;color:var(--accent2)" 
+  onclick="resetMatchResult(${m.id})" title="Borrar resultado">✕</button>
+
+async function resetMatchResult(matchId) {
+  if (!confirm('¿Borrás el resultado de este partido?')) return;
+  try {
+    await api('DELETE', '/prode/matches/' + matchId + '/result');
+    toast('Resultado borrado', 's');
+    renderProde();
+  } catch(e) { toast(e.message, 'e'); }
+}  
 
 async function setMatchResult(matchId, side, value) {
   const m = localMatches.find(x => x.id === matchId);
