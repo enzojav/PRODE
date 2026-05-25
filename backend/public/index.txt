@@ -128,10 +128,6 @@
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
         Miembros
       </div>
-      <div class="ni" data-s="users">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="5" r="3"/><path d="M1 14c0-2.8 2.2-5 5-5M13 11v4M11 13h4"/></svg>
-        Usuarios
-      </div>
     </nav>
     <div class="sb-foot">
       <div class="uavs">QH</div>
@@ -283,9 +279,6 @@
           </table>
         </div>
       </section>
-
-      <!-- ── USUARIOS ── -->
-      <section class="sec" id="s-users"></section>
 
     </div><!-- /content -->
   </div><!-- /main -->
