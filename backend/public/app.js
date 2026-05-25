@@ -186,7 +186,7 @@ function showIntro(callback) {
       intro.style.transition = '';
       callback();
     }, 500);
-  }, 2500);
+  }, 6000);
 }
 
 function bootApp() {

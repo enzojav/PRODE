@@ -1697,8 +1697,9 @@ tbody tr:hover td { background: var(--bg3); }
   z-index: 9999;
 }
 #intro-screen img {
-  width: 320px;
-  max-width: 80vw;
+  width: 100vw;
+height: 100vh;
+object-fit: contain;
 }
 
 /* ── SIDEBAR TOGGLE ── */
