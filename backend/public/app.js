@@ -160,13 +160,45 @@ function doLogout() {
   document.getElementById('auth-error').textContent = '';
 }
 
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  const collapsed = sb.classList.toggle('collapsed');
+  localStorage.setItem('sb_collapsed', collapsed ? '1' : '0');
+}
+
+function applySidebarState() {
+  if (localStorage.getItem('sb_collapsed') === '1') {
+    document.getElementById('sidebar')?.classList.add('collapsed');
+  }
+}
+
+function showIntro(callback) {
+  const intro = document.getElementById('intro-screen');
+  const audio = document.getElementById('login-audio');
+  intro.style.display = 'flex';
+  audio?.play().catch(() => {});
+  setTimeout(() => {
+    intro.style.opacity = '0';
+    intro.style.transition = 'opacity .5s';
+    setTimeout(() => {
+      intro.style.display = 'none';
+      intro.style.opacity = '';
+      intro.style.transition = '';
+      callback();
+    }, 500);
+  }, 2500);
+}
+
 function bootApp() {
-  showApp();
-  applyRole();
-  setupNav();
-  updateUserBadge();
-  if (currentUser.role === 'admin') navigateTo('dashboard');
-  else navigateTo('prode');
+  showIntro(() => {
+    showApp();
+    applyRole();
+    applySidebarState();
+    setupNav();
+    updateUserBadge();
+    if (currentUser.role === 'admin') navigateTo('dashboard');
+    else navigateTo('prode');
+  });
 }
 
 function applyRole() {
