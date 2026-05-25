@@ -388,11 +388,16 @@ function calcMyPoints() {
   let pts = 0;
   localMatches.forEach(m => {
     const pred = localPreds[m.id];
-    if (!pred || m.home_score === null) return;
-    const result = m.home_score > m.away_score ? '1' : m.home_score < m.away_score ? '2' : 'x';
-    const predResult = pred.home_score > pred.away_score ? '1' : pred.home_score < pred.away_score ? '2' : 'x';
-    if (pred.home_score === m.home_score && pred.away_score === m.away_score) pts += 10;
-    else if (predResult === result) pts += 5;
+    if (!pred || m.home_score === null || m.home_score === undefined) return;
+    const mH = Number(m.home_score);
+    const mA = Number(m.away_score);
+    const pH = Number(pred.home_score);
+    const pA = Number(pred.away_score);
+    if (isNaN(pH) || isNaN(pA)) return;
+    const realResult = mH > mA ? '1' : mH < mA ? '2' : 'x';
+    const predResult = pH > pA ? '1' : pH < pA ? '2' : 'x';
+    if (pH === mH && pA === mA) pts += 10;
+    else if (predResult === realResult) pts += 5;
   });
   return pts;
 }
@@ -422,29 +427,63 @@ async function renderStandings() {
 function setDate(d) { activeDate = d; renderProde(); }
  
 function renderMatchCard(m) {
-  const pred    = localPreds[m.id] || {};
-  const locked  = isMatchLocked(m);
-  const played  = m.home_score !== null && m.away_score !== null;
-  const pGH     = pred.home_score !== undefined ? pred.home_score : null;
-  const pGA     = pred.away_score !== undefined ? pred.away_score : null;
- 
+  const pred   = localPreds[m.id] || {};
+  const locked = isMatchLocked(m);
+
+  const mH = m.home_score !== null ? Number(m.home_score) : null;
+  const mA = m.away_score !== null ? Number(m.away_score) : null;
+
+  const played = mH !== null && mA !== null;
+
+  const pGH = pred.home_score !== undefined && pred.home_score !== null
+    ? Number(pred.home_score)
+    : null;
+
+  const pGA = pred.away_score !== undefined && pred.away_score !== null
+    ? Number(pred.away_score)
+    : null;
+
   // Resultado real
-  const realResult = played ? (m.home_score > m.away_score ? '1' : m.home_score < m.away_score ? '2' : 'x') : null;
-  const predResult = (pGH !== null && pGA !== null) ? (pGH > pGA ? '1' : pGH < pGA ? '2' : 'x') : null;
- 
+  const realResult =
+    played
+      ? (mH > mA ? '1' : mH < mA ? '2' : 'x')
+      : null;
+
+  const predResult =
+    (pGH !== null && pGA !== null)
+      ? (pGH > pGA ? '1' : pGH < pGA ? '2' : 'x')
+      : null;
+
   // Puntos
   let matchPts = -1, ptsLabel = '';
+
   if (played && predResult !== null) {
-    if (pGH === m.home_score && pGA === m.away_score) { matchPts = 10; ptsLabel = '🎯 +10 exacto'; }
-    else if (predResult === realResult)                { matchPts = 5;  ptsLabel = '✓ +5 ganador'; }
-    else                                               { matchPts = 0;  ptsLabel = '✗ 0 pts'; }
+    if (pGH === mH && pGA === mA) {
+      matchPts = 10;
+      ptsLabel = '🎯 +10 exacto';
+    } else if (predResult === realResult) {
+      matchPts = 5;
+      ptsLabel = '✓ +5 ganador';
+    } else {
+      matchPts = 0;
+      ptsLabel = '✗ 0 pts';
+    }
   }
- 
+
   function btnCls(val) {
     if (!predResult) return '';
-    if (played) return predResult === val ? (predResult === realResult ? 'ok' : 'fail') : '';
-    return predResult === val ? 'sel' + (val==='1'?'1':val==='x'?'x':'2') : '';
+
+    if (played) {
+      return predResult === val
+        ? (predResult === realResult ? 'ok' : 'fail')
+        : '';
+    }
+
+    return predResult === val
+      ? 'sel' + (val === '1' ? '1' : val === 'x' ? 'x' : '2')
+      : '';
   }
+}
  
   const disabledAttr = locked ? 'disabled' : '';
   const lockIcon = locked ? '<span style="font-size:.7rem;color:var(--text3)">🔒</span>' : '';
@@ -496,7 +535,7 @@ function renderMatchCard(m) {
         </div>
       </div>
     </div>`;
-}
+
  
 // ── Panel admin resultados ────────────────────────────────────
 function renderAdminProdePanel() {
