@@ -1,76 +1,104 @@
 // ============================================================
-//  APP.JS — Con sistema de autenticación y roles
+//  APP.JS — Conectado al backend real (JWT + PostgreSQL)
 //  Roles: "admin" (acceso total) | "player" (solo Prode)
+//  PUNTOS: exacto (goles) = 10pts · resultado (1/x/2) = 5pts
 // ============================================================
 
 const AVATAR_COLORS = ['#6CACE4','#FFB81C','#85bde8','#002470','#3ae8d0','#ff8c42','#a8d8ea','#43e8b0'];
 const avc = i => AVATAR_COLORS[i % AVATAR_COLORS.length];
 const ini = n => n.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
 
-let localMembers    = JSON.parse(JSON.stringify(DB_MEMBERS));
-let localNews       = JSON.parse(JSON.stringify(DB_NEWS));
-let localStandings  = [];
-let scorePeriod     = 'Abr 2026';
-let newsFilter      = '';
+let currentUser    = null;
+let localMatches   = [];
+let localPreds     = {};
+let activeDate     = null;
+let scorePeriod    = 'Abr 2026';
+let newsFilter     = '';
 let editingMemberId = null;
-let currentUser     = null;
 
-// Grupo activo en el prode
-let activeDate = null; // fecha seleccionada
+// ── API helper ────────────────────────────────────s────────────
+async function api(method, path, body) {
+  const token = sessionStorage.getItem('qh_token');
+  const opts = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': 'Bearer ' + token } : {})
+    },
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res  = await fetch('/api' + path, opts);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Error del servidor');
+  return data;
+}
 
-const LS = {
-  USERS:     'qh_users',
-  STANDINGS: 'qh_standings',
-  PREDS:     'qh_preds_',
-  SUBMITTED: 'qh_sub_',
-  SESSION:   'qh_session',
-  NEWS:      'qh_news',
-  MEMBERS:   'qh_members',
+// ── Lock de partidos por hora ─────────────────────────────────
+const MONTH_MAP = {
+  'Ene':0,'Feb':1,'Mar':2,'Abr':3,'May':4,'Jun':5,
+  'Jul':6,'Ago':7,'Sep':8,'Oct':9,'Nov':10,'Dic':11,
+  'Jan':0,'Aug':7,'Dec':11
 };
 
-function lsGet(key, fallback = null) {
-  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
-  catch { return fallback; }
-}
-function lsSet(key, val) {
-  try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+function isMatchLocked(m) {
+  try {
+    const parts   = (m.match_date || m.date || '').split(' ');
+    const dayIdx  = parts.length === 3 ? 1 : 0;
+    const monIdx  = parts.length === 3 ? 2 : 1;
+    const day     = parseInt(parts[dayIdx]);
+    const month   = MONTH_MAP[parts[monIdx]];
+    const [hh,mm] = (m.time || '00:00').split(':').map(Number);
+    return new Date() >= new Date(2026, month, day, hh, mm, 0);
+  } catch { return false; }
 }
 
-function getUsers() {
-  const stored = lsGet(LS.USERS, null);
-  if (!stored) {
-    const defaults = [{ username:'admin', password:'admin123', displayName:'Admin', role:'admin', color:'#6CACE4' }];
-    lsSet(LS.USERS, defaults);
-    return defaults;
+// ── Calcular resultado a partir de goles ─────────────────────
+function goalsToResult(h, a) {
+  if (h === null || a === null || h === undefined || a === undefined) return null;
+  const hN = Number(h), aN = Number(a);
+  if (isNaN(hN) || isNaN(aN)) return null;
+  return hN > aN ? '1' : hN < aN ? '2' : 'x';
+}
+
+// ── Calcular puntos de un partido ────────────────────────────
+function calcMatchPoints(pred, match) {
+  const mH = match.home_score !== null && match.home_score !== undefined ? Number(match.home_score) : null;
+  const mA = match.away_score !== null && match.away_score !== undefined ? Number(match.away_score) : null;
+  if (mH === null || mA === null || isNaN(mH) || isNaN(mA)) return -1; // partido no jugado
+
+  const pResult = pred.result || null;
+  const pH = pred.home_score !== null && pred.home_score !== undefined ? Number(pred.home_score) : null;
+  const pA = pred.away_score !== null && pred.away_score !== undefined ? Number(pred.away_score) : null;
+
+  const realResult = goalsToResult(mH, mA);
+
+  // Exacto: goles correctos (vale 10)
+  if (pH !== null && pA !== null && !isNaN(pH) && !isNaN(pA) && pH === mH && pA === mA) return 10;
+
+  // Resultado correcto (vale 5): compara result guardado o infiere de goles
+  const predResult = pResult || goalsToResult(pH, pA);
+  if (predResult && predResult === realResult) return 5;
+
+  return 0;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  AUTH
+// ══════════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', async () => {
+  const token = sessionStorage.getItem('qh_token');
+  if (token) {
+    try {
+      const data = await api('GET', '/auth/me');
+      currentUser = data.user;
+      bootApp();
+      return;
+    } catch { sessionStorage.removeItem('qh_token'); }
   }
-  return stored;
-}
-function saveUsers(users) { lsSet(LS.USERS, users); }
-function findUser(username) { return getUsers().find(u => u.username.toLowerCase() === username.toLowerCase()); }
-
-function getStandings() { return lsGet(LS.STANDINGS, []); }
-function saveStandings(s) { lsSet(LS.STANDINGS, s); }
-function getUserPreds(username) { return lsGet(LS.PREDS + username, {}); }
-function saveUserPreds(username, p) { lsSet(LS.PREDS + username, p); }
-function getUserSubmitted(username) { return lsGet(LS.SUBMITTED + username, false); }
-function saveUserSubmitted(username, v) { lsSet(LS.SUBMITTED + username, v); }
-
-function initLocalData() {
-  localNews    = lsGet(LS.NEWS,    null) || JSON.parse(JSON.stringify(DB_NEWS));
-  localMembers = lsGet(LS.MEMBERS, null) || JSON.parse(JSON.stringify(DB_MEMBERS));
-}
-function persistNews()    { lsSet(LS.NEWS,    localNews); }
-function persistMembers() { lsSet(LS.MEMBERS, localMembers); }
-
-window.addEventListener('DOMContentLoaded', () => {
-  initLocalData();
-  const session = lsGet(LS.SESSION, null);
-  if (session) { const user = findUser(session); if (user) { currentUser = user; bootApp(); return; } }
   showAuthScreen();
 });
 
 function showAuthScreen() {
-  document.getElementById('ls').style.display          = 'none';
   document.getElementById('auth-screen').style.display = 'flex';
   document.getElementById('app-shell').style.display   = 'none';
 }
@@ -87,19 +115,20 @@ function switchAuthTab(tab) {
   document.getElementById('auth-error').textContent = '';
 }
 
-function doLogin() {
+async function doLogin() {
   const username = document.getElementById('l-user').value.trim();
   const password = document.getElementById('l-pass').value;
   const errEl    = document.getElementById('auth-error');
   if (!username || !password) { errEl.textContent = 'Completá todos los campos.'; return; }
-  const user = findUser(username);
-  if (!user || user.password !== password) { errEl.textContent = 'Usuario o contraseña incorrectos.'; return; }
-  currentUser = user;
-  lsSet(LS.SESSION, username);
-  bootApp();
+  try {
+    const data = await api('POST', '/auth/login', { username, password });
+    sessionStorage.setItem('qh_token', data.token);
+    currentUser = data.user;
+    bootApp();
+  } catch (e) { errEl.textContent = e.message || 'Error al iniciar sesión.'; }
 }
 
-function doRegister() {
+async function doRegister() {
   const displayName = document.getElementById('r-name').value.trim();
   const username    = document.getElementById('r-user').value.trim();
   const password    = document.getElementById('r-pass').value;
@@ -108,43 +137,75 @@ function doRegister() {
   if (!displayName || !username || !password || !password2) { errEl.textContent = 'Completá todos los campos.'; return; }
   if (password !== password2) { errEl.textContent = 'Las contraseñas no coinciden.'; return; }
   if (password.length < 4)    { errEl.textContent = 'La contraseña debe tener al menos 4 caracteres.'; return; }
-  if (findUser(username))     { errEl.textContent = 'Ese usuario ya existe.'; return; }
-  const users = getUsers();
-  const newUser = { username, password, displayName, role:'player', color: AVATAR_COLORS[users.length % AVATAR_COLORS.length] };
-  users.push(newUser);
-  saveUsers(users);
-  const standings = getStandings();
-  standings.push({ name: displayName, username, pts:0, ok:0, tot:0 });
-  saveStandings(standings);
-  currentUser = newUser;
-  lsSet(LS.SESSION, username);
-  bootApp();
+  try {
+    const data = await api('POST', '/auth/register', { username, password, displayName });
+    // YA NO hace login automático — espera aprobación
+    errEl.style.color = 'var(--accent)';
+    errEl.textContent = data.message || 'Cuenta creada. Esperá la aprobación del administrador.';
+    // Limpiar form después de 3 segundos y volver al login
+    setTimeout(() => {
+      switchAuthTab('login');
+      errEl.textContent = '';
+      errEl.style.color = '';
+    }, 3500);
+  } catch (e) { errEl.textContent = e.message || 'Error al registrarse.'; }
 }
 
 function doLogout() {
   currentUser = null;
-  localStorage.removeItem(LS.SESSION);
+  sessionStorage.removeItem('qh_token');
   showAuthScreen();
   document.getElementById('l-user').value = '';
   document.getElementById('l-pass').value = '';
   document.getElementById('auth-error').textContent = '';
 }
 
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  const collapsed = sb.classList.toggle('collapsed');
+  localStorage.setItem('sb_collapsed', collapsed ? '1' : '0');
+}
+
+function applySidebarState() {
+  if (localStorage.getItem('sb_collapsed') === '1') {
+    document.getElementById('sidebar')?.classList.add('collapsed');
+  }
+}
+
+function showIntro(callback) {
+  const intro = document.getElementById('intro-screen');
+  const audio = document.getElementById('login-audio');
+  intro.style.display = 'flex';
+  audio?.play().catch(() => {});
+  setTimeout(() => {
+    intro.style.opacity = '0';
+    intro.style.transition = 'opacity .5s';
+    setTimeout(() => {
+      intro.style.display = 'none';
+      intro.style.opacity = '';
+      intro.style.transition = '';
+      callback();
+    }, 500);
+  }, 2500);
+}
+
 function bootApp() {
-  showApp();
-  applyRole();
-  fillTeamSelects();
-  setupNav();
-  updateUserBadge();
-  if (currentUser.role === 'admin') { renderDashboard(); navigateTo('dashboard'); }
-  else { navigateTo('prode'); }
+  showIntro(() => {
+    showApp();
+    applyRole();
+    applySidebarState();
+    setupNav();
+    updateUserBadge();
+    if (currentUser.role === 'admin') navigateTo('dashboard');
+    else navigateTo('prode');
+  });
 }
 
 function applyRole() {
   const isAdmin = currentUser.role === 'admin';
   document.querySelectorAll('.ni[data-s]').forEach(el => {
     const s = el.dataset.s;
-    if (s === 'prode') { el.style.display = ''; return; }
+    if (s === 'prode' || s === 'news') { el.style.display = ''; return; }
     el.style.display = isAdmin ? '' : 'none';
   });
   document.querySelectorAll('.sb-grp').forEach(g => { if (!isAdmin) g.style.display = 'none'; });
@@ -155,13 +216,13 @@ function applyRole() {
 
 function updateUserBadge() {
   const u = currentUser;
-  document.querySelector('.uavs').textContent      = ini(u.displayName);
-  document.querySelector('.uavs').style.background = u.color || '#6CACE4';
-  document.querySelector('.uin .un').textContent   = u.displayName;
+  document.querySelector('.uavs').textContent      = ini(u.displayName || u.username);
+  document.querySelector('.uavs').style.background = avc(u.id);
+  document.querySelector('.uin .un').textContent   = u.displayName || u.username;
   document.querySelector('.uin .ur').textContent   = u.role === 'admin' ? '⚙ Administrador' : '⚽ Jugador';
 }
 
-const SECTION_TITLES = { dashboard:'Dashboard', score:'Score Balance', training:'Capacitaciones', news:'Noticias', prode:'Prode ⚽', members:'Miembros' };
+const SECTION_TITLES = { dashboard:'Dashboard', score:'Score Balance', training:'Capacitaciones', news:'Noticias', prode:'Prode ⚽', members:'Miembros', users:'Usuarios' };
 const ADD_ACTIONS    = { news: () => openNewsModal(), members: () => openMemberModal() };
 
 function navigateTo(sec) {
@@ -172,160 +233,241 @@ function navigateTo(sec) {
   const addBtn = document.getElementById('addbtn');
   if (currentUser.role === 'admin' && ADD_ACTIONS[sec]) { addBtn.style.display = ''; addBtn.onclick = ADD_ACTIONS[sec]; }
   else { addBtn.style.display = 'none'; }
-  ({ dashboard:renderDashboard, score:renderScore, training:renderTraining, news:renderNews, prode:renderProde, members:renderMembers })[sec]?.();
+  ({ dashboard:renderDashboard, score:renderScore, training:renderTraining, news:renderNews, prode:renderProde, members:renderMembers, users:renderUsers })[sec]?.();
 }
 
 function setupNav() {
   document.querySelectorAll('.ni').forEach(el => el.addEventListener('click', () => navigateTo(el.dataset.s)));
 }
 
-// ── DASHBOARD ──────────────────────────────────────────────────
-function renderDashboard() {
-  document.getElementById('d-members').textContent  = localMembers.length;
-  document.getElementById('d-courses').textContent  = DB_COURSES.filter(c => c.status === 'Activo').length;
-  document.getElementById('d-approved').textContent = DB_TRAINING_PROGRESS.filter(p => p.status === 'Aprobado').length;
-  const aprScores = DB_SCORES.filter(s => s.period === 'Abr 2026');
-  document.getElementById('d-avg').textContent = aprScores.length ? (aprScores.reduce((a,s) => a+s.value,0)/aprScores.length).toFixed(1) : '—';
-  document.getElementById('act-list').innerHTML = DB_ACTIVITY.map(a => `
-    <li class="ai"><span class="adot dot-${a.color}"></span><div><div class="at">${a.message}</div><div class="atm">${a.time}</div></div></li>`).join('');
-  const topList = getScoreRanking('Abr 2026').slice(0,5);
-  document.getElementById('top-list').innerHTML = topList.map((m,i) => {
-    const pkc = i===0?'rk1':i===1?'rk2':i===2?'rk3':'rkn';
-    const team = DB_TEAMS.find(t => t.id === m.teamId);
-    return `<div class="rank-item"><div class="rank-pos ${pkc}">${i+1}</div><div class="av" style="width:30px;height:30px;font-size:.68rem;background:${avc(m.id)}">${ini(m.name)}</div><div class="rank-name">${m.name}<div class="rank-team">${team?.name||''}</div></div><div class="rank-score">${m.avg}</div></div>`;
-  }).join('');
+// ══════════════════════════════════════════════════════════════
+//  DASHBOARD
+// ══════════════════════════════════════════════════════════════
+async function renderDashboard() {
+  try {
+    const members = await api('GET', '/members');
+    document.getElementById('d-members').textContent = members.length;
+  } catch { document.getElementById('d-members').textContent = '—'; }
+
+  document.getElementById('d-courses').textContent  = typeof DB_COURSES !== 'undefined' ? DB_COURSES.filter(c => c.status === 'Activo').length : '—';
+  document.getElementById('d-approved').textContent = typeof DB_TRAINING_PROGRESS !== 'undefined' ? DB_TRAINING_PROGRESS.filter(p => p.status === 'Aprobado').length : '—';
+  document.getElementById('d-avg').textContent      = '—';
+
+  if (typeof DB_ACTIVITY !== 'undefined') {
+    document.getElementById('act-list').innerHTML = DB_ACTIVITY.map(a =>
+      `<li class="ai"><span class="adot dot-${a.color}"></span><div><div class="at">${a.message}</div><div class="atm">${a.time}</div></div></li>`
+    ).join('');
+  }
 }
 
-// ── SCORE BALANCE ──────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+//  SCORE BALANCE
+// ══════════════════════════════════════════════════════════════
 function calcWeightedScore(memberId, period) {
-  const ms = DB_SCORES.filter(s => s.memberId===memberId && s.period===period);
+  if (typeof DB_SCORES === 'undefined') return null;
+  const ms = DB_SCORES.filter(s => s.memberId === memberId && s.period === period);
   if (!ms.length) return null;
-  let tw=0, ws=0;
-  ms.forEach(s => { const cat=DB_SCORE_CATEGORIES.find(c=>c.id===s.categoryId); if(cat){ws+=s.value*cat.weight;tw+=cat.weight;} });
-  return tw ? Math.round(ws/tw*10)/10 : null;
+  let tw = 0, ws = 0;
+  ms.forEach(s => {
+    const cat = DB_SCORE_CATEGORIES.find(c => c.id === s.categoryId);
+    if (cat) { ws += s.value * cat.weight; tw += cat.weight; }
+  });
+  return tw ? Math.round(ws / tw * 10) / 10 : null;
 }
-function getScoreRanking(period) {
-  return localMembers.map(m=>({...m,avg:calcWeightedScore(m.id,period)})).filter(m=>m.avg!==null).sort((a,b)=>b.avg-a.avg);
-}
-function renderScore() {
-  const periods = [...new Set(DB_SCORES.map(s=>s.period))];
-  document.getElementById('period-btns').innerHTML = periods.map(p =>
-    `<button class="pbtn${p===scorePeriod?' active':''}" onclick="setPeriod('${p}')">${p}</button>`).join('');
-  const BC = ['#6CACE4','#FFB81C','#85bde8','#E8334A','#3ae8d0'];
-  document.getElementById('score-grid').innerHTML = localMembers.map(m => {
-    const scores = DB_SCORES.filter(s=>s.memberId===m.id&&s.period===scorePeriod);
-    const avg    = calcWeightedScore(m.id,scorePeriod)??'—';
-    const color  = avg>=8.5?'#6CACE4':avg>=7?'#FFB81C':'#E8334A';
-    const team   = DB_TEAMS.find(t=>t.id===m.teamId);
-    return `<div class="smc"><div class="smc-hdr"><div class="av" style="width:36px;height:36px;font-size:.78rem;background:${avc(m.id)}">${ini(m.name)}</div><div><div class="smc-name">${m.name}</div><div class="smc-role">${team?.name||''} · ${m.role}</div></div><div class="smc-score"><div class="smc-val" style="color:${color}">${avg}</div><div class="smc-lbl">Score</div></div></div>${scores.map((s,i)=>{const cat=DB_SCORE_CATEGORIES.find(c=>c.id===s.categoryId);return `<div class="bar-wrap"><div class="bar-lbl"><span>${cat?.icon||''} ${cat?.name||''}</span><span>${s.value}</span></div><div class="bar-bg"><div class="bar-fill" style="width:${s.value*10}%;background:${BC[i%BC.length]}"></div></div></div>`;}).join('')}</div>`;
-  }).join('');
-  const ranking = getScoreRanking(scorePeriod);
-  document.getElementById('ranking-list').innerHTML = ranking.map((m,i) => {
-    const pkc=i===0?'rk1':i===1?'rk2':i===2?'rk3':'rkn';
-    const team=DB_TEAMS.find(t=>t.id===m.teamId);
-    return `<div class="rank-item"><div class="rank-pos ${pkc}">${i+1}</div><div class="av" style="width:28px;height:28px;font-size:.66rem;background:${avc(m.id)}">${ini(m.name)}</div><div class="rank-name">${m.name}<div class="rank-team">${team?.name||''}</div></div><div class="rank-score">${m.avg}</div></div>`;
-  }).join('');
-}
-function setPeriod(p) { scorePeriod=p; renderScore(); }
 
-// ── CAPACITACIONES ─────────────────────────────────────────────
+async function renderScore() {
+  try {
+    const members = await api('GET', '/members');
+    if (typeof DB_SCORES === 'undefined') return;
+    const periods = [...new Set(DB_SCORES.map(s => s.period))];
+    document.getElementById('period-btns').innerHTML = periods.map(p =>
+      `<button class="pbtn${p === scorePeriod ? ' active' : ''}" onclick="setPeriod('${p}')">${p}</button>`
+    ).join('');
+    const BC = ['#6CACE4','#FFB81C','#85bde8','#E8334A','#3ae8d0'];
+    document.getElementById('score-grid').innerHTML = members.map(m => {
+      const scores = DB_SCORES.filter(s => s.memberId === m.id && s.period === scorePeriod);
+      const avg    = calcWeightedScore(m.id, scorePeriod) ?? '—';
+      const color  = avg >= 8.5 ? '#6CACE4' : avg >= 7 ? '#FFB81C' : '#E8334A';
+      return `<div class="smc">
+        <div class="smc-hdr">
+          <div class="av" style="width:36px;height:36px;font-size:.78rem;background:${avc(m.id)}">${ini(m.name)}</div>
+          <div><div class="smc-name">${m.name}</div><div class="smc-role">${m.team || ''} · ${m.role || ''}</div></div>
+          <div class="smc-score"><div class="smc-val" style="color:${color}">${avg}</div><div class="smc-lbl">Score</div></div>
+        </div>
+        ${scores.map((s, i) => {
+          const cat = DB_SCORE_CATEGORIES.find(c => c.id === s.categoryId);
+          return `<div class="bar-wrap">
+            <div class="bar-lbl"><span>${cat?.icon || ''} ${cat?.name || ''}</span><span>${s.value}</span></div>
+            <div class="bar-bg"><div class="bar-fill" style="width:${s.value * 10}%;background:${BC[i % BC.length]}"></div></div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    }).join('');
+  } catch(e) { console.error(e); }
+}
+
+function setPeriod(p) { scorePeriod = p; renderScore(); }
+
+// ══════════════════════════════════════════════════════════════
+//  CAPACITACIONES
+// ══════════════════════════════════════════════════════════════
 function renderTraining() {
-  document.getElementById('t-total').textContent = DB_COURSES.filter(c=>c.status==='Activo').length;
-  const total=DB_TRAINING_PROGRESS.length, approved=DB_TRAINING_PROGRESS.filter(p=>p.status==='Aprobado').length;
-  document.getElementById('t-prog').textContent = total ? Math.round(approved/total*100)+'%' : '—';
-  const catBadge={Calidad:'ba',Herramientas:'bb',Habilidades:'bc'};
+  if (typeof DB_COURSES === 'undefined') return;
+  document.getElementById('t-total').textContent = DB_COURSES.filter(c => c.status === 'Activo').length;
+  const total    = DB_TRAINING_PROGRESS.length;
+  const approved = DB_TRAINING_PROGRESS.filter(p => p.status === 'Aprobado').length;
+  document.getElementById('t-prog').textContent = total ? Math.round(approved / total * 100) + '%' : '—';
+  const catBadge = { Calidad:'ba', Herramientas:'bb', Habilidades:'bc' };
   document.getElementById('training-tb').innerHTML = DB_COURSES.map(c => {
-    const enrolled=DB_TRAINING_PROGRESS.filter(p=>p.courseId===c.id).length;
-    const done=DB_TRAINING_PROGRESS.filter(p=>p.courseId===c.id&&p.status==='Aprobado').length;
-    return `<tr><td><span style="font-weight:500;color:var(--text)">${c.title}</span></td><td><span class="badge ${catBadge[c.category]||'bb'}">${c.category}</span></td><td>${c.hours}h</td><td>${c.instructor}</td><td>${done}/${enrolled} aprobados</td><td><span class="badge ${c.status==='Activo'?'ba':'bd'}">${c.status}</span></td></tr>`;
+    const enrolled = DB_TRAINING_PROGRESS.filter(p => p.courseId === c.id).length;
+    const done     = DB_TRAINING_PROGRESS.filter(p => p.courseId === c.id && p.status === 'Aprobado').length;
+    return `<tr>
+      <td><span style="font-weight:500;color:var(--text)">${c.title}</span></td>
+      <td><span class="badge ${catBadge[c.category] || 'bb'}">${c.category}</span></td>
+      <td>${c.hours}h</td>
+      <td>${c.instructor}</td>
+      <td>${done}/${enrolled} aprobados</td>
+      <td><span class="badge ${c.status === 'Activo' ? 'ba' : 'bd'}">${c.status}</span></td>
+    </tr>`;
   }).join('');
 }
 
-// ── NOTICIAS ───────────────────────────────────────────────────
-function renderNews() {
-  document.getElementById('tick-inner').innerHTML = [...localNews,...localNews].map(n=>`<span>${n.title}</span>`).join('');
-  const cats=['Todos',...new Set(localNews.map(n=>n.category))];
+// ══════════════════════════════════════════════════════════════
+//  NOTICIAS
+// ══════════════════════════════════════════════════════════════
+let localNews = [];
+
+async function renderNews() {
+  try { localNews = await api('GET', '/news'); }
+  catch { localNews = []; }
+
+  if (!localNews.length) {
+    document.getElementById('news-hero').innerHTML    = '<p style="color:var(--text3)">No hay noticias todavía.</p>';
+    document.getElementById('news-cards').innerHTML   = '';
+    document.getElementById('news-filter').innerHTML  = '';
+    document.getElementById('tick-inner').innerHTML   = '';
+    return;
+  }
+
+  document.getElementById('tick-inner').innerHTML = [...localNews, ...localNews].map(n => `<span>${n.title}</span>`).join('');
+  const cats = ['Todos', ...new Set(localNews.map(n => n.category))];
   document.getElementById('news-filter').innerHTML = cats.map(c =>
-    `<button class="nftag${(!newsFilter&&c==='Todos')||newsFilter===c?' active':''}" onclick="setNewsFilter('${c}')">${c}</button>`).join('');
-  const filtered=newsFilter?localNews.filter(n=>n.category===newsFilter):localNews;
-  const sorted=[...filtered].sort((a,b)=>b.id-a.id);
-  const hero=sorted[0];
-  if(hero) document.getElementById('news-hero').innerHTML=`<div class="hero-emoji">${hero.emoji}</div><span class="hero-tag">${hero.category}</span><div class="hero-title">${hero.title}</div><div class="hero-body">${hero.body}</div><div class="hero-meta">Por ${hero.author} · ${hero.date}</div>`;
-  document.getElementById('news-cards').innerHTML=sorted.slice(1).map(n=>`<div class="ncard"><div class="ncard-top"><span class="ncard-emoji">${n.emoji}</span><span class="ncard-tag">${n.category}</span></div><div class="ncard-title">${n.title}</div><div class="ncard-meta">Por ${n.author} · ${n.date}</div></div>`).join('');
+    `<button class="nftag${(!newsFilter && c === 'Todos') || newsFilter === c ? ' active' : ''}" onclick="setNewsFilter('${c}')">${c}</button>`
+  ).join('');
+
+  const filtered = newsFilter ? localNews.filter(n => n.category === newsFilter) : localNews;
+  const sorted   = [...filtered].sort((a,b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+  const hero     = sorted[0];
+
+  if (hero) {
+    document.getElementById('news-hero').innerHTML = `
+      ${newsMediaHTML(hero.image_url)}
+      <div class="hero-emoji">${hero.emoji || '📋'}</div>
+      <span class="hero-tag">${hero.category}</span>
+      <div class="hero-title">${hero.title}</div>
+      <div class="hero-body">${hero.body}</div>
+      <div class="hero-meta">Por ${hero.author}
+        ${currentUser.role === 'admin' ? `<button class="ib dr" onclick="deleteNews(${hero.id})" style="margin-left:8px">
+          <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 3h8M5 3V2h2v1M4 3v7h4V3"/></svg>
+        </button>` : ''}
+      </div>`;
+  }
+
+  document.getElementById('news-cards').innerHTML = sorted.slice(1).map(n => `
+    <div class="ncard">
+      ${newsMediaHTML(n.image_url)}
+      <div class="ncard-top"><span class="ncard-emoji">${n.emoji || '📋'}</span><span class="ncard-tag">${n.category}</span></div>
+      <div class="ncard-title">${n.title}</div>
+      <div class="ncard-meta">Por ${n.author}
+        ${currentUser.role === 'admin' ? `<button class="ib dr" onclick="deleteNews(${n.id})" style="margin-left:8px">
+          <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 3h8M5 3V2h2v1M4 3v7h4V3"/></svg>
+        </button>` : ''}
+      </div>
+    </div>`).join('');
 }
-function setNewsFilter(cat) { newsFilter=cat==='Todos'?'':cat; renderNews(); }
+
+function newsMediaHTML(url) {
+  if (!url) return '';
+  // YouTube
+  const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?/]+)/);
+  if (yt) return `<div class="news-media"><iframe src="https://www.youtube.com/embed/${yt[1]}" frameborder="0" allowfullscreen></iframe></div>`;
+  // Vimeo
+  const vi = url.match(/vimeo\.com\/(\d+)/);
+  if (vi) return `<div class="news-media"><iframe src="https://player.vimeo.com/video/${vi[1]}" frameborder="0" allowfullscreen></iframe></div>`;
+  // Imagen o gif
+  return `<div class="news-media"><img src="${url}" alt="" onerror="this.parentElement.style.display='none'"></div>`;
+}
+
 function openNewsModal() {
-  ['n-title','n-body','n-author'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('n-emoji').value='📋';
+  ['n-title','n-body','n-author','n-image'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('n-emoji').value = '📋';
   document.getElementById('n-modal').classList.add('open');
 }
-function saveNews() {
-  const title=document.getElementById('n-title').value.trim();
-  const body=document.getElementById('n-body').value.trim();
-  const cat=document.getElementById('n-cat').value;
-  const emoji=document.getElementById('n-emoji').value||'📋';
-  const author=document.getElementById('n-author').value.trim()||'Admin';
-  if(!title||!body){toast('Completá título y contenido','e');return;}
-  const now=new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'short',year:'numeric'});
-  localNews.push({id:Math.max(...localNews.map(n=>n.id),0)+1,title,body,category:cat,emoji,author,date:now});
-  persistNews(); closeM('n-modal'); renderNews(); toast('Noticia publicada','s');
+
+async function saveNews() {
+  const title     = document.getElementById('n-title').value.trim();
+  const body      = document.getElementById('n-body').value.trim();
+  const cat       = document.getElementById('n-cat').value;
+  const emoji     = document.getElementById('n-emoji').value || '📋';
+  const author    = document.getElementById('n-author').value.trim() || currentUser.displayName;
+  const image_url = document.getElementById('n-image').value.trim() || null;
+  if (!title || !body) { toast('Completá título y contenido', 'e'); return; }
+  try {
+    await api('POST', '/news', { title, body, category: cat, emoji, author, image_url });
+    closeM('n-modal'); renderNews(); toast('Noticia publicada', 's');
+  } catch(e) { toast(e.message, 'e'); }
+}
+
+async function deleteNews(id) {
+  if (!confirm('¿Eliminás esta noticia?')) return;
+  try {
+    await api('DELETE', '/news/' + id);
+    renderNews(); toast('Noticia eliminada', 'e');
+  } catch(e) { toast(e.message, 'e'); }
 }
 
 // ══════════════════════════════════════════════════════════════
-//  PRODE — Selector de fechas + tarjetas estilo FIFA
+//  PRODE
 // ══════════════════════════════════════════════════════════════
-
-function renderProde() {
+async function renderProde() {
   if (!currentUser) return;
-  const username       = currentUser.username;
-  const predictions    = getUserPreds(username);
-  const prodeSubmitted = getUserSubmitted(username);
+  try {
+    localMatches   = await api('GET', '/prode/matches');
+    const predsArr = await api('GET', '/prode/predictions');
+    // Indexar por match_id
+    localPreds = {};
+    predsArr.forEach(p => { localPreds[p.match_id] = p; });
+  } catch(e) {
+    console.error('Error cargando prode:', e);
+    return;
+  }
 
-  // ── Calcular mis puntos ──
-  const myPts = DB_MATCHES.reduce((s,m) => {
-    const pred = predictions[m.id];
-    if (!pred || !m.result) return s;
-    const pWinner = pred.winner !== undefined ? pred.winner : pred;
-    const pGH = pred.goalsHome !== undefined ? pred.goalsHome : null;
-    const pGA = pred.goalsAway !== undefined ? pred.goalsAway : null;
-    const exactHome = pGH !== null && pGH === m.goalsHome;
-    const exactAway = pGA !== null && pGA === m.goalsAway;
-    if (exactHome && exactAway) return s + 10;
-    if (pWinner === m.result)   return s + 5;
-    return s;
-  }, 0);
-  document.getElementById('my-pts').textContent = myPts;
-
-  // ── Panel admin ──
+  // Panel admin
   const adminPanel = document.getElementById('admin-prode-panel');
   if (adminPanel) {
     adminPanel.style.display = currentUser.role === 'admin' ? '' : 'none';
     if (currentUser.role === 'admin') renderAdminProdePanel();
   }
 
-  // ── Strip de fechas ──
-  const allDates = [...new Set(DB_MATCHES.map(m => m.date))];
-  // Ordenar por id del primer partido de cada fecha
-  allDates.sort((a,b) => DB_MATCHES.find(m=>m.date===a).id - DB_MATCHES.find(m=>m.date===b).id);
+  // Strip de fechas
+  const allDates = [...new Set(localMatches.map(m => m.match_date))];
+  allDates.sort((a,b) => localMatches.find(m => m.match_date === a).id - localMatches.find(m => m.match_date === b).id);
   if (!activeDate || !allDates.includes(activeDate)) activeDate = allDates[0];
 
-  const strip = document.getElementById('date-strip');
-  strip.innerHTML = allDates.map(d => {
-    const dayMatches = DB_MATCHES.filter(m => m.date === d);
-    const hasResult  = dayMatches.some(m => m.result !== '');
-    const parts = d.split(' '); // ["Jue","11","Jun"]
-    return `
-      <button class="date-chip${d === activeDate ? ' active' : ''}${hasResult ? ' has-result' : ''}"
-              onclick="setDate('${d}')">
-        <span class="dc-day">${parts[0]}</span>
-        <span class="dc-num">${parts[1]}</span>
-        <span class="dc-mon">${parts[2]}</span>
-        ${hasResult ? '<span class="dc-dot"></span>' : ''}
-      </button>`;
+  document.getElementById('date-strip').innerHTML = allDates.map(d => {
+    const dayM      = localMatches.filter(m => m.match_date === d);
+    const hasResult = dayM.some(m => m.home_score !== null);
+    const parts     = d.split(' ');
+    return `<button class="date-chip${d === activeDate ? ' active' : ''}${hasResult ? ' has-result' : ''}" onclick="setDate('${d}')">
+      <span class="dc-day">${parts[0]}</span>
+      <span class="dc-num">${parts[1]}</span>
+      <span class="dc-mon">${parts[2]}</span>
+      ${hasResult ? '<span class="dc-dot"></span>' : ''}
+    </button>`;
   }).join('');
 
-  // ── Partidos del día ──
-  const dayMatches = DB_MATCHES.filter(m => m.date === activeDate);
+  // Partidos del día
+  const dayMatches = localMatches.filter(m => m.match_date === activeDate);
   const dayEl = document.getElementById('matches-day');
   if (!dayMatches.length) {
     dayEl.innerHTML = '<div class="no-matches">No hay partidos este día.</div>';
@@ -333,139 +475,144 @@ function renderProde() {
     dayEl.innerHTML = `
       <div class="day-matches-header">
         <span class="day-matches-date">${activeDate}</span>
-        <span class="day-matches-count">${dayMatches.length} partido${dayMatches.length>1?'s':''}</span>
+        <span class="day-matches-count">${dayMatches.length} partido${dayMatches.length > 1 ? 's' : ''}</span>
       </div>
       <div class="day-matches-grid">
-        ${dayMatches.map(m => renderMatchCard(m, predictions, prodeSubmitted)).join('')}
+        ${dayMatches.map(m => renderMatchCard(m)).join('')}
       </div>`;
   }
 
-  // ── Status bar ──
-  const statusEl = document.getElementById('prode-status');
-  const totalFilled = Object.keys(predictions).filter(k => {
-    const p = predictions[k]; return p && (p.winner || typeof p === 'string');
-  }).length;
-  const totalMatches = DB_MATCHES.length;
-  if (prodeSubmitted) {
-    statusEl.innerHTML = `
-      <div class="status-bar submitted">
-        ✅ Pronóstico enviado · <strong>${myPts} puntos</strong> · ${totalFilled}/${totalMatches} partidos cargados
-      </div>`;
-  } else {
-    const canSend = totalFilled >= 1;
-    statusEl.innerHTML = `
-      <div class="status-bar">
-        <span>${totalFilled}/${totalMatches} partidos completados</span>
-        <button class="btn btn-a" onclick="submitProde()" ${canSend ? '' : 'disabled'} style="${canSend ? '' : 'opacity:.4'}">
-          🚀 Enviar pronóstico
-        </button>
-      </div>`;
-  }
+  // Mis puntos totales — calculados DESPUÉS de llenar localPreds
+  const myPts = calcMyPoints();
+  document.getElementById('my-pts').textContent = myPts;
 
-  // ── Tabla de posiciones ──
-  recalcAllStandings();
-  localStandings = getStandings();
-  const sorted = [...localStandings].sort((a,b) => b.pts - a.pts);
-  document.getElementById('standings').innerHTML = sorted.length
-    ? sorted.map((s,i) => {
-        const pkc = i===0?'rk1':i===1?'rk2':i===2?'rk3':'rkn';
-        const isMe = s.username === username;
-        return `
-          <div class="sr">
+  // Status bar
+  const totalFilled  = Object.values(localPreds).filter(p => p.result || (p.home_score !== null && p.away_score !== null)).length;
+  const totalMatches = localMatches.length;
+  document.getElementById('prode-status').innerHTML = `
+    <div class="status-bar">
+      <span>⚽ ${totalFilled}/${totalMatches} partidos votados · <strong>${myPts} pts</strong></span>
+      <span style="font-size:.75rem;color:var(--text3)">Se guarda automáticamente</span>
+    </div>`;
+
+  // Tabla de posiciones
+  await renderStandings();
+}
+
+// Calcular mis puntos totales usando la lógica unificada
+function calcMyPoints() {
+  let pts = 0;
+  localMatches.forEach(m => {
+    const pred = localPreds[m.id];
+    if (!pred) return;
+    const p = calcMatchPoints(pred, m);
+    if (p > 0) pts += p;
+  });
+  return pts;
+}
+
+async function renderStandings() {
+  try {
+    const standings = await api('GET', '/prode/standings');
+    const sorted    = [...standings].sort((a,b) => b.pts - a.pts);
+    document.getElementById('standings').innerHTML = sorted.length
+      ? sorted.map((s,i) => {
+          const pkc  = i===0?'rk1':i===1?'rk2':i===2?'rk3':'rkn';
+          const isMe = s.username === currentUser.username;
+          return `<div class="sr">
             <div class="srp ${pkc}">${i+1}</div>
             <div class="srname">
-              ${isMe ? `<strong>${s.name}</strong> <span class="me-tag">← vos</span>` : s.name}
-              <div class="srdet">${s.ok}/${s.tot} aciertos</div>
+              ${isMe ? `<strong>${s.displayName}</strong> <span class="me-tag">← vos</span>` : s.displayName}
+              <div class="srdet">${s.exact || s.ok || 0}/${s.total || s.tot || 0} aciertos</div>
             </div>
             <div class="srpts">${s.pts} pts</div>
           </div>`;
-      }).join('')
-    : '<div class="no-standings">Nadie envió pronóstico todavía.</div>';
+        }).join('')
+      : '<div class="no-standings">Nadie cargó pronósticos todavía.</div>';
+  } catch { }
 }
 
-function setDate(d) {
-  activeDate = d;
-  renderProde();
-}
+function setDate(d) { activeDate = d; renderProde(); }
 
+// ── Tarjeta de partido ────────────────────────────────────────
+function renderMatchCard(m) {
+  const pred   = localPreds[m.id] || {};
+  const locked = isMatchLocked(m);
 
-// ── Render de una tarjeta de partido ──────────────────────────
-function renderMatchCard(m, predictions, submitted) {
-  const pred    = predictions[m.id] || {};
-  const pWinner = pred.winner || null;
-  const pGH     = pred.goalsHome !== undefined ? pred.goalsHome : null;
-  const pGA     = pred.goalsAway !== undefined ? pred.goalsAway : null;
-  const res     = m.result;
-  const played  = res !== '';
+  const mH = m.home_score !== null && m.home_score !== undefined ? Number(m.home_score) : null;
+  const mA = m.away_score !== null && m.away_score !== undefined ? Number(m.away_score) : null;
+  const played = mH !== null && mA !== null;
 
-  function flagOrGray(team) {
-    if (team.known) return `<span class="team-flag">${team.flag}</span>`;
-    return `<span class="team-flag unknown">?</span>`;
+  const pH = pred.home_score !== null && pred.home_score !== undefined ? Number(pred.home_score) : null;
+  const pA = pred.away_score !== null && pred.away_score !== undefined ? Number(pred.away_score) : null;
+
+  // Resultado predicho: primero el campo result guardado, sino se infiere de goles
+  const predResult = pred.result || goalsToResult(pH, pA);
+  const realResult = goalsToResult(mH, mA);
+
+  // Puntos de este partido
+  const matchPts = calcMatchPoints(pred, m);
+
+  let ptsLabel = '';
+  if (matchPts === 10) ptsLabel = '🎯 +10 exacto';
+  else if (matchPts === 5) ptsLabel = '✓ +5 ganador';
+  else if (matchPts === 0) ptsLabel = '✗ 0 pts';
+
+  // Clase de los botones 1/X/2
+  function btnCls(val) {
+    const sel = 'sel' + (val === '1' ? '1' : val === 'x' ? 'x' : '2');
+    if (!predResult) return '';
+    if (predResult !== val) return '';
+    if (!played) return sel;
+    return predResult === realResult ? 'ok' : 'fail';
   }
 
-  function btnCls(val, sel) {
-    if (!submitted) return pWinner === val ? sel : '';
-    if (!played)    return pWinner === val ? sel : '';
-    return pWinner === val ? (pWinner === res ? 'ok' : 'fail') : '';
-  }
-
-  let matchPts = -1, ptsLabel = '';
-  if (submitted && played && pWinner) {
-    const exactHome = pGH !== null && pGH === m.goalsHome;
-    const exactAway = pGA !== null && pGA === m.goalsAway;
-    if (exactHome && exactAway) { matchPts = 10; ptsLabel = '🎯 +10 exacto'; }
-    else if (pWinner === res)   { matchPts = 5;  ptsLabel = '✓ +5 ganador'; }
-    else                        { matchPts = 0;  ptsLabel = '✗ 0'; }
-  }
-
-  const disabledAttr = submitted ? 'disabled' : '';
-  const showGoals = pWinner || submitted;
-  const goalsSection = showGoals ? `
-    <div class="pred-goals">
-      <input class="goals-input" type="number" min="0" max="20" placeholder="?"
-        value="${pGH !== null && pGH !== undefined ? pGH : ''}"
-        ${submitted ? 'disabled' : ''}
-        onchange="setPredGoals(${m.id},'home',this.value)"
-        oninput="if(this.value<0)this.value=0"
-        title="Goles ${m.home.name}">
-      <span class="goals-sep">:</span>
-      <input class="goals-input" type="number" min="0" max="20" placeholder="?"
-        value="${pGA !== null && pGA !== undefined ? pGA : ''}"
-        ${submitted ? 'disabled' : ''}
-        onchange="setPredGoals(${m.id},'away',this.value)"
-        oninput="if(this.value<0)this.value=0"
-        title="Goles ${m.away.name}">
-    </div>` : '<div class="pred-goals-hint">Elegí 1·X·2 para ingresar goles</div>';
-
-  const resultBadge = played
-    ? `<span class="match-result-badge">${m.goalsHome !== null ? m.goalsHome+' - '+m.goalsAway : '? - ?'}</span>`
+  const disabledAttr = locked ? 'disabled' : '';
+  const lockIcon     = locked ? '<span style="font-size:.7rem;color:var(--text3)">🔒</span>' : '';
+  const resultBadge  = played
+    ? `<span class="match-result-badge">${mH} - ${mA}</span>`
     : `<span class="match-vs">VS</span>`;
 
   return `
-    <div class="match-card${played ? ' played' : ''}">
+    <div class="match-card${played ? ' played' : ''}${locked ? ' locked' : ''}">
       <div class="match-meta">
-        <span class="match-date">${m.time} hs · ${m.venue}</span>
+        <span class="match-date">${m.time || ''} hs · ${m.venue || ''}</span>
+        ${lockIcon}
       </div>
       <div class="match-body">
         <div class="match-team home">
-          ${flagOrGray(m.home)}
-          <span class="team-name">${m.home.name}</span>
+          <span class="team-flag">${m.home_flag || '🏳️'}</span>
+          <span class="team-name">${m.home}</span>
         </div>
         <div class="match-center">
           ${resultBadge}
           <div class="pred-btns">
-            <button class="pb ${btnCls('1','sel1')}" onclick="setPred(${m.id},'1')" ${disabledAttr} title="Gana ${m.home.name}">1</button>
-            <button class="pb ${btnCls('x','selx')}" onclick="setPred(${m.id},'x')" ${disabledAttr} title="Empate">X</button>
-            <button class="pb ${btnCls('2','sel2')}" onclick="setPred(${m.id},'2')" ${disabledAttr} title="Gana ${m.away.name}">2</button>
+            <button class="pb ${btnCls('1')}" onclick="setPred(${m.id},'1')" ${disabledAttr} title="Gana ${m.home}">1</button>
+            <button class="pb ${btnCls('x')}" onclick="setPred(${m.id},'x')" ${disabledAttr} title="Empate">X</button>
+            <button class="pb ${btnCls('2')}" onclick="setPred(${m.id},'2')" ${disabledAttr} title="Gana ${m.away}">2</button>
           </div>
-          ${goalsSection}
-          ${submitted && played && matchPts >= 0
-            ? `<div class="match-result-row ${matchPts===10?'exact':matchPts===5?'ok':'fail'}">${ptsLabel}</div>`
+          <div class="pred-goals">
+            <input class="goals-input" type="number" min="0" max="20" placeholder="?"
+              value="${pH !== null ? pH : ''}"
+              ${disabledAttr}
+              onchange="setPredGoals(${m.id},'home',this.value)"
+              oninput="if(this.value<0)this.value=0"
+              title="Goles ${m.home}">
+            <span class="goals-sep">:</span>
+            <input class="goals-input" type="number" min="0" max="20" placeholder="?"
+              value="${pA !== null ? pA : ''}"
+              ${disabledAttr}
+              onchange="setPredGoals(${m.id},'away',this.value)"
+              oninput="if(this.value<0)this.value=0"
+              title="Goles ${m.away}">
+          </div>
+          ${played && matchPts >= 0
+            ? `<div class="match-result-row ${matchPts === 10 ? 'exact' : matchPts === 5 ? 'ok' : 'fail'}">${ptsLabel}</div>`
             : ''}
         </div>
         <div class="match-team away">
-          <span class="team-name">${m.away.name}</span>
-          ${flagOrGray(m.away)}
+          <span class="team-name">${m.away}</span>
+          <span class="team-flag">${m.away_flag || '🏳️'}</span>
         </div>
       </div>
     </div>`;
@@ -475,223 +622,307 @@ function renderMatchCard(m, predictions, submitted) {
 function renderAdminProdePanel() {
   const panel = document.getElementById('admin-match-list');
   if (!panel) return;
-  const groupMatches = activeDate ? DB_MATCHES.filter(m => m.date === activeDate) : DB_MATCHES;
+  const groupMatches = activeDate ? localMatches.filter(m => m.match_date === activeDate) : localMatches;
   panel.innerHTML = `
     <p style="font-size:.75rem;color:var(--text3);margin-bottom:10px">
-      Cargá resultados del día <strong>${activeDate || 'seleccionado'}</strong>. Ingresá los goles y el resultado se calcula solo.<br>
+      Cargá resultados del día <strong>${activeDate || 'seleccionado'}</strong>.
       <span style="color:var(--accent);font-weight:600">🎯 Exacto = 10 pts · ✓ Ganador/Empate = 5 pts</span>
     </p>
     ${groupMatches.map(m => `
       <div class="admin-match-row">
-        <span class="admin-match-name">${m.home.flag} ${m.home.name} vs ${m.away.flag} ${m.away.name}</span>
-        <span style="font-size:.7rem;color:var(--text3)">${m.date}</span>
+        <span class="admin-match-name">${m.home_flag || ''} ${m.home} vs ${m.away_flag || ''} ${m.away}</span>
+        <span style="font-size:.7rem;color:var(--text3)">${m.match_date}</span>
         <div class="admin-goals-row">
-          <span class="admin-goals-label">${m.home.flag} Goles:</span>
           <input class="goals-input admin-goals-input" type="number" min="0" max="20"
-            value="${m.goalsHome !== null ? m.goalsHome : ''}"
+            value="${m.home_score !== null && m.home_score !== undefined ? m.home_score : ''}"
             placeholder="—"
-            onchange="setMatchGoals(${m.id}, 'home', this.value)"
+            onchange="setMatchResult(${m.id}, 'home', this.value)"
             oninput="if(this.value<0)this.value=0">
           <span class="goals-sep">:</span>
           <input class="goals-input admin-goals-input" type="number" min="0" max="20"
-            value="${m.goalsAway !== null ? m.goalsAway : ''}"
+            value="${m.away_score !== null && m.away_score !== undefined ? m.away_score : ''}"
             placeholder="—"
-            onchange="setMatchGoals(${m.id}, 'away', this.value)"
+            onchange="setMatchResult(${m.id}, 'away', this.value)"
             oninput="if(this.value<0)this.value=0">
-          <span class="admin-goals-label">${m.away.flag} Goles</span>
-          <span class="admin-result-preview ${m.result ? 'has-result' : ''}">
-            ${m.result === '1' ? '→ Gana '+m.home.name : m.result === 'x' ? '→ Empate' : m.result === '2' ? '→ Gana '+m.away.name : '(sin resultado)'}
+          <span class="admin-result-preview ${m.home_score !== null ? 'has-result' : ''}">
+            ${m.home_score !== null
+              ? (Number(m.home_score) > Number(m.away_score) ? '→ Gana ' + m.home
+                : Number(m.home_score) < Number(m.away_score) ? '→ Gana ' + m.away
+                : '→ Empate')
+              : '(sin resultado)'}
           </span>
         </div>
       </div>`).join('')}`;
 }
 
-function setMatchGoals(matchId, side, value) {
-  const m = DB_MATCHES.find(x => x.id === matchId);
+async function setMatchResult(matchId, side, value) {
+  const m = localMatches.find(x => x.id === matchId);
   if (!m) return;
   const v = value === '' ? null : Number(value);
-  if (side === 'home') m.goalsHome = v;
-  else                 m.goalsAway = v;
-  // Auto-calcular resultado según goles
-  if (m.goalsHome !== null && m.goalsAway !== null) {
-    if      (m.goalsHome > m.goalsAway)  m.result = '1';
-    else if (m.goalsHome < m.goalsAway)  m.result = '2';
-    else                                  m.result = 'x';
-  } else {
-    m.result = '';
-  }
-  recalcAllStandings();
-  renderProde();
-  toast('Resultado actualizado','s');
-}
-
-function setMatchResult(matchId, result) {
-  const m = DB_MATCHES.find(x => x.id === matchId);
-  if (m) { m.result = result; recalcAllStandings(); renderProde(); toast('Resultado guardado','s'); }
-}
-
-function recalcAllStandings() {
-  const users = getUsers();
-  const standings = [];
-  users.forEach(u => {
-    const preds = getUserPreds(u.username);
-    let pts = 0, ok = 0, tot = 0;
-    DB_MATCHES.forEach(m => {
-      if (!m.result) return;
-      const pred = preds[m.id];
-      if (!pred) return;
-      const pWinner = pred.winner || pred;
-      const pGH = pred.goalsHome !== undefined ? pred.goalsHome : null;
-      const pGA = pred.goalsAway !== undefined ? pred.goalsAway : null;
-      tot++;
-      const exactHome = pGH !== null && pGH === m.goalsHome;
-      const exactAway = pGA !== null && pGA === m.goalsAway;
-      if (exactHome && exactAway) { pts += 10; ok++; }
-      else if (pWinner === m.result) { pts += 5; ok++; }
+  if (side === 'home') m.home_score = v;
+  else                 m.away_score = v;
+  // Solo guardar cuando ambos goles están cargados
+  if (m.home_score === null || m.away_score === null) return;
+  try {
+    await api('PUT', '/prode/matches/' + matchId + '/result', {
+      home_score: m.home_score,
+      away_score: m.away_score
     });
-    if (getUserSubmitted(u.username)) {
-      standings.push({ name: u.displayName, username: u.username, pts, ok, tot });
-    }
-  });
-  saveStandings(standings);
+    toast('Resultado guardado', 's');
+    renderProde();
+  } catch(e) { toast(e.message, 'e'); }
 }
 
-function setPred(matchId, val) {
-  if (getUserSubmitted(currentUser.username)) return;
-  const preds = getUserPreds(currentUser.username);
-  // val is a winner string: '1','x','2'
-  const existing = preds[matchId] || {};
-  preds[matchId] = {
-    winner: val,
-    goalsHome: existing.goalsHome !== undefined ? existing.goalsHome : null,
-    goalsAway: existing.goalsAway !== undefined ? existing.goalsAway : null,
-  };
-  saveUserPreds(currentUser.username, preds);
-  renderProde();
-}
+// ── Predicciones ──────────────────────────────────────────────
+async function setPred(matchId, val) {
+  const match = localMatches.find(m => m.id === matchId);
+  if (!match || isMatchLocked(match)) return;
 
-function setPredGoals(matchId, side, value) {
-  if (getUserSubmitted(currentUser.username)) return;
-  const preds = getUserPreds(currentUser.username);
-  const existing = preds[matchId] || {};
-  preds[matchId] = {
-    winner: existing.winner || null,
-    goalsHome: side === 'home' ? Number(value) : (existing.goalsHome !== undefined ? existing.goalsHome : null),
-    goalsAway: side === 'away' ? Number(value) : (existing.goalsAway !== undefined ? existing.goalsAway : null),
-  };
-  saveUserPreds(currentUser.username, preds);
-}
+  const existing = localPreds[matchId] || {};
+  const pH = existing.home_score !== null && existing.home_score !== undefined ? Number(existing.home_score) : null;
+  const pA = existing.away_score !== null && existing.away_score !== undefined ? Number(existing.away_score) : null;
 
-function submitProde() {
-  const username = currentUser.username;
-  const preds    = getUserPreds(username);
-  const filled   = Object.keys(preds).filter(k => preds[k] && preds[k].winner).length;
-  if (filled < 1) {
-    toast('Votá al menos un partido para enviar','e'); return;
+  // Guardar el resultado explícito; si ya tenía goles que coincidan con ese resultado, mantenerlos
+  // Si los goles existentes contradicen el nuevo resultado, limpiarlos
+  const currentGoalResult = goalsToResult(pH, pA);
+  let newHome = pH;
+  let newAway = pA;
+  if (currentGoalResult !== val) {
+    // Los goles no coinciden con el nuevo resultado: limpiar
+    newHome = null;
+    newAway = null;
   }
-  saveUserSubmitted(username, true);
-  const standings = getStandings();
-  if (!standings.find(s => s.username === username)) {
-    standings.push({ name: currentUser.displayName, username, pts:0, ok:0, tot:0 });
-    saveStandings(standings);
+
+  await savePrediction(matchId, val, newHome, newAway);
+}
+
+async function setPredGoals(matchId, side, value) {
+  const match = localMatches.find(m => m.id === matchId);
+  if (!match || isMatchLocked(match)) return;
+
+  const existing = localPreds[matchId] || {};
+  const newHome  = side === 'home' ? (value === '' ? null : Number(value)) : (existing.home_score !== null && existing.home_score !== undefined ? Number(existing.home_score) : null);
+  const newAway  = side === 'away' ? (value === '' ? null : Number(value)) : (existing.away_score !== null && existing.away_score !== undefined ? Number(existing.away_score) : null);
+
+  // Inferir resultado de los goles si ambos están cargados
+  const inferredResult = goalsToResult(newHome, newAway) || existing.result || null;
+
+  await savePrediction(matchId, inferredResult, newHome, newAway);
+}
+
+async function savePrediction(matchId, result, homeScore, awayScore) {
+  try {
+    const saved = await api('POST', '/prode/predictions', {
+      match_id:   matchId,
+      result:     result,
+      home_score: homeScore,
+      away_score: awayScore,
+    });
+    localPreds[matchId] = saved;
+    renderProde();
+  } catch(e) { toast(e.message, 'e'); }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  USUARIOS (solo admin)
+// ══════════════════════════════════════════════════════════════
+
+async function renderUsers() {
+  try {
+    const users = await api('GET', '/auth/users');
+
+    const pending = users.filter(u => u.status === 'pending');
+    const active  = users.filter(u => u.status === 'active');
+    const banned  = users.filter(u => u.status === 'banned');
+
+    const userSection = document.getElementById('s-users');
+    if (!userSection) return;
+
+    userSection.innerHTML = `
+
+      <!-- Pendientes -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="ctit" style="display:flex;align-items:center;gap:8px">
+          ⏳ Pendientes de aprobación
+          ${pending.length ? `<span style="background:var(--accent);color:#fff;font-size:.7rem;padding:2px 8px;border-radius:99px;font-weight:600">${pending.length}</span>` : ''}
+        </div>
+        ${pending.length === 0
+          ? '<p style="color:var(--text3);font-size:.85rem;margin-top:8px">No hay usuarios pendientes.</p>'
+          : `<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+              ${pending.map(u => `
+                <div class="user-row">
+                  <div class="av" style="background:#FFB81C;width:34px;height:34px;font-size:.7rem;flex-shrink:0">${ini(u.display_name)}</div>
+                  <div style="flex:1">
+                    <div style="font-weight:500;font-size:.9rem">${u.display_name}</div>
+                    <div style="font-size:.75rem;color:var(--text3)">@${u.username} · Registrado ${new Date(u.created_at).toLocaleDateString('es-AR')}</div>
+                  </div>
+                  <div style="display:flex;gap:6px">
+                    <button class="btn btn-a" style="font-size:.75rem;padding:6px 12px" onclick="setUserStatus(${u.id},'active')">✓ Aprobar</button>
+                    <button class="btn btn-o" style="font-size:.75rem;padding:6px 12px;color:var(--accent2)" onclick="deleteUser(${u.id},'${u.display_name.replace(/'/g,"\\'")}')">✕ Rechazar</button>
+                  </div>
+                </div>`).join('')}
+            </div>`}
+      </div>
+
+      <!-- Activos -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="ctit">✅ Usuarios activos</div>
+        ${active.length === 0
+          ? '<p style="color:var(--text3);font-size:.85rem;margin-top:8px">Sin usuarios activos.</p>'
+          : `<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+              ${active.map(u => `
+                <div class="user-row">
+                  <div class="av" style="background:${avc(u.id)};width:34px;height:34px;font-size:.7rem;flex-shrink:0">${ini(u.display_name)}</div>
+                  <div style="flex:1">
+                    <div style="font-weight:500;font-size:.9rem">${u.display_name}</div>
+                    <div style="font-size:.75rem;color:var(--text3)">@${u.username}</div>
+                  </div>
+                  <div style="display:flex;gap:6px">
+                    <button class="btn btn-o" style="font-size:.75rem;padding:6px 12px" onclick="setUserStatus(${u.id},'banned')">🚫 Banear</button>
+                    <button class="btn btn-o" style="font-size:.75rem;padding:6px 12px;color:var(--accent2)" onclick="deleteUser(${u.id},'${u.display_name.replace(/'/g,"\\'")}')">🗑 Eliminar</button>
+                  </div>
+                </div>`).join('')}
+            </div>`}
+      </div>
+
+      <!-- Baneados -->
+      ${banned.length > 0 ? `
+      <div class="card">
+        <div class="ctit">🚫 Usuarios baneados</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+          ${banned.map(u => `
+            <div class="user-row">
+              <div class="av" style="background:#555;width:34px;height:34px;font-size:.7rem;flex-shrink:0">${ini(u.display_name)}</div>
+              <div style="flex:1">
+                <div style="font-weight:500;font-size:.9rem;color:var(--text3)">${u.display_name}</div>
+                <div style="font-size:.75rem;color:var(--text3)">@${u.username}</div>
+              </div>
+              <div style="display:flex;gap:6px">
+                <button class="btn btn-o" style="font-size:.75rem;padding:6px 12px" onclick="setUserStatus(${u.id},'active')">↩ Reactivar</button>
+                <button class="btn btn-o" style="font-size:.75rem;padding:6px 12px;color:var(--accent2)" onclick="deleteUser(${u.id},'${u.display_name.replace(/'/g,"\\'")}')">🗑 Eliminar</button>
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>` : ''}`;
+
+  } catch (e) {
+    toast('Error al cargar usuarios: ' + e.message, 'e');
   }
-  recalcAllStandings();
-  renderProde();
-  toast(`¡Pronóstico enviado! 🎉 (${filled} partido${filled!==1?'s':''} votado${filled!==1?'s':''})`, 's');
 }
 
-// ── MIEMBROS ───────────────────────────────────────────────────
-function fillTeamSelects() {
-  const opts = DB_TEAMS.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
-  const mTeam  = document.getElementById('m-team');
-  const mTeamF = document.getElementById('mteam');
-  if (mTeam)  mTeam.innerHTML  = '<option value="">Seleccionar…</option>' + opts;
-  if (mTeamF) mTeamF.innerHTML = '<option value="">Todos los equipos</option>' + opts;
+async function setUserStatus(id, status) {
+  try {
+    await api('PUT', '/auth/users/' + id + '/status', { status });
+    const msgs = { active: 'Usuario aprobado ✓', banned: 'Usuario baneado', pending: 'Usuario movido a pendiente' };
+    toast(msgs[status] || 'Estado actualizado', 's');
+    renderUsers();
+  } catch (e) { toast(e.message, 'e'); }
 }
 
-function renderMembers() {
+async function deleteUser(id, name) {
+  if (!confirm(`¿Eliminás a ${name}? Esta acción no se puede deshacer.`)) return;
+  try {
+    await api('DELETE', '/auth/users/' + id);
+    toast(name + ' eliminado', 'e');
+    renderUsers();
+  } catch (e) { toast(e.message, 'e'); }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  MIEMBROS
+// ══════════════════════════════════════════════════════════════
+let localMembers = [];
+
+async function renderMembers() {
+  try { localMembers = await api('GET', '/members'); }
+  catch { localMembers = []; }
+
   const search = (document.getElementById('msearch').value || '').toLowerCase();
-  const teamId = document.getElementById('mteam').value;
   const list   = localMembers.filter(m =>
-    (!teamId || m.teamId == teamId) &&
-    (!search || m.name.toLowerCase().includes(search) || m.role.toLowerCase().includes(search)));
-  document.getElementById('mcnt').textContent = `${list.length} miembro${list.length!==1?'s':''}`;
-  document.getElementById('members-tb').innerHTML = list.map(m => {
-    const team  = DB_TEAMS.find(t => t.id === m.teamId);
-    const avg   = calcWeightedScore(m.id, 'Abr 2026');
-    const color = avg >= 8.5 ? 'var(--accent)' : avg >= 7 ? 'var(--amber)' : 'var(--accent2)';
-    const aprov = DB_TRAINING_PROGRESS.filter(p => p.memberId === m.id && p.status === 'Aprobado').length;
-    return `
-      <tr>
-        <td><div class="enc"><div class="av" style="width:30px;height:30px;font-size:.68rem;background:${avc(m.id)}">${ini(m.name)}</div><span class="enm">${m.name}</span></div></td>
-        <td>${team?.name||'—'}</td>
-        <td>${m.role}</td>
-        <td><span style="font-family:'Syne',sans-serif;font-weight:700;color:${color}">${avg??'—'}</span></td>
-        <td>${aprov} curso${aprov!==1?'s':''}</td>
-        <td><div class="ab">
-          <button class="ib" onclick="openEditMember(${m.id})">
-            <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8.5 1.5l2 2L3 11H1V9L8.5 1.5z"/></svg>
-          </button>
-          <button class="ib dr" onclick="deleteMember(${m.id},'${m.name.replace(/'/g,"\\'")}')">
-            <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 3h8M5 3V2h2v1M4 3v7h4V3"/></svg>
-          </button>
-        </div></td>
-      </tr>`;
-  }).join('');
+    (!search || m.name.toLowerCase().includes(search) || (m.role || '').toLowerCase().includes(search)));
+
+  document.getElementById('mcnt').textContent = `${list.length} miembro${list.length !== 1 ? 's' : ''}`;
+  document.getElementById('members-tb').innerHTML = list.map(m => `
+    <tr>
+      <td><div class="enc"><div class="av" style="width:30px;height:30px;font-size:.68rem;background:${m.avatar_color || avc(m.id)}">${ini(m.name)}</div><span class="enm">${m.name}</span></div></td>
+      <td>${m.team || '—'}</td>
+      <td>${m.role || '—'}</td>
+      <td>—</td>
+      <td>—</td>
+      <td><div class="ab">
+        <button class="ib" onclick="openEditMember(${m.id})">
+          <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8.5 1.5l2 2L3 11H1V9L8.5 1.5z"/></svg>
+        </button>
+        <button class="ib dr" onclick="deleteMember(${m.id},'${m.name.replace(/'/g,"\\'")}')">
+          <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 3h8M5 3V2h2v1M4 3v7h4V3"/></svg>
+        </button>
+      </div></td>
+    </tr>`).join('');
 }
 
 document.getElementById('msearch')?.addEventListener('input', renderMembers);
-document.getElementById('mteam')?.addEventListener('change', renderMembers);
 
 function openMemberModal() {
   editingMemberId = null;
   document.getElementById('m-mtit').textContent = 'Nuevo miembro';
   ['m-name','m-role'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('m-team').value = '';
   document.getElementById('m-modal').classList.add('open');
 }
+
 function openEditMember(id) {
   const m = localMembers.find(x => x.id === id);
   if (!m) return;
   editingMemberId = id;
   document.getElementById('m-mtit').textContent = 'Editar miembro';
-  document.getElementById('m-name').value  = m.name;
-  document.getElementById('m-role').value  = m.role;
-  document.getElementById('m-team').value  = m.teamId;
+  document.getElementById('m-name').value = m.name;
+  document.getElementById('m-role').value = m.role || '';
   document.getElementById('m-modal').classList.add('open');
 }
-function saveMember() {
-  const name   = document.getElementById('m-name').value.trim();
-  const role   = document.getElementById('m-role').value.trim();
-  const teamId = parseInt(document.getElementById('m-team').value) || null;
-  if (!name || !role || !teamId) { toast('Completá todos los campos','e'); return; }
-  if (editingMemberId) {
-    const m = localMembers.find(x => x.id === editingMemberId);
-    m.name = name; m.role = role; m.teamId = teamId;
-    toast(name + ' actualizado','s');
-  } else {
-    localMembers.push({ id: Math.max(...localMembers.map(m=>m.id),0)+1, name, role, teamId });
-    toast(name + ' agregado','s');
-  }
-  persistMembers(); closeM('m-modal'); renderMembers(); renderDashboard();
-}
-function deleteMember(id, name) {
-  if (!confirm(`¿Eliminás a ${name}?`)) return;
-  localMembers = localMembers.filter(m => m.id !== id);
-  persistMembers(); toast(name + ' eliminado','e'); renderMembers(); renderDashboard();
+
+async function saveMember() {
+  const name = document.getElementById('m-name').value.trim();
+  const role = document.getElementById('m-role').value.trim();
+  if (!name || !role) { toast('Completá todos los campos', 'e'); return; }
+  try {
+    if (editingMemberId) {
+      await api('PUT', '/members/' + editingMemberId, { name, role, team: '', avatar_color: avc(editingMemberId) });
+      toast(name + ' actualizado', 's');
+    } else {
+      await api('POST', '/members', { name, role, team: '', avatar_color: avc(Math.random() * 8 | 0) });
+      toast(name + ' agregado', 's');
+    }
+    closeM('m-modal');
+    renderMembers();
+  } catch(e) { toast(e.message, 'e'); }
 }
 
-// ── UTILS ──────────────────────────────────────────────────────
+async function deleteMember(id, name) {
+  if (!confirm(`¿Eliminás a ${name}?`)) return;
+  try {
+    await api('DELETE', '/members/' + id);
+    toast(name + ' eliminado', 'e');
+    renderMembers();
+  } catch(e) { toast(e.message, 'e'); }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════════════════════
 function closeM(id) { document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('.mb').forEach(b => b.addEventListener('click', e => { if(e.target===b) b.classList.remove('open'); }));
-function toast(msg, type='') {
+
+document.querySelectorAll('.mb').forEach(b =>
+  b.addEventListener('click', e => { if (e.target === b) b.classList.remove('open'); })
+);
+
+function toast(msg, type = '') {
   const w = document.getElementById('tw');
   const t = document.createElement('div');
-  t.className = 'toast' + (type ? ' '+type : '');
-  t.innerHTML = `<span>${type==='s'?'✓':type==='e'?'✕':'ℹ'}</span> ${msg}`;
+  t.className = 'toast' + (type ? ' ' + type : '');
+  t.innerHTML = `<span>${type === 's' ? '✓' : type === 'e' ? '✕' : 'ℹ'}</span> ${msg}`;
   w.appendChild(t);
   setTimeout(() => t.remove(), 3200);
 }
+
 document.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   if (document.getElementById('auth-screen').style.display !== 'none') {

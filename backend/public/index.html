@@ -83,6 +83,15 @@
 </div>
 
 <!-- ══════════════════════════════════════════
+     INTRO SCREEN (gif al login)
+══════════════════════════════════════════ -->
+<div id="intro-screen" style="display:none">
+  <img src="logo_latido.gif" alt="Logo">
+</div>
+
+<audio id="login-audio" src="login.mp3" preload="auto"></audio>
+
+<!-- ══════════════════════════════════════════
      APP SHELL (visible tras login)
 ══════════════════════════════════════════ -->
 <div id="app-shell" style="display:none">
@@ -95,7 +104,16 @@
   </div>
 
   <!-- SIDEBAR -->
-  <aside class="sb">
+  <aside class="sb" id="sidebar">
+    <div class="sb-logo">
+      <div class="lt">Calidad & Cap.</div>
+      <div class="ls">Panel interno</div>
+    </div>
+    <button class="sb-toggle" id="sb-toggle" onclick="toggleSidebar()" title="Colapsar menú">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" width="14" height="14">
+        <path d="M10 3L5 8l5 5"/>
+      </svg>
+    </button>
     <div class="sb-logo">
       <div class="lt">Calidad & Cap.</div>
       <div class="ls">Panel interno</div>
