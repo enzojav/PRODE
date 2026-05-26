@@ -388,19 +388,58 @@ async function renderNews() {
 
 function newsMediaHTML(url) {
   if (!url) return '';
+
   // YouTube
   const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?/]+)/);
-  if (yt) return `<div class="news-media"><iframe src="https://www.youtube.com/embed/${yt[1]}" frameborder="0" allowfullscreen></iframe></div>`;
+  if (yt) {
+    return `
+      <div class="news-media">
+        <iframe
+          src="https://www.youtube.com/embed/${yt[1]}"
+          frameborder="0"
+          allowfullscreen>
+        </iframe>
+      </div>
+    `;
+  }
+
   // Vimeo
   const vi = url.match(/vimeo\.com\/(\d+)/);
-  if (vi) return `<div class="news-media"><iframe src="https://player.vimeo.com/video/${vi[1]}" frameborder="0" allowfullscreen></iframe></div>`;
+  if (vi) {
+    return `
+      <div class="news-media">
+        <iframe
+          src="https://player.vimeo.com/video/${vi[1]}"
+          frameborder="0"
+          allowfullscreen>
+        </iframe>
+      </div>
+    `;
+  }
+
+  // Artículos de La Nación
+  if (url.includes('lanacion.com.ar')) {
+    return `
+      <div class="news-media">
+        <iframe
+          src="${url}"
+          frameborder="0"
+          allowfullscreen>
+        </iframe>
+      </div>
+    `;
+  }
+
   // Imagen o gif
-  return `<div class="news-media"><img src="${url}" alt="" onerror="this.parentElement.style.display='none'"></div>`;
-
-  if (url) return `<div class="news-media"><iframe src="https://www.lanacion.com.ar/deportes/futbol/${url[1]}" frameborder="0" allowfullscreen></iframe></div>`;
- return `<div class="news-media"><img src="${url}" alt="" onerror="this.parentElement.style.display='none'"></div>`;
+  return `
+    <div class="news-media">
+      <img
+        src="${url}"
+        alt=""
+        onerror="this.parentElement.style.display='none'">
+    </div>
+  `;
 }
-
 function openNewsModal() {
   ['n-title','n-body','n-author','n-image'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('n-emoji').value = '📋';
