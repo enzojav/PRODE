@@ -398,7 +398,7 @@ function newsMediaHTML(url) {
   return `<div class="news-media"><img src="${url}" alt="" onerror="this.parentElement.style.display='none'"></div>`;
 
   if (url) return `<div class="news-media"><iframe src="https://www.lanacion.com.ar/deportes/futbol/${url[1]}" frameborder="0" allowfullscreen></iframe></div>`;
-
+ return `<div class="news-media"><img src="${url}" alt="" onerror="this.parentElement.style.display='none'"></div>`;
 }
 
 function openNewsModal() {
