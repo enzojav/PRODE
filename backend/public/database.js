@@ -166,19 +166,19 @@ const DB_MATCHES = [
     home:{ name:"Corea del Sur", flag:"🇰🇷", known:true  },
     away:{ name:"Rep. Checa",    flag:"🇨🇿", known:true  }, result:"" },
 
-  { id:3,  group:"A", round:"Grupo A · Jornada 2", date:"Mié 18 Jun", time:"20:00", venue:"Mercedes-Benz, Atlanta",
+  { id:3,  group:"A", round:"Grupo A · Jornada 2", date:"Jue 18 Jun", time:"20:00", venue:"Mercedes-Benz, Atlanta",
     home:{ name:"Rep. Checa",  flag:"🇨🇿", known:true  },
     away:{ name:"Sudáfrica",   flag:"🇿🇦", known:true  }, result:"" },
 
-  { id:4,  group:"A", round:"Grupo A · Jornada 2", date:"Mié 18 Jun", time:"22:00", venue:"Estadio Akron, Guadalajara",
+  { id:4,  group:"A", round:"Grupo A · Jornada 2", date:"Jue 18 Jun", time:"22:00", venue:"Estadio Akron, Guadalajara",
     home:{ name:"México",     flag:"🇲🇽", known:true  },
     away:{ name:"Corea del Sur", flag:"🇰🇷", known:true  }, result:"" },
 
-  { id:5,  group:"A", round:"Grupo A · Jornada 3", date:"Mar 24 Jun", time:"20:00", venue:"Estadio Azteca, CDMX",
+  { id:5,  group:"A", round:"Grupo A · Jornada 3", date:"Mié 24 Jun", time:"20:00", venue:"Estadio Azteca, CDMX",
     home:{ name:"Rep. Checa",    flag:"🇨🇿", known:true  },
     away:{ name:"México",        flag:"🇲🇽", known:true  }, result:"" },
 
-  { id:6,  group:"A", round:"Grupo A · Jornada 3", date:"Mar 24 Jun", time:"20:00", venue:"Estadio BBVA, Monterrey",
+  { id:6,  group:"A", round:"Grupo A · Jornada 3", date:"Mié 24 Jun", time:"20:00", venue:"Estadio BBVA, Monterrey",
     home:{ name:"Sudáfrica",  flag:"🇿🇦", known:true  },
     away:{ name:"Corea del Sur", flag:"🇰🇷", known:true }, result:"" },
 
@@ -191,11 +191,11 @@ const DB_MATCHES = [
     home:{ name:"Qatar",   flag:"🇶🇦", known:true  },
     away:{ name:"Suiza",   flag:"🇨🇭", known:true  }, result:"" },
 
-  { id:9,  group:"B", round:"Grupo B · Jornada 2", date:"Mié 18 Jun", time:"14:00", venue:"SoFi Stadium, Los Ángeles",
+  { id:9,  group:"B", round:"Grupo B · Jornada 2", date:"Jue 18 Jun", time:"14:00", venue:"SoFi Stadium, Los Ángeles",
     home:{ name:"Suiza",  flag:"🇨🇭", known:true  },
     away:{ name:"Bosnia", flag:"🇧🇦", known:true  }, result:"" },
 
-  { id:10, group:"B", round:"Grupo B · Jornada 2", date:"Mié 18 Jun", time:"17:00", venue:"BC Place, Vancouver",
+  { id:10, group:"B", round:"Grupo B · Jornada 2", date:"Jue 18 Jun", time:"17:00", venue:"BC Place, Vancouver",
     home:{ name:"Canadá", flag:"🇨🇦", known:true  },
     away:{ name:"Qatar",  flag:"🇶🇦", known:true  }, result:"" },
 
@@ -262,7 +262,7 @@ const DB_MATCHES = [
     home:{ name:"Alemania",      flag:"🇩🇪", known:true  },
     away:{ name:"Costa de Marfil",flag:"🇨🇮", known:true  }, result:"" },
 
-  { id:26, group:"E", round:"Grupo E · Jornada 1", date:"Sáb 14 Jun", time:"22:00", venue:"Arrowhead, Kansas City",
+  { id:26, group:"E", round:"Grupo E · Jornada 1", date:"Dom 14 Jun", time:"22:00", venue:"Arrowhead, Kansas City",
     home:{ name:"Ecuador",  flag:"🇪🇨", known:true  },
     away:{ name:"Curazao",  flag:"🏳️", known:true  }, result:"" },
 
@@ -287,7 +287,7 @@ const DB_MATCHES = [
     home:{ name:"Países Bajos", flag:"🇳🇱", known:true  },
     away:{ name:"Japón",        flag:"🇯🇵", known:true  }, result:"" },
 
-  { id:32, group:"F", round:"Grupo F · Jornada 1", date:"Dom 15 Jun", time:"01:00", venue:"Lumen Field, Seattle",
+  { id:32, group:"F", round:"Grupo F · Jornada 1", date:"Lun 15 Jun", time:"01:00", venue:"Lumen Field, Seattle",
     home:{ name:"Túnez",  flag:"🇹🇳", known:true  },
     away:{ name:"Suecia", flag:"🇸🇪", known:true  }, result:"" },
 
@@ -312,7 +312,7 @@ const DB_MATCHES = [
     home:{ name:"Bélgica",      flag:"🇧🇪", known:true  },
     away:{ name:"Nueva Zelanda",flag:"🇳🇿", known:true  }, result:"" },
 
-  { id:38, group:"G", round:"Grupo G · Jornada 1", date:"Dom 15 Jun", time:"22:00", venue:"SoFi Stadium, Los Ángeles",
+  { id:38, group:"G", round:"Grupo G · Jornada 1", date:"Lun 15 Jun", time:"22:00", venue:"SoFi Stadium, Los Ángeles",
     home:{ name:"Egipto", flag:"🇪🇬", known:true  },
     away:{ name:"Irán",   flag:"🇮🇷", known:true  }, result:"" },
 
