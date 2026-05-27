@@ -1347,24 +1347,17 @@ function renderMundial() {
     // center circle
     mSvg.appendChild(mEl('circle',{cx:centerX,cy:finalMidY,r:30,fill:'#091420',stroke:'rgba(255,184,28,.35)','stroke-width':'1.5'}));
     // OPCIÓN A: Si querés usar la imagen copa.png
-const trophyImg = mEl('mundialcopa.png', {
+
+
+// OPCIÓN B: Si querés usar el emoji (sin necesitar el archivo)
+const trophyImg = mEl('image', {
   x: centerX - 18,
   y: finalMidY - 32,
   width: '36',
   height: '46',
-  'href': 'copa.png'
+  href: 'mundialcopa.png'   // ← ya tenés el archivo en public/
 });
 mSvg.appendChild(trophyImg);
-
-// OPCIÓN B: Si querés usar el emoji (sin necesitar el archivo)
-const trophyText = mEl('text', {
-  x: centerX,
-  y: finalMidY - 4,
-  'font-size': '22',
-  'text-anchor': 'middle'
-});
-trophyText.textContent = '🏆';
-mSvg.appendChild(trophyText);
 
 // Esto va en ambos casos (sin cambios)
 const dt = mEl('text', {
