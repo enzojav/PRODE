@@ -1360,4 +1360,4 @@ function renderMundial() {
     const loginVisible = document.getElementById('auth-login').style.display !== 'none';
     if (loginVisible) doLogin(); else doRegister();
   }
-});
+;
