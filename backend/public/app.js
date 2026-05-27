@@ -1181,7 +1181,7 @@ function renderMundial() {
   const container = document.getElementById('mundial-embed');
   if (!container) return;
 
-  const W = 104, H = 36, GAP = 12;
+  const W = 130, H = 42, GAP = 14;
   const LINE_COLOR = 'rgba(108,172,228,.2)';
   const AMBER = '#FFB81C';
   const FONT = "'Inter', system-ui, sans-serif";
@@ -1240,7 +1240,7 @@ function renderMundial() {
         <div><div style="font-size:1.1rem;font-weight:800;color:#FFB81C;font-family:inherit" id="mw-goals">0</div><div style="font-size:.6rem;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.08em">Goles</div></div>
       </div>
     </div>
-    <div style="overflow-x:auto;padding:16px;background:#0a0e1a;border-radius:0 0 12px 12px;border:1px solid rgba(255,255,255,.06);border-top:none">
+    <div style="overflow-x:auto;padding:24px 16px;background:#0a0e1a;border-radius:0 0 12px 12px;border:1px solid rgba(255,255,255,.06);border-top:none;display:flex;justify-content:center">
       <svg id="mw-svg" xmlns="http://www.w3.org/2000/svg" style="display:block"></svg>
     </div>
     <div id="mw-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:500;align-items:center;justify-content:center">
@@ -1362,7 +1362,7 @@ function renderMundial() {
 
   function mRender() {
     mSvg.innerHTML = '';
-    const ROWS = 8, LEFT_X = 16, H_CONN = 60, H_TREE = 44, CENTER_GAP = 80;
+    const ROWS = 8, LEFT_X = 24, H_CONN = 72, H_TREE = 56, CENTER_GAP = 100;
     const rightX  = LEFT_X + W + H_CONN + H_TREE + CENTER_GAP + H_TREE + H_CONN;
     const centerX = LEFT_X + W + H_CONN + H_TREE + CENTER_GAP / 2;
     const svgW    = rightX + W + 20;
