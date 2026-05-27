@@ -387,7 +387,7 @@ async function renderNews() {
     </div>`).join('');
 }
 
-function newsMediaHTML(url) {
+async function newsMediaHTML(url) {
   if (!url) return '';
   // YouTube
   const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?/]+)/);
@@ -395,8 +395,25 @@ function newsMediaHTML(url) {
   // Vimeo
   const vi = url.match(/vimeo\.com\/(\d+)/);
   if (vi) return `<div class="news-media"><iframe src="https://player.vimeo.com/video/${vi[1]}" frameborder="0" allowfullscreen></iframe></div>`;
-  // Imagen o gif
-  return `<div class="news-media"><img src="${url}" alt="" onerror="this.parentElement.style.display='none'"></div>`;
+  // Imagen directa
+  if (url.match(/\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i)) {
+    return `<div class="news-media"><img src="${url}" alt="" onerror="this.parentElement.style.display='none'"></div>`;
+  }
+  // Artículo — mostrar preview
+  try {
+    const preview = await api('GET', '/news/preview?url=' + encodeURIComponent(url));
+    return `<a href="${url}" target="_blank" class="news-link-preview">
+      ${preview.image ? `<img src="${preview.image}" alt="" onerror="this.style.display='none'">` : ''}
+      <div class="nlp-content">
+        ${preview.siteName ? `<div class="nlp-site">${preview.siteName}</div>` : ''}
+        ${preview.title ? `<div class="nlp-title">${preview.title}</div>` : ''}
+        ${preview.description ? `<div class="nlp-desc">${preview.description}</div>` : ''}
+        <div class="nlp-url">🔗 Leer artículo completo</div>
+      </div>
+    </a>`;
+  } catch {
+    return `<a href="${url}" target="_blank" class="nlp-url" style="display:block;margin-bottom:10px;">🔗 Ver artículo</a>`;
+  }
 }
 
 function openNewsModal() {

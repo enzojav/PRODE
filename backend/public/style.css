@@ -1739,3 +1739,21 @@ tbody tr:hover td { background: var(--bg3); }
   border-color: rgba(58,232,176,.25);
   color: #3ae8b0;
 }
+
+.news-link-preview {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 14px;
+  text-decoration: none;
+  transition: .15s;
+}
+.news-link-preview:hover { border-color: var(--border2); }
+.news-link-preview img { width: 100%; max-height: 200px; object-fit: cover; }
+.nlp-content { padding: 12px; }
+.nlp-site { font-size: .65rem; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px; }
+.nlp-title { font-size: .88rem; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.nlp-desc { font-size: .75rem; color: var(--text2); line-height: 1.5; margin-bottom: 8px; }
+.nlp-url { font-size: .72rem; color: var(--accent); font-weight: 600; }

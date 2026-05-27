@@ -34,4 +34,31 @@ router.delete('/:id', requireAuth, requireAdmin, async (req, res) => {
   }
 });
 
+router.get('/preview', requireAuth, async (req, res) => {
+  const { url } = req.query;
+  if (!url) return res.status(400).json({ error: 'URL requerida.' });
+  try {
+    const fetch = require('node-fetch');
+    const response = await fetch(url, { timeout: 5000 });
+    const html = await response.text();
+    
+    const getTag = (prop) => {
+      const match = html.match(new RegExp(`<meta[^>]*(?:property|name)=["']${prop}["'][^>]*content=["']([^"']+)["']`, 'i'))
+                 || html.match(new RegExp(`<meta[^>]*content=["']([^"']+)["'][^>]*(?:property|name)=["']${prop}["']`, 'i'));
+      return match ? match[1] : null;
+    };
+
+    const titleMatch = html.match(/<title>([^<]+)<\/title>/i);
+
+    res.json({
+      title:       getTag('og:title') || (titleMatch ? titleMatch[1] : null),
+      description: getTag('og:description') || getTag('description'),
+      image:       getTag('og:image'),
+      siteName:    getTag('og:site_name'),
+    });
+  } catch (e) {
+    res.status(500).json({ error: 'No se pudo obtener el preview.' });
+  }
+});
+
 module.exports = router;
