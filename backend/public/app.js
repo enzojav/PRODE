@@ -385,35 +385,41 @@ async function renderNews() {
         </button>` : ''}
       </div>
     </div>`).join('');
+  setTimeout(loadPreviews, 100);
 }
 
-async function newsMediaHTML(url) {
+function newsMediaHTML(url) {
   if (!url) return '';
-  // YouTube
   const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?/]+)/);
   if (yt) return `<div class="news-media"><iframe src="https://www.youtube.com/embed/${yt[1]}" frameborder="0" allowfullscreen></iframe></div>`;
-  // Vimeo
   const vi = url.match(/vimeo\.com\/(\d+)/);
   if (vi) return `<div class="news-media"><iframe src="https://player.vimeo.com/video/${vi[1]}" frameborder="0" allowfullscreen></iframe></div>`;
-  // Imagen directa
   if (url.match(/\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i)) {
     return `<div class="news-media"><img src="${url}" alt="" onerror="this.parentElement.style.display='none'"></div>`;
   }
-  // Artículo — mostrar preview
-  try {
-    const preview = await api('GET', '/news/preview?url=' + encodeURIComponent(url));
-    return `<a href="${url}" target="_blank" class="news-link-preview">
-      ${preview.image ? `<img src="${preview.image}" alt="" onerror="this.style.display='none'">` : ''}
-      <div class="nlp-content">
-        ${preview.siteName ? `<div class="nlp-site">${preview.siteName}</div>` : ''}
-        ${preview.title ? `<div class="nlp-title">${preview.title}</div>` : ''}
-        ${preview.description ? `<div class="nlp-desc">${preview.description}</div>` : ''}
-        <div class="nlp-url">🔗 Leer artículo completo</div>
-      </div>
-    </a>`;
-  } catch {
-    return `<a href="${url}" target="_blank" class="nlp-url" style="display:block;margin-bottom:10px;">🔗 Ver artículo</a>`;
-  }
+  return `<div class="news-media" id="preview-${btoa(url).substring(0,10)}">
+    <a href="${url}" target="_blank" class="nlp-url">🔗 Cargando preview...</a>
+  </div>`;
+}
+
+async function loadPreviews() {
+  document.querySelectorAll('.news-media[id^="preview-"]').forEach(async el => {
+    const link = el.querySelector('a');
+    const url = link?.href;
+    if (!url) return;
+    try {
+      const preview = await api('GET', '/news/preview?url=' + encodeURIComponent(url));
+      el.innerHTML = `<a href="${url}" target="_blank" class="news-link-preview">
+        ${preview.image ? `<img src="${preview.image}" alt="" onerror="this.style.display='none'">` : ''}
+        <div class="nlp-content">
+          ${preview.siteName ? `<div class="nlp-site">${preview.siteName}</div>` : ''}
+          ${preview.title ? `<div class="nlp-title">${preview.title}</div>` : ''}
+          ${preview.description ? `<div class="nlp-desc">${preview.description}</div>` : ''}
+          <div class="nlp-url">🔗 Leer artículo completo</div>
+        </div>
+      </a>`;
+    } catch { }
+  });
 }
 
 function openNewsModal() {
