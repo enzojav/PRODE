@@ -32,11 +32,11 @@ html, body {
 }
 
 .auth-logo-icon {
-  width: 80px;       /* ajustá el tamaño que quieras */
-  height: 80px;
+  width: 120px;   /* cambiá este número */
+  height: 120px;  /* y este también */
   object-fit: contain;
   display: block;
-  margin: 0 auto;    /* esto lo centra */
+  margin: 0 auto;
 }
 
   
