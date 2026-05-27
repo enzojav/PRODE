@@ -1365,13 +1365,14 @@ function renderMundial() {
     // Center circle
     mSvg.appendChild(mEl('circle', { cx: centerX, cy: finalMidY, r: 30, fill: '#091420', stroke: 'rgba(255,184,28,.35)', 'stroke-width': '1.5' }));
     // Trophy image
-    const trophyImg = mEl('image', {
-      x: centerX - 18,
-      y: finalMidY - 32,
-      width: '36',
-      height: '46',
-      href: 'copa.png'
-    });
+    const trophyT = mEl('text', {
+  x: centerX,
+  y: finalMidY + 8,
+  'font-size': '28',
+  'text-anchor': 'middle',
+  'dominant-baseline': 'middle'
+});
+trophyT.textContent = '🏆';
     mSvg.appendChild(trophyImg);
     // Date label
     const dt = mEl('text', { x: centerX, y: finalMidY + 28, 'font-size': '6', 'font-family': FONT, fill: 'rgba(255,255,255,.3)', 'text-anchor': 'middle' });
