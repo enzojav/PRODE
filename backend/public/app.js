@@ -1429,8 +1429,8 @@ const trophySize = 80;
 
 const trophyImg = mEl('image', {
   href: 'copa.png',
-  x: centerX - trophySize / 2,
-  y: finalMidY - trophySize / 2,
+  x: centerX - trophySize / 8,
+  y: finalMidY - trophySize / 8,
   width: trophySize,
   height: trophySize
 });
