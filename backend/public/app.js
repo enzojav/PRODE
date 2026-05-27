@@ -140,11 +140,9 @@ async function doRegister() {
   const displayName = document.getElementById('r-name').value.trim();
   const username    = document.getElementById('r-user').value.trim();
   const password    = document.getElementById('r-pass').value;
-  const password2   = document.getElementById('r-pass2').value;
   const legajo      = document.getElementById('r-legajo')?.value.trim() || '';
   const errEl       = document.getElementById('auth-error');
-  if (!displayName || !username || !password || !password2 || !legajo) { errEl.textContent = 'Completá todos los campos incluyendo el legajo.'; return; }
-  if (password !== password2) { errEl.textContent = 'Las contraseñas no coinciden.'; return; }
+  if (!displayName || !username || !password || !legajo) { errEl.textContent = 'Completá todos los campos incluyendo el legajo.'; return; }
   if (password.length < 4)    { errEl.textContent = 'La contraseña debe tener al menos 4 caracteres.'; return; }
   try {
     const data = await api('POST', '/auth/register', { username, password, displayName, legajo });
