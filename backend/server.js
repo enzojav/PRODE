@@ -65,6 +65,7 @@ app.use('/api/members', require('./routes/members'));
 app.use('/api/scores',  require('./routes/scores'));
 app.use('/api/news',    require('./routes/news'));
 app.use('/api/prode',   require('./routes/prode'));
+app.use('/api/sync',    require('./routes/sync'));
 
 // ─── SERVIR FRONTEND (SPA) ───────────────────────────────────
 // En producción el frontend está en la carpeta /public

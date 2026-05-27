@@ -1,140 +1,237 @@
 // ============================================================
 //  import-matches.js
-//  Corre UNA SOLA VEZ para importar los partidos del Mundial
-//  Uso: node import-matches.js
+//  Importa/sincroniza los partidos del Mundial 2026 desde
+//  API-Football a la base de datos SQLite local.
+//
+//  USO:
+//    node import-matches.js              ← importa fixtures
+//    node import-matches.js --results    ← actualiza resultados
 // ============================================================
+
 require('dotenv').config();
-const { Pool } = require('pg');
+const Database = require('better-sqlite3');
+const path     = require('path');
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
+const API_KEY  = process.env.API_FOOTBALL_KEY;
+const API_HOST = 'v3.football.api-sports.io';
+const LEAGUE   = 1;      // FIFA World Cup
+const SEASON   = 2026;
 
-const matches = [
-  // ─── GRUPO A ───────────────────────────────────────────────
-  { id:1,  group_name:"A", match_date:"Jue 11 Jun", time:"16:00", venue:"Estadio Azteca, CDMX",        home:"México",     home_flag:"🇲🇽", away:"Sudáfrica",  away_flag:"🇿🇦" },
-  { id:2,  group_name:"A", match_date:"Jue 11 Jun", time:"23:00", venue:"Estadio Akron, Guadalajara",   home:"Corea del Sur", home_flag:"🇰🇷", away:"Rep. Checa", away_flag:"🇨🇿" },
-  { id:3,  group_name:"A", match_date:"Mié 18 Jun", time:"20:00", venue:"Mercedes-Benz, Atlanta",       home:"México",     home_flag:"🇲🇽", away:"Corea del Sur", away_flag:"🇰🇷" },
-  { id:4,  group_name:"A", match_date:"Mié 18 Jun", time:"22:00", venue:"Estadio Akron, Guadalajara",   home:"Sudáfrica",  away_flag:"🇨🇿", away:"Rep. Checa",  home_flag:"🇿🇦" },
-  { id:5,  group_name:"A", match_date:"Mar 24 Jun", time:"20:00", venue:"Estadio Azteca, CDMX",         home:"México",     home_flag:"🇲🇽", away:"Rep. Checa",  away_flag:"🇨🇿" },
-  { id:6,  group_name:"A", match_date:"Mar 24 Jun", time:"20:00", venue:"Estadio BBVA, Monterrey",      home:"Sudáfrica",  home_flag:"🇿🇦", away:"Corea del Sur", away_flag:"🇰🇷" },
+const DB_PATH  = path.join(__dirname, 'data', 'app.db');
+const db       = new Database(DB_PATH);
 
-  // ─── GRUPO B ───────────────────────────────────────────────
-  { id:7,  group_name:"B", match_date:"Vie 12 Jun", time:"16:00", venue:"BMO Field, Toronto",           home:"Argentina",  home_flag:"🇦🇷", away:"Kazajistán", away_flag:"🇰🇿" },
-  { id:8,  group_name:"B", match_date:"Sáb 13 Jun", time:"16:00", venue:"Levi's Stadium, San Francisco",home:"Nueva Zelanda", home_flag:"🇳🇿", away:"Ucrania",   away_flag:"🇺🇦" },
-  { id:9,  group_name:"B", match_date:"Mié 18 Jun", time:"14:00", venue:"SoFi Stadium, Los Ángeles",    home:"Argentina",  home_flag:"🇦🇷", away:"Nueva Zelanda", away_flag:"🇳🇿" },
-  { id:10, group_name:"B", match_date:"Mié 18 Jun", time:"17:00", venue:"BC Place, Vancouver",          home:"Kazajistán", home_flag:"🇰🇿", away:"Ucrania",    away_flag:"🇺🇦" },
-  { id:11, group_name:"B", match_date:"Mié 24 Jun", time:"16:00", venue:"Levi's Stadium, San Francisco",home:"Argentina",  home_flag:"🇦🇷", away:"Ucrania",    away_flag:"🇺🇦" },
-  { id:12, group_name:"B", match_date:"Mié 24 Jun", time:"16:00", venue:"Arrowhead, Kansas City",       home:"Kazajistán", home_flag:"🇰🇿", away:"Nueva Zelanda", away_flag:"🇳🇿" },
-
-  // ─── GRUPO C ───────────────────────────────────────────────
-  { id:13, group_name:"C", match_date:"Sáb 13 Jun", time:"19:00", venue:"MetLife Stadium, Nueva Jersey",home:"EE.UU.",     home_flag:"🇺🇸", away:"Panamá",     away_flag:"🇵🇦" },
-  { id:14, group_name:"C", match_date:"Sáb 13 Jun", time:"22:00", venue:"Gillette Stadium, Boston",     home:"Uruguay",    home_flag:"🇺🇾", away:"Arabia Saudita", away_flag:"🇸🇦" },
-  { id:15, group_name:"C", match_date:"Vie 19 Jun", time:"22:00", venue:"Hard Rock, Miami",              home:"EE.UU.",     home_flag:"🇺🇸", away:"Arabia Saudita", away_flag:"🇸🇦" },
-  { id:16, group_name:"C", match_date:"Vie 19 Jun", time:"19:00", venue:"Lumen Field, Seattle",          home:"Panamá",     home_flag:"🇵🇦", away:"Uruguay",    away_flag:"🇺🇾" },
-  { id:17, group_name:"C", match_date:"Jue 25 Jun", time:"20:00", venue:"MetLife Stadium, Nueva Jersey", home:"EE.UU.",     home_flag:"🇺🇸", away:"Uruguay",    away_flag:"🇺🇾" },
-  { id:18, group_name:"C", match_date:"Jue 25 Jun", time:"20:00", venue:"Gillette Stadium, Boston",      home:"Arabia Saudita", home_flag:"🇸🇦", away:"Panamá", away_flag:"🇵🇦" },
-
-  // ─── GRUPO D ───────────────────────────────────────────────
-  { id:19, group_name:"D", match_date:"Vie 12 Jun", time:"22:00", venue:"SoFi Stadium, Los Ángeles",    home:"Francia",    home_flag:"🇫🇷", away:"Angola",     away_flag:"🇦🇴" },
-  { id:20, group_name:"D", match_date:"Dom 14 Jun", time:"01:00", venue:"BC Place, Vancouver",           home:"Hungría",    home_flag:"🇭🇺", away:"Emiratos Árabes", away_flag:"🇦🇪" },
-  { id:21, group_name:"D", match_date:"Vie 19 Jun", time:"16:00", venue:"AT&T Stadium, Dallas",          home:"Francia",    home_flag:"🇫🇷", away:"Hungría",    away_flag:"🇭🇺" },
-  { id:22, group_name:"D", match_date:"Sáb 20 Jun", time:"01:00", venue:"Levi's Stadium, San Francisco", home:"Angola",     home_flag:"🇦🇴", away:"Emiratos Árabes", away_flag:"🇦🇪" },
-  { id:23, group_name:"D", match_date:"Vie 26 Jun", time:"20:00", venue:"SoFi Stadium, Los Ángeles",    home:"Francia",    home_flag:"🇫🇷", away:"Emiratos Árabes", away_flag:"🇦🇪" },
-  { id:24, group_name:"D", match_date:"Vie 26 Jun", time:"20:00", venue:"Lumen Field, Seattle",          home:"Angola",     home_flag:"🇦🇴", away:"Hungría",    away_flag:"🇭🇺" },
-
-  // ─── GRUPO E ───────────────────────────────────────────────
-  { id:25, group_name:"E", match_date:"Dom 14 Jun", time:"19:00", venue:"AT&T Stadium, Dallas",          home:"España",     home_flag:"🇪🇸", away:"Serbia",     away_flag:"🇷🇸" },
-  { id:26, group_name:"E", match_date:"Sáb 14 Jun", time:"22:00", venue:"Arrowhead, Kansas City",        home:"Marruecos",  home_flag:"🇲🇦", away:"Dinamarca",  away_flag:"🇩🇰" },
-  { id:27, group_name:"E", match_date:"Sáb 20 Jun", time:"17:00", venue:"AT&T Stadium, Dallas",          home:"España",     home_flag:"🇪🇸", away:"Marruecos",  away_flag:"🇲🇦" },
-  { id:28, group_name:"E", match_date:"Sáb 20 Jun", time:"21:00", venue:"Lincoln Financial, Filadelfia", home:"Serbia",     home_flag:"🇷🇸", away:"Dinamarca",  away_flag:"🇩🇰" },
-  { id:29, group_name:"E", match_date:"Vie 26 Jun", time:"20:00", venue:"Arrowhead, Kansas City",         home:"España",     home_flag:"🇪🇸", away:"Dinamarca",  away_flag:"🇩🇰" },
-  { id:30, group_name:"E", match_date:"Vie 26 Jun", time:"20:00", venue:"AT&T Stadium, Dallas",           home:"Marruecos",  home_flag:"🇲🇦", away:"Serbia",     away_flag:"🇷🇸" },
-
-  // ─── GRUPO F ───────────────────────────────────────────────
-  { id:31, group_name:"F", match_date:"Dom 14 Jun", time:"16:00", venue:"Lincoln Financial, Filadelfia", home:"Brasil",     home_flag:"🇧🇷", away:"Egipto",     away_flag:"🇪🇬" },
-  { id:32, group_name:"F", match_date:"Dom 15 Jun", time:"01:00", venue:"Lumen Field, Seattle",           home:"Croacia",    home_flag:"🇭🇷", away:"Senegal",    away_flag:"🇸🇳" },
-  { id:33, group_name:"F", match_date:"Sáb 20 Jun", time:"14:00", venue:"Lincoln Financial, Filadelfia", home:"Brasil",     home_flag:"🇧🇷", away:"Croacia",    away_flag:"🇭🇷" },
-  { id:34, group_name:"F", match_date:"Dom 21 Jun", time:"01:00", venue:"Lumen Field, Seattle",           home:"Egipto",     home_flag:"🇪🇬", away:"Senegal",    away_flag:"🇸🇳" },
-  { id:35, group_name:"F", match_date:"Sáb 27 Jun", time:"20:00", venue:"Gillette Stadium, Boston",       home:"Brasil",     home_flag:"🇧🇷", away:"Senegal",    away_flag:"🇸🇳" },
-  { id:36, group_name:"F", match_date:"Sáb 27 Jun", time:"20:00", venue:"Lincoln Financial, Filadelfia", home:"Croacia",    home_flag:"🇭🇷", away:"Egipto",     away_flag:"🇪🇬" },
-
-  // ─── GRUPO G ───────────────────────────────────────────────
-  { id:37, group_name:"G", match_date:"Lun 15 Jun", time:"19:00", venue:"Hard Rock, Miami",              home:"Portugal",   home_flag:"🇵🇹", away:"Venezuela",  away_flag:"🇻🇪" },
-  { id:38, group_name:"G", match_date:"Dom 15 Jun", time:"22:00", venue:"SoFi Stadium, Los Ángeles",     home:"Alemania",   home_flag:"🇩🇪", away:"Rep. Dominicana", away_flag:"🇩🇴" },
-  { id:39, group_name:"G", match_date:"Dom 21 Jun", time:"16:00", venue:"Hard Rock, Miami",              home:"Portugal",   home_flag:"🇵🇹", away:"Alemania",   away_flag:"🇩🇪" },
-  { id:40, group_name:"G", match_date:"Dom 21 Jun", time:"19:00", venue:"SoFi Stadium, Los Ángeles",     home:"Venezuela",  home_flag:"🇻🇪", away:"Rep. Dominicana", away_flag:"🇩🇴" },
-  { id:41, group_name:"G", match_date:"Sáb 27 Jun", time:"20:00", venue:"Hard Rock, Miami",              home:"Portugal",   home_flag:"🇵🇹", away:"Rep. Dominicana", away_flag:"🇩🇴" },
-  { id:42, group_name:"G", match_date:"Sáb 27 Jun", time:"20:00", venue:"Lumen Field, Seattle",          home:"Alemania",   home_flag:"🇩🇪", away:"Venezuela",  away_flag:"🇻🇪" },
-
-  // ─── GRUPO H ───────────────────────────────────────────────
-  { id:43, group_name:"H", match_date:"Lun 15 Jun", time:"13:00", venue:"Mercedes-Benz, Atlanta",        home:"Países Bajos", home_flag:"🇳🇱", away:"Turquía",  away_flag:"🇹🇷" },
-  { id:44, group_name:"H", match_date:"Lun 15 Jun", time:"22:00", venue:"Arrowhead, Kansas City",         home:"Australia",  home_flag:"🇦🇺", away:"Malí",      away_flag:"🇲🇱" },
-  { id:45, group_name:"H", match_date:"Dom 21 Jun", time:"13:00", venue:"Mercedes-Benz, Atlanta",         home:"Países Bajos", home_flag:"🇳🇱", away:"Australia", away_flag:"🇦🇺" },
-  { id:46, group_name:"H", match_date:"Dom 21 Jun", time:"22:00", venue:"Arrowhead, Kansas City",          home:"Turquía",    home_flag:"🇹🇷", away:"Malí",      away_flag:"🇲🇱" },
-  { id:47, group_name:"H", match_date:"Sáb 27 Jun", time:"20:00", venue:"Estadio Akron, Guadalajara",     home:"Países Bajos", home_flag:"🇳🇱", away:"Malí",    away_flag:"🇲🇱" },
-  { id:48, group_name:"H", match_date:"Sáb 27 Jun", time:"20:00", venue:"Mercedes-Benz, Atlanta",         home:"Australia",  home_flag:"🇦🇺", away:"Turquía",   away_flag:"🇹🇷" },
-
-  // ─── GRUPO I ───────────────────────────────────────────────
-  { id:49, group_name:"I", match_date:"Mar 16 Jun", time:"16:00", venue:"MetLife Stadium, Nueva Jersey",  home:"Colombia",   home_flag:"🇨🇴", away:"Eslovaquia", away_flag:"🇸🇰" },
-  { id:50, group_name:"I", match_date:"Mar 16 Jun", time:"19:00", venue:"Arrowhead, Kansas City",          home:"Ecuador",    home_flag:"🇪🇨", away:"Austria",    away_flag:"🇦🇹" },
-  { id:51, group_name:"I", match_date:"Lun 22 Jun", time:"18:00", venue:"MetLife Stadium, Nueva Jersey",   home:"Colombia",   home_flag:"🇨🇴", away:"Ecuador",    away_flag:"🇪🇨" },
-  { id:52, group_name:"I", match_date:"Lun 22 Jun", time:"21:00", venue:"Hard Rock, Miami",                home:"Eslovaquia", home_flag:"🇸🇰", away:"Austria",    away_flag:"🇦🇹" },
-  { id:53, group_name:"I", match_date:"Dom 27 Jun", time:"20:00", venue:"MetLife Stadium, Nueva Jersey",   home:"Colombia",   home_flag:"🇨🇴", away:"Austria",    away_flag:"🇦🇹" },
-  { id:54, group_name:"I", match_date:"Dom 27 Jun", time:"20:00", venue:"AT&T Stadium, Dallas",            home:"Ecuador",    home_flag:"🇪🇨", away:"Eslovaquia", away_flag:"🇸🇰" },
-
-  // ─── GRUPO J ───────────────────────────────────────────────
-  { id:55, group_name:"J", match_date:"Mar 16 Jun", time:"22:00", venue:"Arrowhead, Kansas City",          home:"Bélgica",    home_flag:"🇧🇪", away:"Rumania",    away_flag:"🇷🇴" },
-  { id:56, group_name:"J", match_date:"Mar 16 Jun", time:"01:00", venue:"Lumen Field, Seattle",            home:"México",     home_flag:"🇲🇽", away:"Perú",       away_flag:"🇵🇪" },
-  { id:57, group_name:"J", match_date:"Lun 22 Jun", time:"14:00", venue:"AT&T Stadium, Dallas",            home:"Bélgica",    home_flag:"🇧🇪", away:"México",     away_flag:"🇲🇽" },
-  { id:58, group_name:"J", match_date:"Lun 22 Jun", time:"00:00", venue:"Lumen Field, Seattle",            home:"Rumania",    home_flag:"🇷🇴", away:"Perú",       away_flag:"🇵🇪" },
-  { id:59, group_name:"J", match_date:"Sáb 27 Jun", time:"23:00", venue:"Arrowhead, Kansas City",          home:"Bélgica",    home_flag:"🇧🇪", away:"Perú",       away_flag:"🇵🇪" },
-  { id:60, group_name:"J", match_date:"Sáb 27 Jun", time:"23:00", venue:"AT&T Stadium, Dallas",            home:"México",     home_flag:"🇲🇽", away:"Rumania",    away_flag:"🇷🇴" },
-
-  // ─── GRUPO K ───────────────────────────────────────────────
-  { id:61, group_name:"K", match_date:"Mié 17 Jun", time:"14:00", venue:"NRG Stadium, Houston",            home:"Inglaterra", home_flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", away:"Túnez",    away_flag:"🇹🇳" },
-  { id:62, group_name:"K", match_date:"Mié 17 Jun", time:"23:00", venue:"Hard Rock, Miami",                home:"Japón",      home_flag:"🇯🇵", away:"Ghana",      away_flag:"🇬🇭" },
-  { id:63, group_name:"K", match_date:"Mar 23 Jun", time:"14:00", venue:"NRG Stadium, Houston",            home:"Inglaterra", home_flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", away:"Japón",    away_flag:"🇯🇵" },
-  { id:64, group_name:"K", match_date:"Mar 23 Jun", time:"23:00", venue:"Hard Rock, Miami",                home:"Túnez",      home_flag:"🇹🇳", away:"Ghana",      away_flag:"🇬🇭" },
-  { id:65, group_name:"K", match_date:"Dom 27 Jun", time:"20:00", venue:"NRG Stadium, Houston",            home:"Inglaterra", home_flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", away:"Ghana",   away_flag:"🇬🇭" },
-  { id:66, group_name:"K", match_date:"Dom 27 Jun", time:"20:00", venue:"Lincoln Financial, Filadelfia",   home:"Japón",      home_flag:"🇯🇵", away:"Túnez",      away_flag:"🇹🇳" },
-
-  // ─── GRUPO L ───────────────────────────────────────────────
-  { id:67, group_name:"L", match_date:"Mié 17 Jun", time:"17:00", venue:"AT&T Stadium, Dallas",            home:"Italia",     home_flag:"🇮🇹", away:"México",     away_flag:"🇲🇽" },
-  { id:68, group_name:"L", match_date:"Mié 17 Jun", time:"20:00", venue:"BMO Field, Toronto",              home:"Canadá",     home_flag:"🇨🇦", away:"Argelia",    away_flag:"🇩🇿" },
-  { id:69, group_name:"L", match_date:"Mar 23 Jun", time:"17:00", venue:"AT&T Stadium, Dallas",            home:"Italia",     home_flag:"🇮🇹", away:"Canadá",     away_flag:"🇨🇦" },
-  { id:70, group_name:"L", match_date:"Mar 23 Jun", time:"20:00", venue:"Lincoln Financial, Filadelfia",   home:"México",     home_flag:"🇲🇽", away:"Argelia",    away_flag:"🇩🇿" },
-  { id:71, group_name:"L", match_date:"Sáb 27 Jun", time:"18:00", venue:"Lincoln Financial, Filadelfia",   home:"Italia",     home_flag:"🇮🇹", away:"Argelia",    away_flag:"🇩🇿" },
-  { id:72, group_name:"L", match_date:"Sáb 27 Jun", time:"18:00", venue:"BMO Field, Toronto",              home:"Canadá",     home_flag:"🇨🇦", away:"México",     away_flag:"🇲🇽" },
-];
-
-async function run() {
-  console.log('🌍 Importando partidos del Mundial 2026...');
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-    await client.query('DELETE FROM prode_predictions');
-    await client.query('DELETE FROM prode_matches');
-    console.log('🗑️  Tablas limpias');
-
-    for (const m of matches) {
-      await client.query(
-        `INSERT INTO prode_matches (id, home, away, match_date, group_name, home_flag, away_flag, time, venue)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-        [m.id, m.home, m.away, m.match_date, m.group_name, m.home_flag, m.away_flag, m.time, m.venue]
-      );
-    }
-
-    await client.query('COMMIT');
-    console.log(`✅ ${matches.length} partidos importados correctamente`);
-  } catch (e) {
-    await client.query('ROLLBACK');
-    console.error('❌ Error:', e.message);
-  } finally {
-    client.release();
-    pool.end();
-  }
+if (!API_KEY) {
+  console.error('❌ Definí API_FOOTBALL_KEY en tu .env');
+  process.exit(1);
 }
 
-run();
+// ── Banderas por nombre de equipo ──────────────────────────
+const FLAGS = {
+  'Mexico':           '🇲🇽', 'South Africa':     '🇿🇦', 'South Korea':      '🇰🇷',
+  'Czech Republic':   '🇨🇿', 'Canada':           '🇨🇦', 'Bosnia':           '🇧🇦',
+  'Qatar':            '🇶🇦', 'Switzerland':      '🇨🇭', 'Brazil':           '🇧🇷',
+  'Morocco':          '🇲🇦', 'Haiti':            '🇭🇹', 'Scotland':         '🏴󠁧󠁢󠁳󠁣󠁴󠁿',
+  'USA':              '🇺🇸', 'United States':    '🇺🇸', 'Paraguay':         '🇵🇾',
+  'Australia':        '🇦🇺', 'Turkey':           '🇹🇷', 'Germany':          '🇩🇪',
+  "Ivory Coast":      '🇨🇮', "Cote d'Ivoire":    '🇨🇮', 'Ecuador':          '🇪🇨',
+  'Curacao':          '🏳️',  'Netherlands':      '🇳🇱', 'Japan':            '🇯🇵',
+  'Tunisia':          '🇹🇳', 'Sweden':           '🇸🇪', 'Belgium':          '🇧🇪',
+  'New Zealand':      '🇳🇿', 'Egypt':            '🇪🇬', 'Iran':             '🇮🇷',
+  'Spain':            '🇪🇸', 'Cape Verde':       '🇨🇻', 'Uruguay':          '🇺🇾',
+  'Saudi Arabia':     '🇸🇦', 'France':           '🇫🇷', 'Senegal':          '🇸🇳',
+  'Iraq':             '🇮🇶', 'Norway':           '🇳🇴', 'Argentina':        '🇦🇷',
+  'Algeria':          '🇩🇿', 'Austria':          '🇦🇹', 'Jordan':           '🇯🇴',
+  'Portugal':         '🇵🇹', 'DR Congo':         '🇨🇩', 'Uzbekistan':       '🇺🇿',
+  'Colombia':         '🇨🇴', 'England':          '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'Croatia':          '🇭🇷',
+  'Ghana':            '🇬🇭', 'Panama':           '🇵🇦',
+};
+
+function getFlag(name) {
+  return FLAGS[name] || '🏳️';
+}
+
+// ── Nombres en español ─────────────────────────────────────
+const NAMES_ES = {
+  'Mexico':           'México',       'South Korea':      'Corea del Sur',
+  'Czech Republic':   'Rep. Checa',   'Switzerland':      'Suiza',
+  'Morocco':          'Marruecos',    'Haiti':            'Haití',
+  'Scotland':         'Escocia',      'USA':              'Estados Unidos',
+  'United States':    'Estados Unidos','Turkey':          'Turquía',
+  'Germany':          'Alemania',     "Ivory Coast":      'Costa de Marfil',
+  "Cote d'Ivoire":    'Costa de Marfil', 'Curacao':       'Curazao',
+  'Netherlands':      'Países Bajos', 'Belgium':          'Bélgica',
+  'New Zealand':      'Nueva Zelanda', 'Cape Verde':      'Cabo Verde',
+  'Saudi Arabia':     'Arabia Saudí', 'France':           'Francia',
+  'Norway':           'Noruega',      'Algeria':          'Argelia',
+  'Jordan':           'Jordania',     'Portugal':         'Portugal',
+  'DR Congo':         'Rep. D. Congo', 'Uzbekistan':      'Uzbekistán',
+  'England':          'Inglaterra',   'Croatia':          'Croacia',
+  'Panama':           'Panamá',       'Bosnia':           'Bosnia',
+};
+
+function nameEs(name) {
+  return NAMES_ES[name] || name;
+}
+
+// ── Formatear fecha para display ───────────────────────────
+function formatDate(dateStr) {
+  // dateStr viene como "2026-06-11"
+  const d = new Date(dateStr + 'T12:00:00Z');
+  const dias  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  return `${dias[d.getUTCDay()]} ${d.getUTCDate()} ${meses[d.getUTCMonth()]}`;
+}
+
+// ── Formatear hora (UTC a hora local del partido, viene en UTC) ──
+function formatTime(timestamp) {
+  // La API devuelve Unix timestamp; mostramos hora UTC-6 (hora México/Centro)
+  // Ajustá el offset si querés otro huso horario
+  const d = new Date(timestamp * 1000);
+  const h = String(d.getUTCHours()).padStart(2, '0');
+  const m = String(d.getUTCMinutes()).padStart(2, '0');
+  return `${h}:${m}`;
+}
+
+// ── Llamada a la API ───────────────────────────────────────
+async function apiFetch(endpoint) {
+  const url = `https://${API_HOST}/${endpoint}`;
+  const res = await fetch(url, {
+    headers: {
+      'x-rapidapi-key':  API_KEY,
+      'x-rapidapi-host': API_HOST,
+    },
+  });
+  if (!res.ok) throw new Error(`API error ${res.status}: ${await res.text()}`);
+  const data = await res.json();
+  if (data.errors && Object.keys(data.errors).length) {
+    throw new Error('API errors: ' + JSON.stringify(data.errors));
+  }
+  return data.response;
+}
+
+// ── IMPORTAR FIXTURES ─────────────────────────────────────
+async function importFixtures() {
+  console.log('📡 Obteniendo fixtures del Mundial 2026...');
+  const fixtures = await apiFetch(`fixtures?league=${LEAGUE}&season=${SEASON}`);
+  console.log(`   ${fixtures.length} partidos recibidos`);
+
+  // Solo fase de grupos (las primeras 3 jornadas)
+  const groupStage = fixtures.filter(f =>
+    f.league.round && f.league.round.toLowerCase().includes('group')
+  );
+  console.log(`   ${groupStage.length} partidos de fase de grupos`);
+
+  const insert = db.prepare(`
+    INSERT INTO prode_matches
+      (id, match_group, round, date, time, venue, home_name, home_flag, away_name, away_flag, result, goals_home, goals_away)
+    VALUES
+      (@id, @match_group, @round, @date, @time, @venue, @home_name, @home_flag, @away_name, @away_flag, '', NULL, NULL)
+    ON CONFLICT(id) DO UPDATE SET
+      match_group = excluded.match_group,
+      round       = excluded.round,
+      date        = excluded.date,
+      time        = excluded.time,
+      venue       = excluded.venue,
+      home_name   = excluded.home_name,
+      home_flag   = excluded.home_flag,
+      away_name   = excluded.away_name,
+      away_flag   = excluded.away_flag
+  `);
+
+  const runAll = db.transaction((matches) => {
+    let inserted = 0, updated = 0;
+    for (const f of matches) {
+      const homeName = nameEs(f.teams.home.name);
+      const awayName = nameEs(f.teams.away.name);
+
+      // Extraer grupo de la ronda: "Group Stage - 1" → "A", etc.
+      // La API devuelve el grupo en f.league.round o f.teams
+      const groupRaw = f.league.round || '';
+      const groupMatch = groupRaw.match(/Group\s+([A-L])/i);
+      const group = groupMatch ? groupMatch[1].toUpperCase() : '?';
+
+      // Jornada
+      const rdMatch = groupRaw.match(/(\d)/);
+      const jornada = rdMatch ? rdMatch[1] : '?';
+
+      const row = {
+        id:         f.fixture.id,
+        match_group: group,
+        round:      `Grupo ${group} · Jornada ${jornada}`,
+        date:       formatDate(f.fixture.date.substring(0, 10)),
+        time:       formatTime(f.fixture.timestamp),
+        venue:      f.fixture.venue?.name || 'Por confirmar',
+        home_name:  homeName,
+        home_flag:  getFlag(f.teams.home.name),
+        away_name:  awayName,
+        away_flag:  getFlag(f.teams.away.name),
+      };
+
+      const info = insert.run(row);
+      if (info.changes) inserted++;
+      else updated++;
+    }
+    return { inserted, updated };
+  });
+
+  const { inserted, updated } = runAll(groupStage);
+  console.log(`✅ Importados: ${inserted} nuevos, ${updated} actualizados`);
+}
+
+// ── SINCRONIZAR RESULTADOS ─────────────────────────────────
+async function syncResults() {
+  console.log('🔄 Sincronizando resultados...');
+
+  // Traer solo partidos del día de hoy y ayer (para no gastar requests)
+  const today     = new Date().toISOString().substring(0, 10);
+  const yesterday = new Date(Date.now() - 86400000).toISOString().substring(0, 10);
+
+  for (const dateStr of [yesterday, today]) {
+    let fixtures;
+    try {
+      fixtures = await apiFetch(`fixtures?league=${LEAGUE}&season=${SEASON}&date=${dateStr}`);
+    } catch (e) {
+      console.warn(`  ⚠ Error obteniendo ${dateStr}:`, e.message);
+      continue;
+    }
+
+    let updated = 0;
+    for (const f of fixtures) {
+      const goals = f.goals;
+      if (goals.home === null || goals.away === null) continue; // partido no jugado
+
+      const gH = goals.home;
+      const gA = goals.away;
+      let result = '';
+      if (gH > gA)      result = '1';
+      else if (gH < gA) result = '2';
+      else              result = 'x';
+
+      const info = db.prepare(`
+        UPDATE prode_matches
+        SET goals_home = ?, goals_away = ?, result = ?
+        WHERE id = ? AND (result = '' OR goals_home IS NULL)
+      `).run(gH, gA, result, f.fixture.id);
+
+      if (info.changes) updated++;
+    }
+    console.log(`   ${dateStr}: ${updated} resultados actualizados`);
+  }
+
+  // Recalcular standings después de actualizar resultados
+  try {
+    const { recalcStandings } = require('./routes/prode');
+    recalcStandings();
+    console.log('   Standings recalculados ✓');
+  } catch {}
+
+  console.log('✅ Sincronización completa');
+}
+
+// ── MAIN ───────────────────────────────────────────────────
+const mode = process.argv[2];
+if (mode === '--results') {
+  syncResults().catch(e => { console.error('❌', e.message); process.exit(1); });
+} else {
+  importFixtures().catch(e => { console.error('❌', e.message); process.exit(1); });
+}
