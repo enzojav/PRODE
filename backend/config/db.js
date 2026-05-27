@@ -1,7 +1,7 @@
 const { Pool } = require('pg');
  
 // Validar que DATABASE_URL esté seteada ANTES de intentar conectar
-if (!process.env.DATABASE_URL) {fa
+if (!process.env.DATABASE_URL) {
   console.error('❌ Error iniciando DB: DATABASE_URL no está definida en las variables de entorno.');
   console.error('   En Railway: agregá el plugin de PostgreSQL y linkealó a este servicio.');
   process.exit(1);
