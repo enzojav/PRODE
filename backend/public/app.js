@@ -1425,13 +1425,16 @@ function renderMundial() {
   'text-anchor': 'middle',
   'dominant-baseline': 'middle'
 });
+const trophySize = 80;
+
 const trophyImg = mEl('image', {
   href: 'copa.png',
-  x: centerX - 20,
-  y: finalMidY - 24,
-  width: '250',
-  height: '250'
+  x: centerX - trophySize / 2,
+  y: finalMidY - trophySize / 2,
+  width: trophySize,
+  height: trophySize
 });
+
 mSvg.appendChild(trophyImg);
 
     mUpdateStats();
