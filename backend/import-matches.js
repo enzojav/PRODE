@@ -1,236 +1,174 @@
 // ============================================================
-//  import-matches.js
-//  Importa/sincroniza los partidos del Mundial 2026 desde
-//  API-Football a la base de datos SQLite local.
-//
+//  import-matches.js — openfootball (sin API key)
 //  USO:
-//    node import-matches.js              ← importa fixtures
-//    node import-matches.js --results    ← actualiza resultados
+//    node import-matches.js         ← importa fixtures
+//    node import-matches.js --sync  ← actualiza resultados
 // ============================================================
 
 require('dotenv').config();
-const Database = require('better-sqlite3');
-const path     = require('path');
+const { Pool } = require('pg');
 
-const API_KEY  = process.env.API_FOOTBALL_KEY;
-const API_HOST = 'v3.football.api-sports.io';
-const LEAGUE   = 1;      // FIFA World Cup
-const SEASON   = 2026;
+const JSON_URL = 'https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json';
 
-const DB_PATH  = path.join(__dirname, 'data', 'app.db');
-const db       = new Database(DB_PATH);
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+});
 
-if (!API_KEY) {
-  console.error('❌ Definí API_FOOTBALL_KEY en tu .env');
-  process.exit(1);
-}
-
-// ── Banderas por nombre de equipo ──────────────────────────
-const FLAGS = {
-  'Mexico':           '🇲🇽', 'South Africa':     '🇿🇦', 'South Korea':      '🇰🇷',
-  'Czech Republic':   '🇨🇿', 'Canada':           '🇨🇦', 'Bosnia':           '🇧🇦',
-  'Qatar':            '🇶🇦', 'Switzerland':      '🇨🇭', 'Brazil':           '🇧🇷',
-  'Morocco':          '🇲🇦', 'Haiti':            '🇭🇹', 'Scotland':         '🏴󠁧󠁢󠁳󠁣󠁴󠁿',
-  'USA':              '🇺🇸', 'United States':    '🇺🇸', 'Paraguay':         '🇵🇾',
-  'Australia':        '🇦🇺', 'Turkey':           '🇹🇷', 'Germany':          '🇩🇪',
-  "Ivory Coast":      '🇨🇮', "Cote d'Ivoire":    '🇨🇮', 'Ecuador':          '🇪🇨',
-  'Curacao':          '🏳️',  'Netherlands':      '🇳🇱', 'Japan':            '🇯🇵',
-  'Tunisia':          '🇹🇳', 'Sweden':           '🇸🇪', 'Belgium':          '🇧🇪',
-  'New Zealand':      '🇳🇿', 'Egypt':            '🇪🇬', 'Iran':             '🇮🇷',
-  'Spain':            '🇪🇸', 'Cape Verde':       '🇨🇻', 'Uruguay':          '🇺🇾',
-  'Saudi Arabia':     '🇸🇦', 'France':           '🇫🇷', 'Senegal':          '🇸🇳',
-  'Iraq':             '🇮🇶', 'Norway':           '🇳🇴', 'Argentina':        '🇦🇷',
-  'Algeria':          '🇩🇿', 'Austria':          '🇦🇹', 'Jordan':           '🇯🇴',
-  'Portugal':         '🇵🇹', 'DR Congo':         '🇨🇩', 'Uzbekistan':       '🇺🇿',
-  'Colombia':         '🇨🇴', 'England':          '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'Croatia':          '🇭🇷',
-  'Ghana':            '🇬🇭', 'Panama':           '🇵🇦',
-};
-
-function getFlag(name) {
-  return FLAGS[name] || '🏳️';
-}
-
-// ── Nombres en español ─────────────────────────────────────
+// ── Traducciones ───────────────────────────────────────────
 const NAMES_ES = {
-  'Mexico':           'México',       'South Korea':      'Corea del Sur',
-  'Czech Republic':   'Rep. Checa',   'Switzerland':      'Suiza',
-  'Morocco':          'Marruecos',    'Haiti':            'Haití',
-  'Scotland':         'Escocia',      'USA':              'Estados Unidos',
-  'United States':    'Estados Unidos','Turkey':          'Turquía',
-  'Germany':          'Alemania',     "Ivory Coast":      'Costa de Marfil',
-  "Cote d'Ivoire":    'Costa de Marfil', 'Curacao':       'Curazao',
-  'Netherlands':      'Países Bajos', 'Belgium':          'Bélgica',
-  'New Zealand':      'Nueva Zelanda', 'Cape Verde':      'Cabo Verde',
-  'Saudi Arabia':     'Arabia Saudí', 'France':           'Francia',
-  'Norway':           'Noruega',      'Algeria':          'Argelia',
-  'Jordan':           'Jordania',     'Portugal':         'Portugal',
-  'DR Congo':         'Rep. D. Congo', 'Uzbekistan':      'Uzbekistán',
-  'England':          'Inglaterra',   'Croatia':          'Croacia',
-  'Panama':           'Panamá',       'Bosnia':           'Bosnia',
+  'Mexico':'México','South Korea':'Corea del Sur','Czech Republic':'Rep. Checa',
+  'Switzerland':'Suiza','Morocco':'Marruecos','Haiti':'Haití','Scotland':'Escocia',
+  'USA':'Estados Unidos','Paraguay':'Paraguay','Turkey':'Turquía',
+  'Germany':'Alemania',"Ivory Coast":'Costa de Marfil',"Cote d'Ivoire":'Costa de Marfil',
+  'Curaçao':'Curazao','Netherlands':'Países Bajos','Japan':'Japón',
+  'Tunisia':'Túnez','Sweden':'Suecia','Belgium':'Bélgica','New Zealand':'Nueva Zelanda',
+  'Egypt':'Egipto','Iran':'Irán','Spain':'España','Cape Verde':'Cabo Verde',
+  'Saudi Arabia':'Arabia Saudí','France':'Francia','Norway':'Noruega',
+  'Algeria':'Argelia','Austria':'Austria','Jordan':'Jordania',
+  'Portugal':'Portugal','DR Congo':'Rep. D. Congo','Uzbekistan':'Uzbekistán',
+  'Colombia':'Colombia','England':'Inglaterra','Croatia':'Croacia',
+  'Ghana':'Ghana','Panama':'Panamá','Bosnia':'Bosnia','Qatar':'Qatar',
+  'Canada':'Canadá','Brazil':'Brasil','South Africa':'Sudáfrica',
+  'Ecuador':'Ecuador','Iraq':'Irak','Argentina':'Argentina',
+  'Uruguay':'Uruguay','Senegal':'Senegal','Australia':'Australia',
 };
 
-function nameEs(name) {
-  return NAMES_ES[name] || name;
-}
+const FLAGS = {
+  'Mexico':'🇲🇽','South Africa':'🇿🇦','South Korea':'🇰🇷','Czech Republic':'🇨🇿',
+  'Canada':'🇨🇦','Bosnia':'🇧🇦','Qatar':'🇶🇦','Switzerland':'🇨🇭',
+  'Brazil':'🇧🇷','Morocco':'🇲🇦','Haiti':'🇭🇹','Scotland':'🏴󠁧󠁢󠁳󠁣󠁴󠁿',
+  'USA':'🇺🇸','Paraguay':'🇵🇾','Australia':'🇦🇺','Turkey':'🇹🇷',
+  'Germany':'🇩🇪',"Ivory Coast":'🇨🇮',"Cote d'Ivoire":'🇨🇮','Curaçao':'🏳️',
+  'Netherlands':'🇳🇱','Japan':'🇯🇵','Tunisia':'🇹🇳','Sweden':'🇸🇪',
+  'Belgium':'🇧🇪','New Zealand':'🇳🇿','Egypt':'🇪🇬','Iran':'🇮🇷',
+  'Spain':'🇪🇸','Cape Verde':'🇨🇻','Uruguay':'🇺🇾','Saudi Arabia':'🇸🇦',
+  'France':'🇫🇷','Senegal':'🇸🇳','Iraq':'🇮🇶','Norway':'🇳🇴',
+  'Argentina':'🇦🇷','Algeria':'🇩🇿','Austria':'🇦🇹','Jordan':'🇯🇴',
+  'Portugal':'🇵🇹','DR Congo':'🇨🇩','Uzbekistan':'🇺🇿','Colombia':'🇨🇴',
+  'England':'🏴󠁧󠁢󠁥󠁮󠁧󠁿','Croatia':'🇭🇷','Ghana':'🇬🇭','Panama':'🇵🇦',
+  'Ecuador':'🇪🇨',
+};
 
-// ── Formatear fecha para display ───────────────────────────
+const nameEs  = n => NAMES_ES[n] || n;
+const getFlag = n => FLAGS[n]    || '🏳️';
+
+// ── Formatear fecha ────────────────────────────────────────
 function formatDate(dateStr) {
-  // dateStr viene como "2026-06-11"
-  const d = new Date(dateStr + 'T12:00:00Z');
+  const d    = new Date(dateStr + 'T12:00:00Z');
   const dias  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
   const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
   return `${dias[d.getUTCDay()]} ${d.getUTCDate()} ${meses[d.getUTCMonth()]}`;
 }
 
-// ── Formatear hora (UTC a hora local del partido, viene en UTC) ──
-function formatTime(timestamp) {
-  // La API devuelve Unix timestamp; mostramos hora UTC-6 (hora México/Centro)
-  // Ajustá el offset si querés otro huso horario
-  const d = new Date(timestamp * 1000);
-  const h = String(d.getUTCHours()).padStart(2, '0');
-  const m = String(d.getUTCMinutes()).padStart(2, '0');
-  return `${h}:${m}`;
+// ── Extraer hora limpia ────────────────────────────────────
+function formatTime(timeStr) {
+  // viene como "13:00 UTC-6" → sacamos solo "13:00"
+  return (timeStr || '').split(' ')[0] || '';
 }
 
-// ── Llamada a la API ───────────────────────────────────────
-async function apiFetch(endpoint) {
-  const url = `https://${API_HOST}/${endpoint}`;
-  const res = await fetch(url, {
-    headers: {
-      'x-rapidapi-key':  API_KEY,
-      'x-rapidapi-host': API_HOST,
-    },
-  });
-  if (!res.ok) throw new Error(`API error ${res.status}: ${await res.text()}`);
-  const data = await res.json();
-  if (data.errors && Object.keys(data.errors).length) {
-    throw new Error('API errors: ' + JSON.stringify(data.errors));
-  }
-  return data.response;
+// ── Extraer grupo ──────────────────────────────────────────
+function extractGroup(groupStr) {
+  // viene como "Group A" → "A"
+  const m = (groupStr || '').match(/Group\s+([A-L])/i);
+  return m ? m[1].toUpperCase() : '?';
 }
 
-// ── IMPORTAR FIXTURES ─────────────────────────────────────
+// ── Extraer jornada ────────────────────────────────────────
+function extractJornada(roundStr) {
+  // viene como "Matchday 1" → "1"
+  const m = (roundStr || '').match(/(\d+)/);
+  return m ? m[1] : '?';
+}
+
+// ── IMPORTAR ───────────────────────────────────────────────
 async function importFixtures() {
-  console.log('📡 Obteniendo fixtures del Mundial 2026...');
-  const fixtures = await apiFetch(`fixtures?league=${LEAGUE}&season=${SEASON}`);
-  console.log(`   ${fixtures.length} partidos recibidos`);
+  console.log('📡 Bajando fixtures de openfootball...');
 
-  // Solo fase de grupos (las primeras 3 jornadas)
-  const groupStage = fixtures.filter(f =>
-    f.league.round && f.league.round.toLowerCase().includes('group')
-  );
-  console.log(`   ${groupStage.length} partidos de fase de grupos`);
+  const res  = await fetch(JSON_URL);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
 
-  const insert = db.prepare(`
-    INSERT INTO prode_matches
-      (id, match_group, round, date, time, venue, home_name, home_flag, away_name, away_flag, result, goals_home, goals_away)
-    VALUES
-      (@id, @match_group, @round, @date, @time, @venue, @home_name, @home_flag, @away_name, @away_flag, '', NULL, NULL)
-    ON CONFLICT(id) DO UPDATE SET
-      match_group = excluded.match_group,
-      round       = excluded.round,
-      date        = excluded.date,
-      time        = excluded.time,
-      venue       = excluded.venue,
-      home_name   = excluded.home_name,
-      home_flag   = excluded.home_flag,
-      away_name   = excluded.away_name,
-      away_flag   = excluded.away_flag
-  `);
+  // Solo fase de grupos (tienen campo "group")
+  const groupMatches = data.matches.filter(m => m.group);
+  console.log(`   ${groupMatches.length} partidos de fase de grupos encontrados`);
 
-  const runAll = db.transaction((matches) => {
-    let inserted = 0, updated = 0;
-    for (const f of matches) {
-      const homeName = nameEs(f.teams.home.name);
-      const awayName = nameEs(f.teams.away.name);
+  // Limpiar tablas (primero predicciones por FK)
+  await pool.query('DELETE FROM prode_predictions');
+  await pool.query('DELETE FROM prode_matches');
+  console.log('   Tablas limpiadas');
 
-      // Extraer grupo de la ronda: "Group Stage - 1" → "A", etc.
-      // La API devuelve el grupo en f.league.round o f.teams
-      const groupRaw = f.league.round || '';
-      const groupMatch = groupRaw.match(/Group\s+([A-L])/i);
-      const group = groupMatch ? groupMatch[1].toUpperCase() : '?';
+  let id = 1;
+  for (const m of groupMatches) {
+    const group    = extractGroup(m.group);
+    const jornada  = extractJornada(m.round);
+    const homeName = nameEs(m.team1);
+    const awayName = nameEs(m.team2);
+    const date     = formatDate(m.date);
+    const time     = formatTime(m.time);
+    const venue    = m.ground || 'Por confirmar';
+    const round    = `Grupo ${group} · Jornada ${jornada}`;
 
-      // Jornada
-      const rdMatch = groupRaw.match(/(\d)/);
-      const jornada = rdMatch ? rdMatch[1] : '?';
-
-      const row = {
-        id:         f.fixture.id,
-        match_group: group,
-        round:      `Grupo ${group} · Jornada ${jornada}`,
-        date:       formatDate(f.fixture.date.substring(0, 10)),
-        time:       formatTime(f.fixture.timestamp),
-        venue:      f.fixture.venue?.name || 'Por confirmar',
-        home_name:  homeName,
-        home_flag:  getFlag(f.teams.home.name),
-        away_name:  awayName,
-        away_flag:  getFlag(f.teams.away.name),
-      };
-
-      const info = insert.run(row);
-      if (info.changes) inserted++;
-      else updated++;
-    }
-    return { inserted, updated };
-  });
-
-  const { inserted, updated } = runAll(groupStage);
-  console.log(`✅ Importados: ${inserted} nuevos, ${updated} actualizados`);
-}
-
-// ── SINCRONIZAR RESULTADOS ─────────────────────────────────
-async function syncResults() {
-  console.log('🔄 Sincronizando resultados...');
-
-  // Traer solo partidos del día de hoy y ayer (para no gastar requests)
-  const today     = new Date().toISOString().substring(0, 10);
-  const yesterday = new Date(Date.now() - 86400000).toISOString().substring(0, 10);
-
-  for (const dateStr of [yesterday, today]) {
-    let fixtures;
-    try {
-      fixtures = await apiFetch(`fixtures?league=${LEAGUE}&season=${SEASON}&date=${dateStr}`);
-    } catch (e) {
-      console.warn(`  ⚠ Error obteniendo ${dateStr}:`, e.message);
-      continue;
+    // Resultado si ya existe en el JSON
+    let homeScore = null, awayScore = null;
+    if (m.score && m.score.ft) {
+      homeScore = m.score.ft[0];
+      awayScore = m.score.ft[1];
     }
 
-    let updated = 0;
-    for (const f of fixtures) {
-      const goals = f.goals;
-      if (goals.home === null || goals.away === null) continue; // partido no jugado
-
-      const gH = goals.home;
-      const gA = goals.away;
-      let result = '';
-      if (gH > gA)      result = '1';
-      else if (gH < gA) result = '2';
-      else              result = 'x';
-
-      const info = db.prepare(`
-        UPDATE prode_matches
-        SET goals_home = ?, goals_away = ?, result = ?
-        WHERE id = ? AND (result = '' OR goals_home IS NULL)
-      `).run(gH, gA, result, f.fixture.id);
-
-      if (info.changes) updated++;
-    }
-    console.log(`   ${dateStr}: ${updated} resultados actualizados`);
+    await pool.query(`
+      INSERT INTO prode_matches
+        (id, home, away, home_flag, away_flag, match_date, time, venue, group_name, home_score, away_score)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+      ON CONFLICT (id) DO UPDATE SET
+        home       = EXCLUDED.home,
+        away       = EXCLUDED.away,
+        home_flag  = EXCLUDED.home_flag,
+        away_flag  = EXCLUDED.away_flag,
+        match_date = EXCLUDED.match_date,
+        time       = EXCLUDED.time,
+        venue      = EXCLUDED.venue,
+        group_name = EXCLUDED.group_name,
+        home_score = EXCLUDED.home_score,
+        away_score = EXCLUDED.away_score
+    `, [id, homeName, awayName, getFlag(m.team1), getFlag(m.team2),
+        date, time, venue, round, homeScore, awayScore]);
+    id++;
   }
 
-  // Recalcular standings después de actualizar resultados
-  try {
-    const { recalcStandings } = require('./routes/prode');
-    recalcStandings();
-    console.log('   Standings recalculados ✓');
-  } catch {}
+  console.log(`✅ ${id - 1} partidos importados correctamente`);
+  await pool.end();
+}
 
-  console.log('✅ Sincronización completa');
+// ── SYNC RESULTADOS ────────────────────────────────────────
+async function syncResults() {
+  console.log('🔄 Sincronizando resultados desde openfootball...');
+
+  const res  = await fetch(JSON_URL);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+
+  let updated = 0;
+  let id = 1;
+  for (const m of data.matches.filter(x => x.group)) {
+    if (m.score && m.score.ft) {
+      const [gH, gA] = m.score.ft;
+      await pool.query(
+        'UPDATE prode_matches SET home_score=$1, away_score=$2 WHERE id=$3',
+        [gH, gA, id]
+      );
+      updated++;
+    }
+    id++;
+  }
+
+  console.log(`✅ ${updated} resultados actualizados`);
+  await pool.end();
 }
 
 // ── MAIN ───────────────────────────────────────────────────
 const mode = process.argv[2];
-if (mode === '--results') {
+if (mode === '--sync') {
   syncResults().catch(e => { console.error('❌', e.message); process.exit(1); });
 } else {
   importFixtures().catch(e => { console.error('❌', e.message); process.exit(1); });
