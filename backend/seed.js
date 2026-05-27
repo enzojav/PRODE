@@ -1,7 +1,6 @@
 // seed.js — Insertar partidos del Mundial 2026 en PostgreSQL
 // Correr con: node seed.js
 // Requiere DATABASE_URL en el entorno
-
 require('dotenv').config();
 const { Pool } = require('pg');
 
