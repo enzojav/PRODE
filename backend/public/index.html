@@ -88,6 +88,31 @@
 ══════════════════════════════════════════ -->
 <div id="app-shell" style="display:none">
 
+  <!-- SECCIÓN 16AVOS -->
+<div class="sec" id="s-r16">
+  <div class="r16-hero">
+    <div class="r16-hero-bg"></div>
+    <div class="r16-hero-content">
+      <div class="fifa-logo-wrap">
+        <span class="fifa-trophy">🏆</span>
+        <div>
+          <div class="fifa-title">16avos de Final</div>
+          <div class="fifa-subtitle">FIFA World Cup 2026</div>
+        </div>
+      </div>
+      <div class="fifa-pts-wrap">
+        <div class="fifa-pts-val" id="r16-my-pts">0</div>
+        <div class="fifa-pts-lbl">MIS PUNTOS</div>
+      </div>
+    </div>
+  </div>
+  <div id="r16-matches-grid" class="r16-grid"></div>
+  <div class="prode-stand" id="r16-standings-wrap">
+    <div class="ps-title">🏅 Tabla R16</div>
+    <div id="r16-standings"></div>
+  </div>
+</div>
+
   <!-- LOADING (oculto, se usa si se necesita) -->
   <div id="ls" style="display:none">
     <div class="spin"></div>
@@ -120,9 +145,17 @@
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="2" width="14" height="12" rx="1.5"/><path d="M1 6h14M5 9h3M5 12h6"/></svg>
         Noticias
       </div>
+      <div class="ni" data-s="mundial">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 1.5C8 1.5 6 4 6 8s2 6.5 2 6.5M8 1.5C8 1.5 10 4 10 8s-2 6.5-2 6.5M1.5 8h13M2 5h12M2 11h12"/></svg>
+        Mundial 2026 🏆
+      </div>
       <div class="ni" data-s="prode">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M5.5 5l1.5 2-1.5 2.5h2l.5-.8.5.8H11L9.5 7l1.5-2H9L8 5.8 7 5z"/></svg>
         Prode ⚽
+      </div>
+      <div class="ni" data-s="r16">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>
+      16avos
       </div>
       <div class="sb-grp">Sistema</div>
       <div class="ni" data-s="members">
@@ -257,6 +290,11 @@
           <div id="standings"></div>
         </div>
 
+      </section>
+
+      <!-- ── MUNDIAL ── -->
+      <section class="sec" id="s-mundial">
+        <div id="mundial-embed"></div>
       </section>
 
       <!-- ── MIEMBROS ── -->

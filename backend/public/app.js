@@ -1346,10 +1346,38 @@ function renderMundial() {
     mSvg.appendChild(mEl('circle',{cx:centerX,cy:finalMidY,r:38,fill:'none',stroke:'rgba(255,184,28,.08)','stroke-width':'1','stroke-dasharray':'3 4'}));
     // center circle
     mSvg.appendChild(mEl('circle',{cx:centerX,cy:finalMidY,r:30,fill:'#091420',stroke:'rgba(255,184,28,.35)','stroke-width':'1.5'}));
-    const tt=mEl('text',{x:centerX,y:finalMidY-4,'font-size':'22','text-anchor':'middle'}); tt.textContent='🏆'; mSvg.appendChild(tt);
-    const ft=mEl('text',{x:centerX,y:finalMidY+17,'font-size':'7','font-family':FONT,'font-weight':'800',fill:AMBER,'text-anchor':'middle','letter-spacing':'2'}); ft.textContent='FINAL'; mSvg.appendChild(ft);
-    const dt=mEl('text',{x:centerX,y:finalMidY+28,'font-size':'6','font-family':FONT,fill:'rgba(255,255,255,.3)','text-anchor':'middle'}); dt.textContent='19 Jul · MetLife NJ'; mSvg.appendChild(dt);
-    mUpdateStats();
+    // OPCIÓN A: Si querés usar la imagen copa.png
+const trophyImg = mEl('mundialcopa.png', {
+  x: centerX - 18,
+  y: finalMidY - 32,
+  width: '36',
+  height: '46',
+  'href': 'copa.png'
+});
+mSvg.appendChild(trophyImg);
+
+// OPCIÓN B: Si querés usar el emoji (sin necesitar el archivo)
+const trophyText = mEl('text', {
+  x: centerX,
+  y: finalMidY - 4,
+  'font-size': '22',
+  'text-anchor': 'middle'
+});
+trophyText.textContent = '🏆';
+mSvg.appendChild(trophyText);
+
+// Esto va en ambos casos (sin cambios)
+const dt = mEl('text', {
+  x: centerX,
+  y: finalMidY + 28,
+  'font-size': '6',
+  'font-family': FONT,
+  fill: 'rgba(255,255,255,.3)',
+  'text-anchor': 'middle'
+});
+dt.textContent = '19 Jul · MetLife NJ';
+mSvg.appendChild(dt);
+mUpdateStats();
   }
   mRender();
 }
