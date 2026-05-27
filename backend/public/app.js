@@ -230,18 +230,18 @@ function updateUserBadge() {
   document.querySelector('.uin .ur').textContent   = u.role === 'admin' ? '⚙ Administrador' : '⚽ Jugador';
 }
 
-const SECTION_TITLES = { dashboard:'Dashboard', score:'Score Balance', training:'Capacitaciones', news:'Noticias', prode:'Prode ⚽', members:'Miembros', users:'Usuarios' };
+const SECTION_TITLES = { dashboard:'Dashboard', r16:'16avos ⚽', score:'Score Balance', training:'Capacitaciones', news:'Noticias', prode:'Prode ⚽', members:'Miembros', users:'Usuarios' };
 const ADD_ACTIONS    = { news: () => openNewsModal(), members: () => openMemberModal() };
 
 function navigateTo(sec) {
   document.querySelectorAll('.ni').forEach(n => n.classList.toggle('active', n.dataset.s === sec));
   document.querySelectorAll('.sec').forEach(x => x.classList.remove('active'));
   document.getElementById('s-' + sec)?.classList.add('active');
-  document.getElementById('tbtit').textContent = SECTION_TITLES[sec] || sec;
+  const SECTION_TITLES = { dashboard:'Dashboard', r16:'16avos ⚽', score:'Score Balance', training:'Capacitaciones', news:'Noticias', prode:'Prode ⚽', members:'Miembros', users:'Usuarios' };
   const addBtn = document.getElementById('addbtn');
   if (currentUser.role === 'admin' && ADD_ACTIONS[sec]) { addBtn.style.display = ''; addBtn.onclick = ADD_ACTIONS[sec]; }
   else { addBtn.style.display = 'none'; }
-  ({ dashboard:renderDashboard, score:renderScore, training:renderTraining, news:renderNews, prode:renderProde, members:renderMembers, users:renderUsers })[sec]?.();
+  ({ dashboard:renderDashboard, r16:renderR16, score:renderScore, training:renderTraining, news:renderNews, prode:renderProde, members:renderMembers, users:renderUsers })[sec]?.();
 }
 
 function setupNav() {
@@ -955,6 +955,194 @@ function toast(msg, type = '') {
   t.innerHTML = `<span>${type === 's' ? '✓' : type === 'e' ? '✕' : 'ℹ'}</span> ${msg}`;
   w.appendChild(t);
   setTimeout(() => t.remove(), 3200);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  16AVOS DE FINAL
+// ══════════════════════════════════════════════════════════════
+let r16Matches = [];
+let r16Preds   = {};
+
+async function renderR16() {
+  if (!currentUser) return;
+  try {
+    r16Matches     = await api('GET', '/prode/matches/r16');
+    const predsArr = await api('GET', '/prode/predictions');
+    r16Preds = {};
+    predsArr.forEach(p => { if (r16Matches.find(m => m.id === p.match_id)) r16Preds[p.match_id] = p; });
+  } catch(e) { console.error('Error cargando R16:', e); return; }
+
+  // Panel admin
+  const adminPanel = document.getElementById('admin-prode-panel');
+  if (adminPanel) adminPanel.style.display = 'none';
+
+  // Mis puntos
+  let myPts = 0;
+  r16Matches.forEach(m => {
+    const pred = r16Preds[m.id];
+    if (!pred) return;
+    const p = calcMatchPoints(pred, m);
+    if (p > 0) myPts += p;
+  });
+  document.getElementById('r16-my-pts').textContent = myPts;
+
+  // Grid de partidos
+  document.getElementById('r16-matches-grid').innerHTML = `
+    <div class="day-matches-grid" style="margin:24px 0">
+      ${r16Matches.map(m => renderR16Card(m)).join('')}
+    </div>`;
+
+  // Standings R16
+  await renderR16Standings();
+}
+
+function renderR16Card(m) {
+  const pred   = r16Preds[m.id] || {};
+  const locked = isMatchLocked(m);
+
+  const mH = m.home_score !== null && m.home_score !== undefined ? Number(m.home_score) : null;
+  const mA = m.away_score !== null && m.away_score !== undefined ? Number(m.away_score) : null;
+  const played = mH !== null && mA !== null;
+
+  const pH = pred.home_score !== null && pred.home_score !== undefined ? Number(pred.home_score) : null;
+  const pA = pred.away_score !== null && pred.away_score !== undefined ? Number(pred.away_score) : null;
+
+  const predResult = pred.result || goalsToResult(pH, pA);
+  const realResult = goalsToResult(mH, mA);
+  const matchPts   = calcMatchPoints(pred, m);
+
+  let ptsLabel = '';
+  if (matchPts === 10) ptsLabel = '🎯 +10 exacto';
+  else if (matchPts === 5) ptsLabel = '✓ +5 ganador';
+  else if (matchPts === 0 && played) ptsLabel = '✗ 0 pts';
+
+  function btnCls(val) {
+    const sel = 'sel' + (val === '1' ? '1' : val === 'x' ? 'x' : '2');
+    if (!predResult) return '';
+    if (predResult !== val) return '';
+    if (!played) return sel;
+    return predResult === realResult ? 'ok' : 'fail';
+  }
+
+  const disabledAttr = locked ? 'disabled' : '';
+  const lockIcon     = locked ? '<span style="font-size:.7rem;color:rgba(255,255,255,.3)">🔒</span>' : '';
+  const resultBadge  = played
+    ? `<span class="match-result-badge">${mH} - ${mA}</span>`
+    : `<span class="match-vs">VS</span>`;
+
+  return `
+    <div class="match-card${played ? ' played' : ''}${locked ? ' locked' : ''}">
+      <div class="match-meta">
+        <span class="match-date">${m.group_name || ''} · ${m.match_date || ''} ${m.time || ''}</span>
+        ${lockIcon}
+        ${currentUser.role === 'admin' ? `
+          <div style="display:flex;gap:4px;margin-left:auto">
+            <input type="number" min="0" max="20" placeholder="L" style="width:36px;height:24px;text-align:center;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:5px;color:#fff;font-size:.75rem;outline:none"
+              value="${mH !== null ? mH : ''}"
+              onchange="setR16Result(${m.id},'home',this.value)">
+            <span style="color:rgba(255,255,255,.3);font-size:.8rem">:</span>
+            <input type="number" min="0" max="20" placeholder="V" style="width:36px;height:24px;text-align:center;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:5px;color:#fff;font-size:.75rem;outline:none"
+              value="${mA !== null ? mA : ''}"
+              onchange="setR16Result(${m.id},'away',this.value)">
+          </div>` : ''}
+      </div>
+      <div class="match-body">
+        <div class="match-team home">
+          <span class="team-flag">${m.home_flag || '🏳️'}</span>
+          <span class="team-name">${m.home}</span>
+        </div>
+        <div class="match-center">
+          ${resultBadge}
+          <div class="pred-btns">
+            <button class="pb ${btnCls('1')}" onclick="setR16Pred(${m.id},'1')" ${disabledAttr}>1</button>
+            <button class="pb ${btnCls('x')}" onclick="setR16Pred(${m.id},'x')" ${disabledAttr}>X</button>
+            <button class="pb ${btnCls('2')}" onclick="setR16Pred(${m.id},'2')" ${disabledAttr}>2</button>
+          </div>
+          <div class="pred-goals">
+            <input class="goals-input" type="number" min="0" max="20" placeholder="?"
+              value="${pH !== null ? pH : ''}" ${disabledAttr}
+              onchange="setR16PredGoals(${m.id},'home',this.value)"
+              oninput="if(this.value<0)this.value=0">
+            <span class="goals-sep">:</span>
+            <input class="goals-input" type="number" min="0" max="20" placeholder="?"
+              value="${pA !== null ? pA : ''}" ${disabledAttr}
+              onchange="setR16PredGoals(${m.id},'away',this.value)"
+              oninput="if(this.value<0)this.value=0">
+          </div>
+          ${played && matchPts >= 0 ? `<div class="match-result-row ${matchPts === 10 ? 'exact' : matchPts === 5 ? 'ok' : 'fail'}">${ptsLabel}</div>` : ''}
+        </div>
+        <div class="match-team away">
+          <span class="team-name">${m.away}</span>
+          <span class="team-flag">${m.away_flag || '🏳️'}</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+async function setR16Pred(matchId, val) {
+  const match = r16Matches.find(m => m.id === matchId);
+  if (!match || isMatchLocked(match)) return;
+  const existing = r16Preds[matchId] || {};
+  const pH = existing.home_score !== null && existing.home_score !== undefined ? Number(existing.home_score) : null;
+  const pA = existing.away_score !== null && existing.away_score !== undefined ? Number(existing.away_score) : null;
+  const currentGoalResult = goalsToResult(pH, pA);
+  let newHome = pH, newAway = pA;
+  if (currentGoalResult !== val) { newHome = null; newAway = null; }
+  await saveR16Prediction(matchId, val, newHome, newAway);
+}
+
+async function setR16PredGoals(matchId, side, value) {
+  const match = r16Matches.find(m => m.id === matchId);
+  if (!match || isMatchLocked(match)) return;
+  const existing = r16Preds[matchId] || {};
+  const newHome = side === 'home' ? (value === '' ? null : Number(value)) : (existing.home_score ?? null);
+  const newAway = side === 'away' ? (value === '' ? null : Number(value)) : (existing.away_score ?? null);
+  const inferredResult = goalsToResult(newHome, newAway) || existing.result || null;
+  await saveR16Prediction(matchId, inferredResult, newHome, newAway);
+}
+
+async function saveR16Prediction(matchId, result, homeScore, awayScore) {
+  try {
+    const saved = await api('POST', '/prode/predictions', { match_id: matchId, result, home_score: homeScore, away_score: awayScore });
+    r16Preds[matchId] = saved;
+    renderR16();
+  } catch(e) { toast(e.message, 'e'); }
+}
+
+async function setR16Result(matchId, side, value) {
+  const m = r16Matches.find(x => x.id === matchId);
+  if (!m) return;
+  const v = value === '' ? null : Number(value);
+  if (side === 'home') m.home_score = v;
+  else                 m.away_score = v;
+  if (m.home_score === null || m.away_score === null) return;
+  try {
+    await api('PUT', '/prode/matches/' + matchId + '/result', { home_score: m.home_score, away_score: m.away_score });
+    toast('Resultado guardado', 's');
+    renderR16();
+  } catch(e) { toast(e.message, 'e'); }
+}
+
+async function renderR16Standings() {
+  try {
+    const standings = await api('GET', '/prode/standings');
+    const r16ids = new Set(r16Matches.map(m => m.id));
+    // Filtramos solo puntos de R16 — por ahora mostramos standings globales
+    const sorted = [...standings].sort((a,b) => b.pts - a.pts);
+    document.getElementById('r16-standings').innerHTML = sorted.length
+      ? sorted.map((s,i) => {
+          const pkc  = i===0?'rk1':i===1?'rk2':i===2?'rk3':'rkn';
+          const isMe = s.username === currentUser.username;
+          return `<div class="sr">
+            <div class="srp ${pkc}">${i+1}</div>
+            <div class="srname">
+              ${isMe ? `<strong>${s.displayName}</strong> <span class="me-tag">← vos</span>` : s.displayName}
+            </div>
+            <div class="srpts">${s.pts} pts</div>
+          </div>`;
+        }).join('')
+      : '<div class="no-standings">Sin pronósticos todavía.</div>';
+  } catch { }
 }
 
 document.addEventListener('keydown', e => {
