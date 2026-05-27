@@ -1414,10 +1414,7 @@ function renderMundial() {
     mLine(mSvg, centerX + 30, finalMidY, rF[0].x, finalMidY);
 
     // Dashed outer ring
-    mSvg.appendChild(mEl('circle', { cx: centerX, cy: finalMidY, r: 38, fill: 'none', stroke: 'rgba(255,184,28,.08)', 'stroke-width': '1', 'stroke-dasharray': '3 4' }));
-    // Center circle
-    mSvg.appendChild(mEl('circle', { cx: centerX, cy: finalMidY, r: 30, fill: '#091420', stroke: 'rgba(255,184,28,.35)', 'stroke-width': '1.5' }));
-    // Trophy image
+    
     const trophyT = mEl('text', {
   x: centerX,
   y: finalMidY + 8,
@@ -1425,12 +1422,12 @@ function renderMundial() {
   'text-anchor': 'middle',
   'dominant-baseline': 'middle'
 });
-const trophySize = 80;
+const trophySize = 150;
 
 const trophyImg = mEl('image', {
   href: 'copa.png',
-  x: centerX - trophySize / 8,
-  y: finalMidY - trophySize / 8,
+  x: centerX - trophySize / 2,
+  y: finalMidY - trophySize / 2,
   width: trophySize,
   height: trophySize
 });
