@@ -1350,14 +1350,7 @@ function renderMundial() {
 
 
 // OPCIÓN B: Si querés usar el emoji (sin necesitar el archivo)
-const trophyImg = mEl('image', {
-  x: centerX - 18,
-  y: finalMidY - 32,
-  width: '36',
-  height: '46',
-  href: 'mundialcopa.png'   // ← ya tenés el archivo en public/
-});
-mSvg.appendChild(trophyImg);
+v
 
 // Esto va en ambos casos (sin cambios)
 const dt = mEl('text', {
@@ -1372,7 +1365,7 @@ dt.textContent = '19 Jul · MetLife NJ';
 mSvg.appendChild(dt);
 mUpdateStats();
   }
-  mRender();
+  mRender();s
 }
  
  
