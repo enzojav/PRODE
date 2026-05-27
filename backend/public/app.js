@@ -3,11 +3,11 @@
 //  Roles: "admin" (acceso total) | "player" (solo Prode)
 //  PUNTOS: exacto (goles) = 10pts · resultado (1/x/2) = 5pts
 // ============================================================
-
+ 
 const AVATAR_COLORS = ['#6CACE4','#FFB81C','#85bde8','#002470','#3ae8d0','#ff8c42','#a8d8ea','#43e8b0'];
 const avc = i => AVATAR_COLORS[i % AVATAR_COLORS.length];
 const ini = n => n.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
-
+ 
 let currentUser    = null;
 let localMatches   = [];
 let localPreds     = {};
@@ -15,7 +15,7 @@ let activeDate     = null;
 let scorePeriod    = 'Abr 2026';
 let newsFilter     = '';
 let editingMemberId = null;
-
+ 
 // ── API helper ────────────────────────────────────────────────
 async function api(method, path, body) {
   const token = sessionStorage.getItem('qh_token');
@@ -32,14 +32,14 @@ async function api(method, path, body) {
   if (!res.ok) throw new Error(data.error || 'Error del servidor');
   return data;
 }
-
+ 
 // ── Lock de partidos por hora ─────────────────────────────────
 const MONTH_MAP = {
   'Ene':0,'Feb':1,'Mar':2,'Abr':3,'May':4,'Jun':5,
   'Jul':6,'Ago':7,'Sep':8,'Oct':9,'Nov':10,'Dic':11,
   'Jan':0,'Aug':7,'Dec':11
 };
-
+ 
 function isMatchLocked(m) {
   try {
     const parts   = (m.match_date || m.date || '').split(' ');
@@ -51,7 +51,7 @@ function isMatchLocked(m) {
     return new Date() >= new Date(2026, month, day, hh, mm, 0);
   } catch { return false; }
 }
-
+ 
 // ── Ordenar fechas cronológicamente ──────────────────────────
 const DAY_ORDER = { 'Jue':0,'Vie':1,'Sáb':2,'Dom':3,'Lun':4,'Mar':5,'Mié':6 };
 function parseDateToSort(dateStr) {
@@ -63,7 +63,7 @@ function parseDateToSort(dateStr) {
     return new Date(2026, month, day).getTime();
   } catch { return 0; }
 }
-
+ 
 // ── Calcular resultado a partir de goles ─────────────────────
 function goalsToResult(h, a) {
   if (h === null || a === null || h === undefined || a === undefined) return null;
@@ -71,27 +71,27 @@ function goalsToResult(h, a) {
   if (isNaN(hN) || isNaN(aN)) return null;
   return hN > aN ? '1' : hN < aN ? '2' : 'x';
 }
-
+ 
 // ── Calcular puntos de un partido ────────────────────────────
 function calcMatchPoints(pred, match) {
   const mH = match.home_score !== null && match.home_score !== undefined ? Number(match.home_score) : null;
   const mA = match.away_score !== null && match.away_score !== undefined ? Number(match.away_score) : null;
   if (mH === null || mA === null || isNaN(mH) || isNaN(mA)) return -1;
-
+ 
   const pResult = pred.result || null;
   const pH = pred.home_score !== null && pred.home_score !== undefined ? Number(pred.home_score) : null;
   const pA = pred.away_score !== null && pred.away_score !== undefined ? Number(pred.away_score) : null;
-
+ 
   const realResult = goalsToResult(mH, mA);
-
+ 
   if (pH !== null && pA !== null && !isNaN(pH) && !isNaN(pA) && pH === mH && pA === mA) return 10;
-
+ 
   const predResult = pResult || goalsToResult(pH, pA);
   if (predResult && predResult === realResult) return 5;
-
+ 
   return 0;
 }
-
+ 
 // ══════════════════════════════════════════════════════════════
 //  AUTH
 // ══════════════════════════════════════════════════════════════
@@ -107,7 +107,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
   showAuthScreen();
 });
-
+ 
 function showAuthScreen() {
   document.getElementById('auth-screen').style.display = 'flex';
   document.getElementById('app-shell').style.display   = 'none';
@@ -116,7 +116,7 @@ function showApp() {
   document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('app-shell').style.display   = 'flex';
 }
-
+ 
 function switchAuthTab(tab) {
   ['login','register'].forEach(t => {
     document.getElementById('auth-' + t).style.display = t === tab ? 'block' : 'none';
@@ -124,7 +124,7 @@ function switchAuthTab(tab) {
   });
   document.getElementById('auth-error').textContent = '';
 }
-
+ 
 async function doLogin() {
   const username = document.getElementById('l-user').value.trim();
   const password = document.getElementById('l-pass').value;
@@ -137,7 +137,7 @@ async function doLogin() {
     bootApp();
   } catch (e) { errEl.textContent = e.message || 'Error al iniciar sesión.'; }
 }
-
+ 
 async function doRegister() {
   const displayName = document.getElementById('r-name').value.trim();
   const username    = document.getElementById('r-user').value.trim();
@@ -158,7 +158,7 @@ async function doRegister() {
     }, 3500);
   } catch (e) { errEl.textContent = e.message || 'Error al registrarse.'; }
 }
-
+ 
 function doLogout() {
   currentUser = null;
   sessionStorage.removeItem('qh_token');
@@ -167,19 +167,19 @@ function doLogout() {
   document.getElementById('l-pass').value = '';
   document.getElementById('auth-error').textContent = '';
 }
-
+ 
 function toggleSidebar() {
   const sb = document.getElementById('sidebar');
   const collapsed = sb.classList.toggle('collapsed');
   localStorage.setItem('sb_collapsed', collapsed ? '1' : '0');
 }
-
+ 
 function applySidebarState() {
   if (localStorage.getItem('sb_collapsed') === '1') {
     document.getElementById('sidebar')?.classList.add('collapsed');
   }
 }
-
+ 
 function showIntro(callback) {
   const intro = document.getElementById('intro-screen');
   const audio = document.getElementById('login-audio');
@@ -196,7 +196,7 @@ function showIntro(callback) {
     }, 500);
   }, 2500);
 }
-
+ 
 function bootApp() {
   showIntro(() => {
     showApp();
@@ -208,7 +208,7 @@ function bootApp() {
     else navigateTo('prode');
   });
 }
-
+ 
 function applyRole() {
   const isAdmin = currentUser.role === 'admin';
   document.querySelectorAll('.ni[data-s]').forEach(el => {
@@ -221,7 +221,7 @@ function applyRole() {
   const ap = document.getElementById('admin-prode-panel');
   if (ap) ap.style.display = isAdmin ? '' : 'none';
 }
-
+ 
 function updateUserBadge() {
   const u = currentUser;
   document.querySelector('.uavs').textContent      = ini(u.displayName || u.username);
@@ -229,10 +229,10 @@ function updateUserBadge() {
   document.querySelector('.uin .un').textContent   = u.displayName || u.username;
   document.querySelector('.uin .ur').textContent   = u.role === 'admin' ? '⚙ Administrador' : '⚽ Jugador';
 }
-
+ 
 const SECTION_TITLES = { dashboard:'Dashboard', r16:'16avos ⚽', score:'Score Balance', training:'Capacitaciones', news:'Noticias', mundial:'Mundial 2026 🏆', prode:'Prode ⚽', members:'Miembros', users:'Usuarios' };
 const ADD_ACTIONS    = { news: () => openNewsModal(), members: () => openMemberModal() };
-
+ 
 function navigateTo(sec) {
   document.querySelectorAll('.ni').forEach(n => n.classList.toggle('active', n.dataset.s === sec));
   document.querySelectorAll('.sec').forEach(x => x.classList.remove('active'));
@@ -243,11 +243,11 @@ function navigateTo(sec) {
   else { addBtn.style.display = 'none'; }
   ({ dashboard:renderDashboard, r16:renderR16, score:renderScore, training:renderTraining, news:renderNews, mundial:renderMundial, prode:renderProde, members:renderMembers, users:renderUsers })[sec]?.();
 }
-
+ 
 function setupNav() {
   document.querySelectorAll('.ni').forEach(el => el.addEventListener('click', () => navigateTo(el.dataset.s)));
 }
-
+ 
 // ══════════════════════════════════════════════════════════════
 //  DASHBOARD
 // ══════════════════════════════════════════════════════════════
@@ -256,18 +256,18 @@ async function renderDashboard() {
     const members = await api('GET', '/members');
     document.getElementById('d-members').textContent = members.length;
   } catch { document.getElementById('d-members').textContent = '—'; }
-
+ 
   document.getElementById('d-courses').textContent  = typeof DB_COURSES !== 'undefined' ? DB_COURSES.filter(c => c.status === 'Activo').length : '—';
   document.getElementById('d-approved').textContent = typeof DB_TRAINING_PROGRESS !== 'undefined' ? DB_TRAINING_PROGRESS.filter(p => p.status === 'Aprobado').length : '—';
   document.getElementById('d-avg').textContent      = '—';
-
+ 
   if (typeof DB_ACTIVITY !== 'undefined') {
     document.getElementById('act-list').innerHTML = DB_ACTIVITY.map(a =>
       `<li class="ai"><span class="adot dot-${a.color}"></span><div><div class="at">${a.message}</div><div class="atm">${a.time}</div></div></li>`
     ).join('');
   }
 }
-
+ 
 // ══════════════════════════════════════════════════════════════
 //  SCORE BALANCE
 // ══════════════════════════════════════════════════════════════
@@ -282,7 +282,7 @@ function calcWeightedScore(memberId, period) {
   });
   return tw ? Math.round(ws / tw * 10) / 10 : null;
 }
-
+ 
 async function renderScore() {
   try {
     const members = await api('GET', '/members');
@@ -313,9 +313,9 @@ async function renderScore() {
     }).join('');
   } catch(e) { console.error(e); }
 }
-
+ 
 function setPeriod(p) { scorePeriod = p; renderScore(); }
-
+ 
 // ══════════════════════════════════════════════════════════════
 //  CAPACITACIONES
 // ══════════════════════════════════════════════════════════════
@@ -339,16 +339,16 @@ function renderTraining() {
     </tr>`;
   }).join('');
 }
-
+ 
 // ══════════════════════════════════════════════════════════════
 //  NOTICIAS
 // ══════════════════════════════════════════════════════════════
 let localNews = [];
-
+ 
 async function renderNews() {
   try { localNews = await api('GET', '/news'); }
   catch { localNews = []; }
-
+ 
   if (!localNews.length) {
     document.getElementById('news-hero').innerHTML    = '<p style="color:var(--text3)">No hay noticias todavía.</p>';
     document.getElementById('news-cards').innerHTML   = '';
@@ -356,17 +356,17 @@ async function renderNews() {
     document.getElementById('tick-inner').innerHTML   = '';
     return;
   }
-
+ 
   document.getElementById('tick-inner').innerHTML = [...localNews, ...localNews].map(n => `<span>${n.title}</span>`).join('');
   const cats = ['Todos', ...new Set(localNews.map(n => n.category))];
   document.getElementById('news-filter').innerHTML = cats.map(c =>
     `<button class="nftag${(!newsFilter && c === 'Todos') || newsFilter === c ? ' active' : ''}" onclick="setNewsFilter('${c}')">${c}</button>`
   ).join('');
-
+ 
   const filtered = newsFilter ? localNews.filter(n => n.category === newsFilter) : localNews;
   const sorted   = [...filtered].sort((a,b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
   const hero     = sorted[0];
-
+ 
   if (hero) {
     document.getElementById('news-hero').innerHTML = `
       ${newsMediaHTML(hero.image_url)}
@@ -381,7 +381,7 @@ async function renderNews() {
         </button>` : ''}
       </div>`;
   }
-
+ 
   document.getElementById('news-cards').innerHTML = sorted.slice(1).map(n => `
     <div class="ncard">
       ${newsMediaHTML(n.image_url)}
@@ -395,7 +395,7 @@ async function renderNews() {
     </div>`).join('');
   setTimeout(loadPreviews, 100);
 }
-
+ 
 function newsMediaHTML(url) {
   if (!url) return '';
   const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?/]+)/);
@@ -409,7 +409,7 @@ function newsMediaHTML(url) {
     <a href="${url}" target="_blank" class="nlp-url">🔗 Cargando preview...</a>
   </div>`;
 }
-
+ 
 async function loadPreviews() {
   document.querySelectorAll('.news-media[id^="preview-"]').forEach(async el => {
     const link = el.querySelector('a');
@@ -429,13 +429,13 @@ async function loadPreviews() {
     } catch { }
   });
 }
-
+ 
 function openNewsModal() {
   ['n-title','n-body','n-author','n-image'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('n-emoji').value = '📋';
   document.getElementById('n-modal').classList.add('open');
 }
-
+ 
 async function saveNews() {
   const title     = document.getElementById('n-title').value.trim();
   const body      = document.getElementById('n-body').value.trim();
@@ -449,7 +449,7 @@ async function saveNews() {
     closeM('n-modal'); renderNews(); toast('Noticia publicada', 's');
   } catch(e) { toast(e.message, 'e'); }
 }
-
+ 
 async function deleteNews(id) {
   if (!confirm('¿Eliminás esta noticia?')) return;
   try {
@@ -457,7 +457,7 @@ async function deleteNews(id) {
     renderNews(); toast('Noticia eliminada', 'e');
   } catch(e) { toast(e.message, 'e'); }
 }
-
+ 
 // ══════════════════════════════════════════════════════════════
 //  PRODE
 // ══════════════════════════════════════════════════════════════
@@ -472,19 +472,19 @@ async function renderProde() {
     console.error('Error cargando prode:', e);
     return;
   }
-
+ 
   // Panel admin
   const adminPanel = document.getElementById('admin-prode-panel');
   if (adminPanel) {
     adminPanel.style.display = currentUser.role === 'admin' ? '' : 'none';
     if (currentUser.role === 'admin') renderAdminProdePanel();
   }
-
+ 
   // Strip de fechas — ORDENADAS CRONOLÓGICAMENTE
   const allDates = [...new Set(localMatches.map(m => m.match_date))];
   allDates.sort((a, b) => parseDateToSort(a) - parseDateToSort(b));
   if (!activeDate || !allDates.includes(activeDate)) activeDate = allDates[0];
-
+ 
   document.getElementById('date-strip').innerHTML = allDates.map(d => {
     const dayM      = localMatches.filter(m => m.match_date === d);
     const hasResult = dayM.some(m => m.home_score !== null);
@@ -496,7 +496,7 @@ async function renderProde() {
       ${hasResult ? '<span class="dc-dot"></span>' : ''}
     </button>`;
   }).join('');
-
+ 
   // Partidos del día
   const dayMatches = localMatches.filter(m => m.match_date === activeDate);
   const dayEl = document.getElementById('matches-day');
@@ -512,11 +512,11 @@ async function renderProde() {
         ${dayMatches.map(m => renderMatchCard(m)).join('')}
       </div>`;
   }
-
+ 
   // Mis puntos
   const myPts = calcMyPoints();
   document.getElementById('my-pts').textContent = myPts;
-
+ 
   // Status bar
   const totalFilled  = Object.values(localPreds).filter(p => p.result || (p.home_score !== null && p.away_score !== null)).length;
   const totalMatches = localMatches.length;
@@ -525,10 +525,10 @@ async function renderProde() {
       <span>⚽ ${totalFilled}/${totalMatches} partidos votados · <strong>${myPts} pts</strong></span>
       <span style="font-size:.75rem;color:var(--text3)">Se guarda automáticamente</span>
     </div>`;
-
+ 
   await renderStandings();
 }
-
+ 
 function calcMyPoints() {
   let pts = 0;
   localMatches.forEach(m => {
@@ -539,7 +539,7 @@ function calcMyPoints() {
   });
   return pts;
 }
-
+ 
 async function renderStandings() {
   try {
     const standings = await api('GET', '/prode/standings');
@@ -560,30 +560,30 @@ async function renderStandings() {
       : '<div class="no-standings">Nadie cargó pronósticos todavía.</div>';
   } catch { }
 }
-
+ 
 function setDate(d) { activeDate = d; renderProde(); }
-
+ 
 // ── Tarjeta de partido ────────────────────────────────────────
 function renderMatchCard(m) {
   const pred   = localPreds[m.id] || {};
   const locked = isMatchLocked(m);
-
+ 
   const mH = m.home_score !== null && m.home_score !== undefined ? Number(m.home_score) : null;
   const mA = m.away_score !== null && m.away_score !== undefined ? Number(m.away_score) : null;
   const played = mH !== null && mA !== null;
-
+ 
   const pH = pred.home_score !== null && pred.home_score !== undefined ? Number(pred.home_score) : null;
   const pA = pred.away_score !== null && pred.away_score !== undefined ? Number(pred.away_score) : null;
-
+ 
   const predResult = pred.result || goalsToResult(pH, pA);
   const realResult = goalsToResult(mH, mA);
   const matchPts   = calcMatchPoints(pred, m);
-
+ 
   let ptsLabel = '';
   if (matchPts === 10) ptsLabel = '🎯 +10 exacto';
   else if (matchPts === 5) ptsLabel = '✓ +5 ganador';
   else if (matchPts === 0) ptsLabel = '✗ 0 pts';
-
+ 
   // Clase de los botones ↑ X ↓
   function btnCls(val) {
     const sel = 'sel' + (val === '1' ? '1' : val === 'x' ? 'x' : '2');
@@ -592,18 +592,18 @@ function renderMatchCard(m) {
     if (!played) return sel;
     return predResult === realResult ? 'ok' : 'fail';
   }
-
+ 
   // Ícono del botón: flecha verde arriba para 1, X para empate, flecha roja abajo para 2
   const btn1Icon = `<svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 10V2M2 6l4-4 4 4"/></svg>`;
   const btnXIcon = `<span style="font-size:1rem;font-weight:700">X</span>`;
   const btn2Icon = `<svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 2v8M2 6l4 4 4-4"/></svg>`;
-
+ 
   const disabledAttr = locked ? 'disabled' : '';
   const lockIcon     = locked ? '<span style="font-size:.7rem;color:var(--text3)">🔒</span>' : '';
   const resultBadge  = played
     ? `<span class="match-result-badge">${mH} - ${mA}</span>`
     : `<span class="match-vs">VS</span>`;
-
+ 
   return `
     <div class="match-card${played ? ' played' : ''}${locked ? ' locked' : ''}">
       <div class="match-meta">
@@ -648,7 +648,7 @@ function renderMatchCard(m) {
       </div>
     </div>`;
 }
-
+ 
 // ── Panel admin resultados ────────────────────────────────────
 function renderAdminProdePanel() {
   const panel = document.getElementById('admin-match-list');
@@ -688,7 +688,7 @@ function renderAdminProdePanel() {
         </div>
       </div>`).join('')}`;
 }
-
+ 
 async function setMatchResult(matchId, side, value) {
   const m = localMatches.find(x => x.id === matchId);
   if (!m) return;
@@ -705,7 +705,7 @@ async function setMatchResult(matchId, side, value) {
     renderProde();
   } catch(e) { toast(e.message, 'e'); }
 }
-
+ 
 // ── Borrar resultado de un partido (solo admin) ───────────────
 async function clearMatchResult(matchId) {
   if (!confirm('¿Borrás el resultado de este partido?')) return;
@@ -715,16 +715,16 @@ async function clearMatchResult(matchId) {
     renderProde();
   } catch(e) { toast(e.message, 'e'); }
 }
-
+ 
 // ── Predicciones ──────────────────────────────────────────────
 async function setPred(matchId, val) {
   const match = localMatches.find(m => m.id === matchId);
   if (!match || isMatchLocked(match)) return;
-
+ 
   const existing = localPreds[matchId] || {};
   const pH = existing.home_score !== null && existing.home_score !== undefined ? Number(existing.home_score) : null;
   const pA = existing.away_score !== null && existing.away_score !== undefined ? Number(existing.away_score) : null;
-
+ 
   const currentGoalResult = goalsToResult(pH, pA);
   let newHome = pH;
   let newAway = pA;
@@ -732,23 +732,23 @@ async function setPred(matchId, val) {
     newHome = null;
     newAway = null;
   }
-
+ 
   await savePrediction(matchId, val, newHome, newAway);
 }
-
+ 
 async function setPredGoals(matchId, side, value) {
   const match = localMatches.find(m => m.id === matchId);
   if (!match || isMatchLocked(match)) return;
-
+ 
   const existing = localPreds[matchId] || {};
   const newHome  = side === 'home' ? (value === '' ? null : Number(value)) : (existing.home_score !== null && existing.home_score !== undefined ? Number(existing.home_score) : null);
   const newAway  = side === 'away' ? (value === '' ? null : Number(value)) : (existing.away_score !== null && existing.away_score !== undefined ? Number(existing.away_score) : null);
-
+ 
   const inferredResult = goalsToResult(newHome, newAway) || existing.result || null;
-
+ 
   await savePrediction(matchId, inferredResult, newHome, newAway);
 }
-
+ 
 async function savePrediction(matchId, result, homeScore, awayScore) {
   try {
     const saved = await api('POST', '/prode/predictions', {
@@ -761,21 +761,21 @@ async function savePrediction(matchId, result, homeScore, awayScore) {
     renderProde();
   } catch(e) { toast(e.message, 'e'); }
 }
-
+ 
 // ══════════════════════════════════════════════════════════════
 //  USUARIOS (solo admin)
 // ══════════════════════════════════════════════════════════════
 async function renderUsers() {
   try {
     const users = await api('GET', '/auth/users');
-
+ 
     const pending = users.filter(u => u.status === 'pending');
     const active  = users.filter(u => u.status === 'active');
     const banned  = users.filter(u => u.status === 'banned');
-
+ 
     const userSection = document.getElementById('s-users');
     if (!userSection) return;
-
+ 
     userSection.innerHTML = `
       <div class="card" style="margin-bottom:16px">
         <div class="ctit" style="display:flex;align-items:center;gap:8px">
@@ -799,7 +799,7 @@ async function renderUsers() {
                 </div>`).join('')}
             </div>`}
       </div>
-
+ 
       <div class="card" style="margin-bottom:16px">
         <div class="ctit">✅ Usuarios activos</div>
         ${active.length === 0
@@ -819,7 +819,7 @@ async function renderUsers() {
                 </div>`).join('')}
             </div>`}
       </div>
-
+ 
       ${banned.length > 0 ? `
       <div class="card">
         <div class="ctit">🚫 Usuarios baneados</div>
@@ -838,12 +838,12 @@ async function renderUsers() {
             </div>`).join('')}
         </div>
       </div>` : ''}`;
-
+ 
   } catch (e) {
     toast('Error al cargar usuarios: ' + e.message, 'e');
   }
 }
-
+ 
 async function setUserStatus(id, status) {
   try {
     await api('PUT', '/auth/users/' + id + '/status', { status });
@@ -852,7 +852,7 @@ async function setUserStatus(id, status) {
     renderUsers();
   } catch (e) { toast(e.message, 'e'); }
 }
-
+ 
 async function deleteUser(id, name) {
   if (!confirm(`¿Eliminás a ${name}? Esta acción no se puede deshacer.`)) return;
   try {
@@ -861,20 +861,20 @@ async function deleteUser(id, name) {
     renderUsers();
   } catch (e) { toast(e.message, 'e'); }
 }
-
+ 
 // ══════════════════════════════════════════════════════════════
 //  MIEMBROS
 // ══════════════════════════════════════════════════════════════
 let localMembers = [];
-
+ 
 async function renderMembers() {
   try { localMembers = await api('GET', '/members'); }
   catch { localMembers = []; }
-
+ 
   const search = (document.getElementById('msearch').value || '').toLowerCase();
   const list   = localMembers.filter(m =>
     (!search || m.name.toLowerCase().includes(search) || (m.role || '').toLowerCase().includes(search)));
-
+ 
   document.getElementById('mcnt').textContent = `${list.length} miembro${list.length !== 1 ? 's' : ''}`;
   document.getElementById('members-tb').innerHTML = list.map(m => `
     <tr>
@@ -893,16 +893,16 @@ async function renderMembers() {
       </div></td>
     </tr>`).join('');
 }
-
+ 
 document.getElementById('msearch')?.addEventListener('input', renderMembers);
-
+ 
 function openMemberModal() {
   editingMemberId = null;
   document.getElementById('m-mtit').textContent = 'Nuevo miembro';
   ['m-name','m-role'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('m-modal').classList.add('open');
 }
-
+ 
 function openEditMember(id) {
   const m = localMembers.find(x => x.id === id);
   if (!m) return;
@@ -912,7 +912,7 @@ function openEditMember(id) {
   document.getElementById('m-role').value = m.role || '';
   document.getElementById('m-modal').classList.add('open');
 }
-
+ 
 async function saveMember() {
   const name = document.getElementById('m-name').value.trim();
   const role = document.getElementById('m-role').value.trim();
@@ -929,7 +929,7 @@ async function saveMember() {
     renderMembers();
   } catch(e) { toast(e.message, 'e'); }
 }
-
+ 
 async function deleteMember(id, name) {
   if (!confirm(`¿Eliminás a ${name}?`)) return;
   try {
@@ -938,16 +938,16 @@ async function deleteMember(id, name) {
     renderMembers();
   } catch(e) { toast(e.message, 'e'); }
 }
-
+ 
 // ══════════════════════════════════════════════════════════════
 //  UTILS
 // ══════════════════════════════════════════════════════════════
 function closeM(id) { document.getElementById(id).classList.remove('open'); }
-
+ 
 document.querySelectorAll('.mb').forEach(b =>
   b.addEventListener('click', e => { if (e.target === b) b.classList.remove('open'); })
 );
-
+ 
 function toast(msg, type = '') {
   const w = document.getElementById('tw');
   const t = document.createElement('div');
@@ -956,13 +956,13 @@ function toast(msg, type = '') {
   w.appendChild(t);
   setTimeout(() => t.remove(), 3200);
 }
-
+ 
 // ══════════════════════════════════════════════════════════════
 //  16AVOS DE FINAL
 // ══════════════════════════════════════════════════════════════
 let r16Matches = [];
 let r16Preds   = {};
-
+ 
 async function renderR16() {
   if (!currentUser) return;
   try {
@@ -971,11 +971,11 @@ async function renderR16() {
     r16Preds = {};
     predsArr.forEach(p => { if (r16Matches.find(m => m.id === p.match_id)) r16Preds[p.match_id] = p; });
   } catch(e) { console.error('Error cargando R16:', e); return; }
-
+ 
   // Panel admin
   const adminPanel = document.getElementById('admin-prode-panel');
   if (adminPanel) adminPanel.style.display = 'none';
-
+ 
   // Mis puntos
   let myPts = 0;
   r16Matches.forEach(m => {
@@ -985,37 +985,37 @@ async function renderR16() {
     if (p > 0) myPts += p;
   });
   document.getElementById('r16-my-pts').textContent = myPts;
-
+ 
   // Grid de partidos
   document.getElementById('r16-matches-grid').innerHTML = `
     <div class="day-matches-grid" style="margin:24px 0">
       ${r16Matches.map(m => renderR16Card(m)).join('')}
     </div>`;
-
+ 
   // Standings R16
   await renderR16Standings();
 }
-
+ 
 function renderR16Card(m) {
   const pred   = r16Preds[m.id] || {};
   const locked = isMatchLocked(m);
-
+ 
   const mH = m.home_score !== null && m.home_score !== undefined ? Number(m.home_score) : null;
   const mA = m.away_score !== null && m.away_score !== undefined ? Number(m.away_score) : null;
   const played = mH !== null && mA !== null;
-
+ 
   const pH = pred.home_score !== null && pred.home_score !== undefined ? Number(pred.home_score) : null;
   const pA = pred.away_score !== null && pred.away_score !== undefined ? Number(pred.away_score) : null;
-
+ 
   const predResult = pred.result || goalsToResult(pH, pA);
   const realResult = goalsToResult(mH, mA);
   const matchPts   = calcMatchPoints(pred, m);
-
+ 
   let ptsLabel = '';
   if (matchPts === 10) ptsLabel = '🎯 +10 exacto';
   else if (matchPts === 5) ptsLabel = '✓ +5 ganador';
   else if (matchPts === 0 && played) ptsLabel = '✗ 0 pts';
-
+ 
   function btnCls(val) {
     const sel = 'sel' + (val === '1' ? '1' : val === 'x' ? 'x' : '2');
     if (!predResult) return '';
@@ -1023,13 +1023,13 @@ function renderR16Card(m) {
     if (!played) return sel;
     return predResult === realResult ? 'ok' : 'fail';
   }
-
+ 
   const disabledAttr = locked ? 'disabled' : '';
   const lockIcon     = locked ? '<span style="font-size:.7rem;color:rgba(255,255,255,.3)">🔒</span>' : '';
   const resultBadge  = played
     ? `<span class="match-result-badge">${mH} - ${mA}</span>`
     : `<span class="match-vs">VS</span>`;
-
+ 
   return `
     <div class="match-card${played ? ' played' : ''}${locked ? ' locked' : ''}">
       <div class="match-meta">
@@ -1078,7 +1078,7 @@ function renderR16Card(m) {
       </div>
     </div>`;
 }
-
+ 
 async function setR16Pred(matchId, val) {
   const match = r16Matches.find(m => m.id === matchId);
   if (!match || isMatchLocked(match)) return;
@@ -1090,7 +1090,7 @@ async function setR16Pred(matchId, val) {
   if (currentGoalResult !== val) { newHome = null; newAway = null; }
   await saveR16Prediction(matchId, val, newHome, newAway);
 }
-
+ 
 async function setR16PredGoals(matchId, side, value) {
   const match = r16Matches.find(m => m.id === matchId);
   if (!match || isMatchLocked(match)) return;
@@ -1100,7 +1100,7 @@ async function setR16PredGoals(matchId, side, value) {
   const inferredResult = goalsToResult(newHome, newAway) || existing.result || null;
   await saveR16Prediction(matchId, inferredResult, newHome, newAway);
 }
-
+ 
 async function saveR16Prediction(matchId, result, homeScore, awayScore) {
   try {
     const saved = await api('POST', '/prode/predictions', { match_id: matchId, result, home_score: homeScore, away_score: awayScore });
@@ -1108,7 +1108,7 @@ async function saveR16Prediction(matchId, result, homeScore, awayScore) {
     renderR16();
   } catch(e) { toast(e.message, 'e'); }
 }
-
+ 
 async function setR16Result(matchId, side, value) {
   const m = r16Matches.find(x => x.id === matchId);
   if (!m) return;
@@ -1122,7 +1122,7 @@ async function setR16Result(matchId, side, value) {
     renderR16();
   } catch(e) { toast(e.message, 'e'); }
 }
-
+ 
 async function renderR16Standings() {
   try {
     const standings = await api('GET', '/prode/standings');
@@ -1144,7 +1144,7 @@ async function renderR16Standings() {
       : '<div class="no-standings">Sin pronósticos todavía.</div>';
   } catch { }
 }
-
+ 
 // ══════════════════════════════════════════════════════════════
 //  MUNDIAL 2026 — Bracket 16avos
 // ══════════════════════════════════════════════════════════════
@@ -1152,17 +1152,17 @@ let mundialRendered = false;
 function renderMundial() {
   if (mundialRendered) return;
   mundialRendered = true;
-
+ 
   const container = document.getElementById('mundial-embed');
   if (!container) return;
-
+ 
   const W = 104, H = 36, GAP = 12;
   const COL_W = 120;
   const LINE_COLOR = 'rgba(108,172,228,.2)';
   const AMBER = '#FFB81C';
   const FONT = "'Inter', system-ui, sans-serif";
   const STORAGE_KEY = 'mundial2026_bracket';
-
+ 
   const defaultMatches = [
     {id:1,  home:{f:'🏳️',n:'1E'},      away:{f:'🏳️',n:'3 ABCDF'}, date:'27 Jun', hs:null, as:null},
     {id:2,  home:{f:'🏳️',n:'1I'},      away:{f:'🏳️',n:'3 CDFGH'}, date:'27 Jun', hs:null, as:null},
@@ -1181,17 +1181,17 @@ function renderMundial() {
     {id:15, home:{f:'🏳️',n:'1B'},      away:{f:'🏳️',n:'3 EFGIJ'}, date:'4 Jul',  hs:null, as:null},
     {id:16, home:{f:'🏳️',n:'1K'},      away:{f:'🏳️',n:'3 DEIJL'}, date:'4 Jul',  hs:null, as:null},
   ];
-
+ 
   let mMatches;
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     mMatches = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultMatches));
   } catch { mMatches = JSON.parse(JSON.stringify(defaultMatches)); }
-
+ 
   const leftIds  = [1,2,3,4,5,6,7,8];
   const rightIds = [9,10,11,12,13,14,15,16];
   let mEditTarget = null;
-
+ 
   function mSave() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(mMatches)); } catch {} }
   function mWinner(m) {
     if (m.hs === null || m.as === null) return null;
@@ -1203,7 +1203,7 @@ function renderMundial() {
     for (const [k,v] of Object.entries(attrs)) el.setAttribute(k, v);
     return el;
   }
-
+ 
   // inject HTML
   container.innerHTML = `
     <div style="background:linear-gradient(135deg,#060d1f 0%,#0f2347 50%,#060d1f 100%);border-bottom:1px solid rgba(108,172,228,.15);padding:16px 20px;display:flex;align-items:center;gap:14px;border-radius:12px 12px 0 0;margin-bottom:0">
@@ -1235,15 +1235,15 @@ function renderMundial() {
         </div>
       </div>
     </div>`;
-
+ 
   const mSvg     = document.getElementById('mw-svg');
   const mModal   = document.getElementById('mw-modal');
-
+ 
   document.getElementById('mw-mclose').addEventListener('click', mCloseModal);
   document.getElementById('mw-mcancel').addEventListener('click', mCloseModal);
   document.getElementById('mw-msave').addEventListener('click', mSaveModal);
   mModal.addEventListener('click', e => { if (e.target === mModal) mCloseModal(); });
-
+ 
   function mOpenModal(matchId, side) {
     const m = mMatches.find(x => x.id === matchId);
     const team = side === 'home' ? m.home : m.away;
@@ -1255,12 +1255,12 @@ function renderMundial() {
     mModal.style.display = 'flex';
     document.getElementById('mw-name').focus();
   }
-
+ 
   function mCloseModal() {
     mModal.style.display = 'none';
     mEditTarget = null;
   }
-
+ 
   function mSaveModal() {
     if (!mEditTarget) return;
     const {matchId, side} = mEditTarget;
@@ -1273,7 +1273,7 @@ function renderMundial() {
     mSave(); mCloseModal(); mRender();
     showToast('✓ Guardado');
   }
-
+ 
   function mUpdateStats() {
     const played = mMatches.filter(m => m.hs!==null && m.as!==null).length;
     const goals  = mMatches.reduce((a,m) => a+(m.hs||0)+(m.as||0), 0);
@@ -1282,7 +1282,7 @@ function renderMundial() {
     if (pe) pe.textContent = played;
     if (ge) ge.textContent = goals;
   }
-
+ 
   function mDrawMatch(svg, m, x, y) {
     const winner = mWinner(m);
     const mx = Math.round(x), my = Math.round(y);
@@ -1313,11 +1313,11 @@ function renderMundial() {
     const dt = mEl('text', {x:mx+W/2, y:my+mh2+10, 'font-size':'7.5', 'text-anchor':'middle', fill:'rgba(255,255,255,.18)', 'font-family':FONT}); dt.textContent = m.date; g.appendChild(dt);
     svg.appendChild(g);
   }
-
+ 
   function mLine(svg, x1, y1, x2, y2) {
     svg.appendChild(mEl('line', {x1,y1,x2,y2,stroke:LINE_COLOR,'stroke-width':'1.5'}));
   }
-
+ 
   function mRender() {
     mSvg.innerHTML = '';
     const ROWS=8, LEFT_X=16, H_CONN=60, H_TREE=44, CENTER_GAP=80;
@@ -1353,11 +1353,18 @@ function renderMundial() {
   }
   mRender();
 }
-
-
+ 
+ 
+document.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   if (document.getElementById('auth-screen').style.display !== 'none') {
     const loginVisible = document.getElementById('auth-login').style.display !== 'none';
     if (loginVisible) doLogin(); else doRegister();
   }
-;
+});
+ 
+
+
+
+
+
