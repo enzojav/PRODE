@@ -32,8 +32,8 @@ html, body {
 }
 
 .auth-logo-icon {
-  width: 120px;   /* cambiá este número */
-  height: 120px;  /* y este también */
+  width: 200px;   /* cambiá este número */
+  height: 200px;  /* y este también */
   object-fit: contain;
   display: block;
   margin: 0 auto;
