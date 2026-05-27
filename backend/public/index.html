@@ -9,12 +9,9 @@
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════
-     PANTALLA DE AUTH (login / registro)
-══════════════════════════════════════════ -->
+<!-- ══ AUTH ══════════════════════════════════════════════════ -->
 <div id="auth-screen">
   <div class="auth-card">
-
     <div class="auth-brand">
       <img src="copa.png" alt="Logo" class="auth-logo-icon">
       <div class="auth-brand-name">Calidad & Capacitación</div>
@@ -37,9 +34,7 @@
         <input type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password">
       </div>
       <button class="btn btn-a auth-submit" onclick="doLogin()">Entrar</button>
-      <div class="auth-hint">
-        ¿Todavía no tenés cuenta? <span onclick="switchAuthTab('register')">Registrate acá</span>
-      </div>
+      <div class="auth-hint">¿Todavía no tenés cuenta? <span onclick="switchAuthTab('register')">Registrate acá</span></div>
     </div>
 
     <!-- REGISTRO -->
@@ -67,53 +62,21 @@
         <span>Al registrarte vas a poder participar del <strong>Prode</strong>. El acceso completo lo asigna un administrador.</span>
       </div>
       <button class="btn btn-a auth-submit" onclick="doRegister()">Crear cuenta</button>
-      <div class="auth-hint">
-        ¿Ya tenés cuenta? <span onclick="switchAuthTab('login')">Iniciá sesión</span>
-      </div>
+      <div class="auth-hint">¿Ya tenés cuenta? <span onclick="switchAuthTab('login')">Iniciá sesión</span></div>
     </div>
 
     <div class="auth-error" id="auth-error"></div>
-
     <div class="auth-divider"></div>
     <div class="auth-admin-hint">
       En caso de error: <code>email: enzo.aguirre@gestiondeingresos.com</code>
-      </code>
     </div>
-
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     APP SHELL (visible tras login)
-══════════════════════════════════════════ -->
+<!-- ══ APP SHELL ══════════════════════════════════════════════ -->
 <div id="app-shell" style="display:none">
 
-  <!-- SECCIÓN 16AVOS -->
-<div class="sec" id="s-r16">
-  <div class="r16-hero">
-    <div class="r16-hero-bg"></div>
-    <div class="r16-hero-content">
-      <div class="fifa-logo-wrap">
-        <span class="fifa-trophy">🏆</span>
-        <div>
-          <div class="fifa-title">16avos de Final</div>
-          <div class="fifa-subtitle">FIFA World Cup 2026</div>
-        </div>
-      </div>
-      <div class="fifa-pts-wrap">
-        <div class="fifa-pts-val" id="r16-my-pts">0</div>
-        <div class="fifa-pts-lbl">MIS PUNTOS</div>
-      </div>
-    </div>
-  </div>
-  <div id="r16-matches-grid" class="r16-grid"></div>
-  <div class="prode-stand" id="r16-standings-wrap">
-    <div class="ps-title">🏅 Tabla R16</div>
-    <div id="r16-standings"></div>
-  </div>
-</div>
-
-  <!-- LOADING (oculto, se usa si se necesita) -->
+  <!-- LOADING -->
   <div id="ls" style="display:none">
     <div class="spin"></div>
     <div class="lt">Calidad & Capacitación</div>
@@ -154,8 +117,8 @@
         Prode ⚽
       </div>
       <div class="ni" data-s="r16">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>
-      16avos
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>
+        16avos
       </div>
       <div class="sb-grp">Sistema</div>
       <div class="ni" data-s="members">
@@ -206,7 +169,7 @@
       <section class="sec" id="s-score">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px">
           <div>
-            <h2 style="font-family:'Syne',sans-serif;font-size:1.15rem;font-weight:700">Score Balance</h2>
+            <h2 style="font-size:1.15rem;font-weight:700">Score Balance</h2>
             <p style="font-size:.8rem;color:var(--text3);margin-top:3px">Desempeño ponderado por categoría</p>
           </div>
           <div class="period-btns" id="period-btns"></div>
@@ -244,8 +207,6 @@
 
       <!-- ── PRODE ── -->
       <section class="sec" id="s-prode">
-
-        <!-- Hero FIFA -->
         <div class="fifa-hero">
           <div class="fifa-hero-bg"></div>
           <div class="fifa-hero-content">
@@ -263,13 +224,11 @@
           </div>
         </div>
 
-        <!-- Selector de fechas -->
         <div class="date-picker-wrap">
           <div class="date-picker-label">SELECCIONÁ UNA FECHA</div>
           <div class="date-strip" id="date-strip"></div>
         </div>
 
-        <!-- Panel exclusivo de admin: cargar resultados -->
         <div id="admin-prode-panel" class="card admin-panel" style="display:none;margin-bottom:20px">
           <div class="admin-panel-hdr">
             <span>⚙ Panel Administrador · Cargar resultados</span>
@@ -278,23 +237,43 @@
           <div id="admin-match-list"></div>
         </div>
 
-        <!-- Status bar -->
         <div id="prode-status"></div>
-
-        <!-- Partidos del día seleccionado -->
         <div id="matches-day"></div>
 
-        <!-- Tabla de posiciones -->
         <div class="prode-stand">
           <div class="ps-title">🏆 Tabla de posiciones</div>
           <div id="standings"></div>
         </div>
-
       </section>
 
       <!-- ── MUNDIAL ── -->
       <section class="sec" id="s-mundial">
         <div id="mundial-embed"></div>
+      </section>
+
+      <!-- ── 16AVOS ── -->
+      <section class="sec" id="s-r16">
+        <div class="fifa-hero">
+          <div class="fifa-hero-bg"></div>
+          <div class="fifa-hero-content">
+            <div class="fifa-logo-wrap">
+              <span class="fifa-trophy">🏆</span>
+              <div>
+                <div class="fifa-title">16avos de Final</div>
+                <div class="fifa-subtitle">FIFA World Cup 2026</div>
+              </div>
+            </div>
+            <div class="fifa-pts-wrap">
+              <div class="fifa-pts-val" id="r16-my-pts">0</div>
+              <div class="fifa-pts-lbl">MIS PUNTOS</div>
+            </div>
+          </div>
+        </div>
+        <div id="r16-matches-grid" class="r16-grid"></div>
+        <div class="prode-stand" id="r16-standings-wrap">
+          <div class="ps-title">🏅 Tabla R16</div>
+          <div id="r16-standings"></div>
+        </div>
       </section>
 
       <!-- ── MIEMBROS ── -->
@@ -324,7 +303,7 @@
 
 </div><!-- /app-shell -->
 
-<!-- ══ MODALES ══════════════════════════════ -->
+<!-- ══ MODALES ════════════════════════════════════════════════ -->
 
 <!-- Modal Miembro -->
 <div class="mb" id="m-modal">
@@ -380,7 +359,11 @@
 <!-- Toast container -->
 <div class="tw" id="tw"></div>
 
-<div id="intro-screen" style="display:none; position:fixed; inset:0; background:#0d0d0d; z-index:9999; flex-direction:column; align-items:center; justify-content:center;"><img src="logo_latido.gif" alt="Intro" style="max-width:80vw; max-height:80vh;">
+<!-- Intro screen -->
+<div id="intro-screen" style="display:none; position:fixed; inset:0; background:#0d0d0d; z-index:9999; flex-direction:column; align-items:center; justify-content:center;">
+  <img src="logo_latido.gif" alt="Intro" style="max-width:80vw; max-height:80vh;">
+</div>
+
 <script src="database.js"></script>
 <script src="app.js"></script>
 </body>
