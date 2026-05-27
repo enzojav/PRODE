@@ -1429,8 +1429,8 @@ const trophyImg = mEl('image', {
   href: 'copa.png',
   x: centerX - 20,
   y: finalMidY - 24,
-  width: '40',
-  height: '40'
+  width: '250',
+  height: '250'
 });
 mSvg.appendChild(trophyImg);
 
