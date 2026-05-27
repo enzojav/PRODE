@@ -213,7 +213,7 @@ function applyRole() {
   const isAdmin = currentUser.role === 'admin';
   document.querySelectorAll('.ni[data-s]').forEach(el => {
     const s = el.dataset.s;
-    if (s === 'prode' || s === 'news') { el.style.display = ''; return; }
+    if (s === 'prode' || s === 'news' || s === 'mundial') { el.style.display = ''; return; }
     el.style.display = isAdmin ? '' : 'none';
   });
   document.querySelectorAll('.sb-grp').forEach(g => { if (!isAdmin) g.style.display = 'none'; });
@@ -230,18 +230,18 @@ function updateUserBadge() {
   document.querySelector('.uin .ur').textContent   = u.role === 'admin' ? '⚙ Administrador' : '⚽ Jugador';
 }
 
-const SECTION_TITLES = { dashboard:'Dashboard', r16:'16avos ⚽', score:'Score Balance', training:'Capacitaciones', news:'Noticias', prode:'Prode ⚽', members:'Miembros', users:'Usuarios' };
+const SECTION_TITLES = { dashboard:'Dashboard', r16:'16avos ⚽', score:'Score Balance', training:'Capacitaciones', news:'Noticias', mundial:'Mundial 2026 🏆', prode:'Prode ⚽', members:'Miembros', users:'Usuarios' };
 const ADD_ACTIONS    = { news: () => openNewsModal(), members: () => openMemberModal() };
 
 function navigateTo(sec) {
   document.querySelectorAll('.ni').forEach(n => n.classList.toggle('active', n.dataset.s === sec));
   document.querySelectorAll('.sec').forEach(x => x.classList.remove('active'));
   document.getElementById('s-' + sec)?.classList.add('active');
-  const SECTION_TITLES = { dashboard:'Dashboard', r16:'16avos ⚽', score:'Score Balance', training:'Capacitaciones', news:'Noticias', prode:'Prode ⚽', members:'Miembros', users:'Usuarios' };
+  const SECTION_TITLES = { dashboard:'Dashboard', r16:'16avos ⚽', score:'Score Balance', training:'Capacitaciones', news:'Noticias', mundial:'Mundial 2026 🏆', prode:'Prode ⚽', members:'Miembros', users:'Usuarios' };
   const addBtn = document.getElementById('addbtn');
   if (currentUser.role === 'admin' && ADD_ACTIONS[sec]) { addBtn.style.display = ''; addBtn.onclick = ADD_ACTIONS[sec]; }
   else { addBtn.style.display = 'none'; }
-  ({ dashboard:renderDashboard, r16:renderR16, score:renderScore, training:renderTraining, news:renderNews, prode:renderProde, members:renderMembers, users:renderUsers })[sec]?.();
+  ({ dashboard:renderDashboard, r16:renderR16, score:renderScore, training:renderTraining, news:renderNews, mundial:renderMundial, prode:renderProde, members:renderMembers, users:renderUsers })[sec]?.();
 }
 
 function setupNav() {
@@ -1145,7 +1145,216 @@ async function renderR16Standings() {
   } catch { }
 }
 
-document.addEventListener('keydown', e => {
+// ══════════════════════════════════════════════════════════════
+//  MUNDIAL 2026 — Bracket 16avos
+// ══════════════════════════════════════════════════════════════
+let mundialRendered = false;
+function renderMundial() {
+  if (mundialRendered) return;
+  mundialRendered = true;
+
+  const container = document.getElementById('mundial-embed');
+  if (!container) return;
+
+  const W = 104, H = 36, GAP = 12;
+  const COL_W = 120;
+  const LINE_COLOR = 'rgba(108,172,228,.2)';
+  const AMBER = '#FFB81C';
+  const FONT = "'Inter', system-ui, sans-serif";
+  const STORAGE_KEY = 'mundial2026_bracket';
+
+  const defaultMatches = [
+    {id:1,  home:{f:'🏳️',n:'1E'},      away:{f:'🏳️',n:'3 ABCDF'}, date:'27 Jun', hs:null, as:null},
+    {id:2,  home:{f:'🏳️',n:'1I'},      away:{f:'🏳️',n:'3 CDFGH'}, date:'27 Jun', hs:null, as:null},
+    {id:3,  home:{f:'🏳️',n:'2A'},      away:{f:'🏳️',n:'2B'},      date:'28 Jun', hs:null, as:null},
+    {id:4,  home:{f:'🏳️',n:'1F'},      away:{f:'🏳️',n:'2C'},      date:'28 Jun', hs:null, as:null},
+    {id:5,  home:{f:'🏳️',n:'2K'},      away:{f:'🏳️',n:'2L'},      date:'29 Jun', hs:null, as:null},
+    {id:6,  home:{f:'🏳️',n:'1H'},      away:{f:'🏳️',n:'2J'},      date:'29 Jun', hs:null, as:null},
+    {id:7,  home:{f:'🏳️',n:'1D'},      away:{f:'🏳️',n:'3 BEFIJ'}, date:'30 Jun', hs:null, as:null},
+    {id:8,  home:{f:'🏳️',n:'1G'},      away:{f:'🏳️',n:'3 AEHIJ'}, date:'30 Jun', hs:null, as:null},
+    {id:9,  home:{f:'🏳️',n:'1C'},      away:{f:'🏳️',n:'2F'},      date:'1 Jul',  hs:null, as:null},
+    {id:10, home:{f:'🏳️',n:'2E'},      away:{f:'🏳️',n:'2I'},      date:'1 Jul',  hs:null, as:null},
+    {id:11, home:{f:'🏳️',n:'1A'},      away:{f:'🏳️',n:'3 CEFHI'}, date:'2 Jul',  hs:null, as:null},
+    {id:12, home:{f:'🏳️',n:'1L'},      away:{f:'🏳️',n:'3 EHIJK'}, date:'2 Jul',  hs:null, as:null},
+    {id:13, home:{f:'🏳️',n:'1J'},      away:{f:'🏳️',n:'2H'},      date:'3 Jul',  hs:null, as:null},
+    {id:14, home:{f:'🏳️',n:'2D'},      away:{f:'🏳️',n:'2G'},      date:'3 Jul',  hs:null, as:null},
+    {id:15, home:{f:'🏳️',n:'1B'},      away:{f:'🏳️',n:'3 EFGIJ'}, date:'4 Jul',  hs:null, as:null},
+    {id:16, home:{f:'🏳️',n:'1K'},      away:{f:'🏳️',n:'3 DEIJL'}, date:'4 Jul',  hs:null, as:null},
+  ];
+
+  let mMatches;
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    mMatches = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultMatches));
+  } catch { mMatches = JSON.parse(JSON.stringify(defaultMatches)); }
+
+  const leftIds  = [1,2,3,4,5,6,7,8];
+  const rightIds = [9,10,11,12,13,14,15,16];
+  let mEditTarget = null;
+
+  function mSave() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(mMatches)); } catch {} }
+  function mWinner(m) {
+    if (m.hs === null || m.as === null) return null;
+    return m.hs > m.as ? 'home' : m.hs < m.as ? 'away' : null;
+  }
+  function mTrunc(s, max) { return s.length > max ? s.slice(0, max-1)+'…' : s; }
+  function mEl(tag, attrs) {
+    const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    for (const [k,v] of Object.entries(attrs)) el.setAttribute(k, v);
+    return el;
+  }
+
+  // inject HTML
+  container.innerHTML = `
+    <div style="background:linear-gradient(135deg,#060d1f 0%,#0f2347 50%,#060d1f 100%);border-bottom:1px solid rgba(108,172,228,.15);padding:16px 20px;display:flex;align-items:center;gap:14px;border-radius:12px 12px 0 0;margin-bottom:0">
+      <div style="width:44px;height:44px;background:radial-gradient(circle,rgba(255,184,28,.18),rgba(255,184,28,.04));border:1px solid rgba(255,184,28,.3);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🏆</div>
+      <div>
+        <div style="font-size:1.1rem;font-weight:800;color:#fff;letter-spacing:.02em">Mundial 2026 · 16avos de Final</div>
+        <div style="font-size:.68rem;color:rgba(255,255,255,.45);letter-spacing:.1em;text-transform:uppercase;margin-top:2px">USA · México · Canadá · Tocá un equipo para editar</div>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:12px;text-align:center">
+        <div><div style="font-size:1.1rem;font-weight:800;color:#FFB81C;font-family:inherit" id="mw-played">0</div><div style="font-size:.6rem;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.08em">Jugados</div></div>
+        <div><div style="font-size:1.1rem;font-weight:800;color:#FFB81C;font-family:inherit" id="mw-goals">0</div><div style="font-size:.6rem;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.08em">Goles</div></div>
+      </div>
+    </div>
+    <div style="overflow-x:auto;padding:16px;background:#0a0e1a;border-radius:0 0 12px 12px;border:1px solid rgba(255,255,255,.06);border-top:none">
+      <svg id="mw-svg" xmlns="http://www.w3.org/2000/svg" style="display:block"></svg>
+    </div>
+    <div id="mw-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:500;align-items:center;justify-content:center">
+      <div style="background:#131724;border:1px solid rgba(108,172,228,.2);border-radius:14px;padding:22px;width:290px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <div style="font-size:.9rem;font-weight:700;color:#fff">Editar equipo</div>
+          <button id="mw-mclose" style="background:rgba(255,255,255,.07);border:none;border-radius:6px;color:rgba(255,255,255,.5);cursor:pointer;width:24px;height:24px;font-size:14px">✕</button>
+        </div>
+        <div style="margin-bottom:10px"><label style="font-size:.68rem;color:rgba(255,255,255,.5);display:block;margin-bottom:4px">Bandera (emoji)</label><input id="mw-flag" maxlength="4" placeholder="🇦🇷" style="width:100%;background:#1a1f30;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px 10px;color:#fff;font-size:.82rem;outline:none;font-family:inherit"></div>
+        <div style="margin-bottom:10px"><label style="font-size:.68rem;color:rgba(255,255,255,.5);display:block;margin-bottom:4px">Equipo</label><input id="mw-name" placeholder="Argentina" style="width:100%;background:#1a1f30;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px 10px;color:#fff;font-size:.82rem;outline:none;font-family:inherit"></div>
+        <div style="margin-bottom:10px"><label style="font-size:.68rem;color:rgba(255,255,255,.5);display:block;margin-bottom:4px">Goles <span style="opacity:.4">(vacío si no jugó)</span></label><input id="mw-score" type="number" min="0" max="20" placeholder="—" style="width:100%;background:#1a1f30;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px 10px;color:#fff;font-size:.82rem;outline:none;font-family:inherit"></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+          <button id="mw-mcancel" style="padding:8px 16px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.07);color:rgba(255,255,255,.6);font-size:.8rem;font-weight:600;cursor:pointer;font-family:inherit">Cancelar</button>
+          <button id="mw-msave" style="padding:8px 16px;border-radius:8px;border:none;background:#6CACE4;color:#fff;font-size:.8rem;font-weight:600;cursor:pointer;font-family:inherit">Guardar</button>
+        </div>
+      </div>
+    </div>`;
+
+  const mSvg     = document.getElementById('mw-svg');
+  const mModal   = document.getElementById('mw-modal');
+
+  document.getElementById('mw-mclose').addEventListener('click', mCloseModal);
+  document.getElementById('mw-mcancel').addEventListener('click', mCloseModal);
+  document.getElementById('mw-msave').addEventListener('click', mSaveModal);
+  mModal.addEventListener('click', e => { if (e.target === mModal) mCloseModal(); });
+
+  function mOpenModal(matchId, side) {
+    const m = mMatches.find(x => x.id === matchId);
+    const team = side === 'home' ? m.home : m.away;
+    const score = side === 'home' ? m.hs : m.as;
+    mEditTarget = {matchId, side};
+    document.getElementById('mw-flag').value  = team.f;
+    document.getElementById('mw-name').value  = team.n;
+    document.getElementById('mw-score').value = score !== null ? score : '';
+    mModal.style.display = 'flex';
+    document.getElementById('mw-name').focus();
+  }
+
+  function mCloseModal() {
+    mModal.style.display = 'none';
+    mEditTarget = null;
+  }
+
+  function mSaveModal() {
+    if (!mEditTarget) return;
+    const {matchId, side} = mEditTarget;
+    const m = mMatches.find(x => x.id === matchId);
+    const flag  = document.getElementById('mw-flag').value.trim() || '🏳️';
+    const name  = document.getElementById('mw-name').value.trim();
+    const score = document.getElementById('mw-score').value;
+    if (side === 'home') { m.home = {f:flag, n:name||m.home.n}; m.hs = score!=='' ? Number(score) : null; }
+    else { m.away = {f:flag, n:name||m.away.n}; m.as = score!=='' ? Number(score) : null; }
+    mSave(); mCloseModal(); mRender();
+    showToast('✓ Guardado');
+  }
+
+  function mUpdateStats() {
+    const played = mMatches.filter(m => m.hs!==null && m.as!==null).length;
+    const goals  = mMatches.reduce((a,m) => a+(m.hs||0)+(m.as||0), 0);
+    const pe = document.getElementById('mw-played');
+    const ge = document.getElementById('mw-goals');
+    if (pe) pe.textContent = played;
+    if (ge) ge.textContent = goals;
+  }
+
+  function mDrawMatch(svg, m, x, y) {
+    const winner = mWinner(m);
+    const mx = Math.round(x), my = Math.round(y);
+    const mh2 = H*2+1;
+    const g = mEl('g', {});
+    g.appendChild(mEl('rect', {x:mx+1, y:my+2, width:W, height:mh2, rx:'7', fill:'rgba(0,0,0,.35)'}));
+    g.appendChild(mEl('rect', {x:mx, y:my, width:W, height:mh2, rx:'7', fill:'#0d1b38', stroke:winner?'rgba(255,184,28,.25)':'rgba(255,255,255,.07)', 'stroke-width':'1'}));
+    g.appendChild(mEl('line', {x1:mx+1, y1:my+H, x2:mx+W-1, y2:my+H, stroke:'rgba(255,255,255,.05)', 'stroke-width':'1'}));
+    [{team:m.home, score:m.hs, side:'home', wy:my+H/2},{team:m.away, score:m.as, side:'away', wy:my+H+H/2}].forEach(({team,score,side,wy}) => {
+      const isW = winner===side, isL = winner&&winner!==side;
+      const tr = mEl('g', {class:'team-box', 'data-id':m.id, 'data-side':side});
+      tr.style.cursor = 'pointer';
+      if (isW) {
+        tr.appendChild(mEl('rect', {x:mx, y:wy-H/2, width:W, height:H, rx:side==='home'?'7':'0', fill:'rgba(255,184,28,.07)'}));
+        tr.appendChild(mEl('rect', {x:mx, y:wy-H/2, width:3, height:H, rx:'2', fill:'rgba(255,184,28,.6)'}));
+      } else {
+        tr.appendChild(mEl('rect', {x:mx, y:wy-H/2, width:W, height:H, rx:side==='home'?'7':'0', fill:'rgba(0,0,0,0)'}));
+      }
+      const fl = mEl('text', {x:mx+9, y:wy+5, 'font-size':'12'}); fl.textContent = team.f; tr.appendChild(fl);
+      const nt = mEl('text', {x:mx+27, y:wy+5, 'font-size':'10', 'font-family':FONT, 'font-weight':isW?'700':'400', fill:isW?AMBER:isL?'rgba(255,255,255,.25)':'rgba(255,255,255,.8)'}); nt.textContent = mTrunc(team.n,9); tr.appendChild(nt);
+      if (score !== null) {
+        tr.appendChild(mEl('rect', {x:mx+W-22, y:wy-9, width:18, height:17, rx:'4', fill:isW?'rgba(255,184,28,.15)':'rgba(255,255,255,.05)', stroke:isW?'rgba(255,184,28,.3)':'rgba(255,255,255,.08)', 'stroke-width':'1'}));
+        const st = mEl('text', {x:mx+W-13, y:wy+5, 'font-size':'10', 'font-family':FONT, 'font-weight':'800', fill:isW?AMBER:'rgba(255,255,255,.4)', 'text-anchor':'middle'}); st.textContent = score; tr.appendChild(st);
+      }
+      tr.addEventListener('click', () => mOpenModal(m.id, side));
+      g.appendChild(tr);
+    });
+    const dt = mEl('text', {x:mx+W/2, y:my+mh2+10, 'font-size':'7.5', 'text-anchor':'middle', fill:'rgba(255,255,255,.18)', 'font-family':FONT}); dt.textContent = m.date; g.appendChild(dt);
+    svg.appendChild(g);
+  }
+
+  function mLine(svg, x1, y1, x2, y2) {
+    svg.appendChild(mEl('line', {x1,y1,x2,y2,stroke:LINE_COLOR,'stroke-width':'1.5'}));
+  }
+
+  function mRender() {
+    mSvg.innerHTML = '';
+    const ROWS=8, LEFT_X=16, H_CONN=60, H_TREE=44, CENTER_GAP=80;
+    const rightX = LEFT_X+W+H_CONN+H_TREE+CENTER_GAP+H_TREE+H_CONN;
+    const centerX = LEFT_X+W+H_CONN+H_TREE+CENTER_GAP/2;
+    const svgW = rightX+W+20;
+    const rowH_base = H*2+GAP+16;
+    const svgH = ROWS*rowH_base+30;
+    const rowH = (svgH-40)/ROWS;
+    mSvg.setAttribute('width', svgW);
+    mSvg.setAttribute('height', svgH);
+    mSvg.setAttribute('viewBox', `0 0 ${svgW} ${svgH}`);
+    function getY(i) { return 20+i*rowH+rowH/2-H; }
+    leftIds.forEach((id,i)  => { const m=mMatches.find(x=>x.id===id),y=getY(i); mDrawMatch(mSvg,m,LEFT_X,y); mLine(mSvg,LEFT_X+W,y+H,LEFT_X+W+H_CONN,y+H); });
+    rightIds.forEach((id,i) => { const m=mMatches.find(x=>x.id===id),y=getY(i); mDrawMatch(mSvg,m,rightX,y); mLine(mSvg,rightX-H_CONN,y+H,rightX,y+H); });
+    const lS=[], rS=[];
+    for(let i=0;i<4;i++){const t=getY(i*2)+H,b=getY(i*2+1)+H,my2=(t+b)/2,x1=LEFT_X+W+H_CONN,x2=x1+H_TREE;mLine(mSvg,x1,t,x1,b);mLine(mSvg,x1,my2,x2,my2);lS.push({midY:my2,x:x2});}
+    for(let i=0;i<4;i++){const t=getY(i*2)+H,b=getY(i*2+1)+H,my2=(t+b)/2,x1=rightX-H_CONN,x2=x1-H_TREE;mLine(mSvg,x1,t,x1,b);mLine(mSvg,x2,my2,x1,my2);rS.push({midY:my2,x:x2});}
+    const lF=[],rF=[];
+    for(let i=0;i<2;i++){const t=lS[i*2].midY,b=lS[i*2+1].midY,my2=(t+b)/2,x1=lS[i*2].x,x2=x1+22;mLine(mSvg,x1,t,x1,b);mLine(mSvg,x1,my2,x2,my2);lF.push({midY:my2,x:x2});}
+    for(let i=0;i<2;i++){const t=rS[i*2].midY,b=rS[i*2+1].midY,my2=(t+b)/2,x1=rS[i*2].x,x2=x1-22;mLine(mSvg,x1,t,x1,b);mLine(mSvg,x2,my2,x1,my2);rF.push({midY:my2,x:x2});}
+    const finalMidY=(lF[0].midY+lF[1].midY)/2;
+    mLine(mSvg,lF[0].x,lF[0].midY,lF[0].x,lF[1].midY);mLine(mSvg,lF[0].x,finalMidY,centerX-30,finalMidY);
+    mLine(mSvg,rF[0].x,rF[0].midY,rF[0].x,rF[1].midY);mLine(mSvg,centerX+30,finalMidY,rF[0].x,finalMidY);
+    // dashed outer ring
+    mSvg.appendChild(mEl('circle',{cx:centerX,cy:finalMidY,r:38,fill:'none',stroke:'rgba(255,184,28,.08)','stroke-width':'1','stroke-dasharray':'3 4'}));
+    // center circle
+    mSvg.appendChild(mEl('circle',{cx:centerX,cy:finalMidY,r:30,fill:'#091420',stroke:'rgba(255,184,28,.35)','stroke-width':'1.5'}));
+    const tt=mEl('text',{x:centerX,y:finalMidY-4,'font-size':'22','text-anchor':'middle'}); tt.textContent='🏆'; mSvg.appendChild(tt);
+    const ft=mEl('text',{x:centerX,y:finalMidY+17,'font-size':'7','font-family':FONT,'font-weight':'800',fill:AMBER,'text-anchor':'middle','letter-spacing':'2'}); ft.textContent='FINAL'; mSvg.appendChild(ft);
+    const dt=mEl('text',{x:centerX,y:finalMidY+28,'font-size':'6','font-family':FONT,fill:'rgba(255,255,255,.3)','text-anchor':'middle'}); dt.textContent='19 Jul · MetLife NJ'; mSvg.appendChild(dt);
+    mUpdateStats();
+  }
+  mRender();
+}
+
+
   if (e.key !== 'Enter') return;
   if (document.getElementById('auth-screen').style.display !== 'none') {
     const loginVisible = document.getElementById('auth-login').style.display !== 'none';
