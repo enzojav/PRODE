@@ -1425,12 +1425,14 @@ function renderMundial() {
   'text-anchor': 'middle',
   'dominant-baseline': 'middle'
 });
-trophyT.textContent = '🏆';
-    mSvg.appendChild(trophyT);
-    // Date label
-    const dt = mEl('text', { x: centerX, y: finalMidY + 28, 'font-size': '6', 'font-family': FONT, fill: 'rgba(255,255,255,.3)', 'text-anchor': 'middle' });
-    dt.textContent = '19 Jul · MetLife NJ';
-    mSvg.appendChild(dt);
+const trophyImg = mEl('image', {
+  href: 'copa.png',
+  x: centerX - 20,
+  y: finalMidY - 24,
+  width: '40',
+  height: '40'
+});
+mSvg.appendChild(trophyImg);
 
     mUpdateStats();
   }
