@@ -31,6 +31,14 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
+.auth-logo-icon {
+  width: 80px;       /* ajustá el tamaño que quieras */
+  height: 80px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;    /* esto lo centra */
+}
+
   
 #auth-screen {
   min-height: 100vh;
