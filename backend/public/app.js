@@ -1422,7 +1422,7 @@ function renderMundial() {
   'text-anchor': 'middle',
   'dominant-baseline': 'middle'
 });
-const trophySize = 150;
+const trophySize = 350;
 
 const trophyImg = mEl('image', {
   href: 'copa.png',
