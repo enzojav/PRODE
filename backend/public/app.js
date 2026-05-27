@@ -174,6 +174,7 @@ function applySidebarState() {
 
 function showIntro(callback) {
   const intro = document.getElementById('intro-screen');
+  if (!intro) { callback(); return; }  // ← esta línea arregla todo
   const audio = document.getElementById('login-audio');
   intro.style.display = 'flex';
   audio?.play().catch(() => {});
