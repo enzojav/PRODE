@@ -16,7 +16,7 @@ let scorePeriod    = 'Abr 2026';
 let newsFilter     = '';
 let editingMemberId = null;
 
-// ── API helper ────────────────────────────────────s────────────
+// ── API helper ────────────────────────────────────────────────
 async function api(method, path, body) {
   const token = sessionStorage.getItem('qh_token');
   const opts = {
@@ -52,6 +52,18 @@ function isMatchLocked(m) {
   } catch { return false; }
 }
 
+// ── Ordenar fechas cronológicamente ──────────────────────────
+const DAY_ORDER = { 'Jue':0,'Vie':1,'Sáb':2,'Dom':3,'Lun':4,'Mar':5,'Mié':6 };
+function parseDateToSort(dateStr) {
+  // dateStr: "Jue 11 Jun"
+  try {
+    const parts = dateStr.split(' ');
+    const day   = parseInt(parts[1]);
+    const month = MONTH_MAP[parts[2]] ?? 5;
+    return new Date(2026, month, day).getTime();
+  } catch { return 0; }
+}
+
 // ── Calcular resultado a partir de goles ─────────────────────
 function goalsToResult(h, a) {
   if (h === null || a === null || h === undefined || a === undefined) return null;
@@ -64,7 +76,7 @@ function goalsToResult(h, a) {
 function calcMatchPoints(pred, match) {
   const mH = match.home_score !== null && match.home_score !== undefined ? Number(match.home_score) : null;
   const mA = match.away_score !== null && match.away_score !== undefined ? Number(match.away_score) : null;
-  if (mH === null || mA === null || isNaN(mH) || isNaN(mA)) return -1; // partido no jugado
+  if (mH === null || mA === null || isNaN(mH) || isNaN(mA)) return -1;
 
   const pResult = pred.result || null;
   const pH = pred.home_score !== null && pred.home_score !== undefined ? Number(pred.home_score) : null;
@@ -72,10 +84,8 @@ function calcMatchPoints(pred, match) {
 
   const realResult = goalsToResult(mH, mA);
 
-  // Exacto: goles correctos (vale 10)
   if (pH !== null && pA !== null && !isNaN(pH) && !isNaN(pA) && pH === mH && pA === mA) return 10;
 
-  // Resultado correcto (vale 5): compara result guardado o infiere de goles
   const predResult = pResult || goalsToResult(pH, pA);
   if (predResult && predResult === realResult) return 5;
 
@@ -139,10 +149,8 @@ async function doRegister() {
   if (password.length < 4)    { errEl.textContent = 'La contraseña debe tener al menos 4 caracteres.'; return; }
   try {
     const data = await api('POST', '/auth/register', { username, password, displayName });
-    // YA NO hace login automático — espera aprobación
     errEl.style.color = 'var(--accent)';
     errEl.textContent = data.message || 'Cuenta creada. Esperá la aprobación del administrador.';
-    // Limpiar form después de 3 segundos y volver al login
     setTimeout(() => {
       switchAuthTab('login');
       errEl.textContent = '';
@@ -458,7 +466,6 @@ async function renderProde() {
   try {
     localMatches   = await api('GET', '/prode/matches');
     const predsArr = await api('GET', '/prode/predictions');
-    // Indexar por match_id
     localPreds = {};
     predsArr.forEach(p => { localPreds[p.match_id] = p; });
   } catch(e) {
@@ -473,9 +480,9 @@ async function renderProde() {
     if (currentUser.role === 'admin') renderAdminProdePanel();
   }
 
-  // Strip de fechas
+  // Strip de fechas — ORDENADAS CRONOLÓGICAMENTE
   const allDates = [...new Set(localMatches.map(m => m.match_date))];
-  allDates.sort((a,b) => localMatches.find(m => m.match_date === a).id - localMatches.find(m => m.match_date === b).id);
+  allDates.sort((a, b) => parseDateToSort(a) - parseDateToSort(b));
   if (!activeDate || !allDates.includes(activeDate)) activeDate = allDates[0];
 
   document.getElementById('date-strip').innerHTML = allDates.map(d => {
@@ -506,7 +513,7 @@ async function renderProde() {
       </div>`;
   }
 
-  // Mis puntos totales — calculados DESPUÉS de llenar localPreds
+  // Mis puntos
   const myPts = calcMyPoints();
   document.getElementById('my-pts').textContent = myPts;
 
@@ -519,11 +526,9 @@ async function renderProde() {
       <span style="font-size:.75rem;color:var(--text3)">Se guarda automáticamente</span>
     </div>`;
 
-  // Tabla de posiciones
   await renderStandings();
 }
 
-// Calcular mis puntos totales usando la lógica unificada
 function calcMyPoints() {
   let pts = 0;
   localMatches.forEach(m => {
@@ -570,19 +575,16 @@ function renderMatchCard(m) {
   const pH = pred.home_score !== null && pred.home_score !== undefined ? Number(pred.home_score) : null;
   const pA = pred.away_score !== null && pred.away_score !== undefined ? Number(pred.away_score) : null;
 
-  // Resultado predicho: primero el campo result guardado, sino se infiere de goles
   const predResult = pred.result || goalsToResult(pH, pA);
   const realResult = goalsToResult(mH, mA);
-
-  // Puntos de este partido
-  const matchPts = calcMatchPoints(pred, m);
+  const matchPts   = calcMatchPoints(pred, m);
 
   let ptsLabel = '';
   if (matchPts === 10) ptsLabel = '🎯 +10 exacto';
   else if (matchPts === 5) ptsLabel = '✓ +5 ganador';
   else if (matchPts === 0) ptsLabel = '✗ 0 pts';
 
-  // Clase de los botones 1/X/2
+  // Clase de los botones ↑ X ↓
   function btnCls(val) {
     const sel = 'sel' + (val === '1' ? '1' : val === 'x' ? 'x' : '2');
     if (!predResult) return '';
@@ -590,6 +592,11 @@ function renderMatchCard(m) {
     if (!played) return sel;
     return predResult === realResult ? 'ok' : 'fail';
   }
+
+  // Ícono del botón: flecha verde arriba para 1, X para empate, flecha roja abajo para 2
+  const btn1Icon = `<svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 10V2M2 6l4-4 4 4"/></svg>`;
+  const btnXIcon = `<span style="font-size:1rem;font-weight:700">X</span>`;
+  const btn2Icon = `<svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 2v8M2 6l4 4 4-4"/></svg>`;
 
   const disabledAttr = locked ? 'disabled' : '';
   const lockIcon     = locked ? '<span style="font-size:.7rem;color:var(--text3)">🔒</span>' : '';
@@ -611,9 +618,9 @@ function renderMatchCard(m) {
         <div class="match-center">
           ${resultBadge}
           <div class="pred-btns">
-            <button class="pb ${btnCls('1')}" onclick="setPred(${m.id},'1')" ${disabledAttr} title="Gana ${m.home}">1</button>
-            <button class="pb ${btnCls('x')}" onclick="setPred(${m.id},'x')" ${disabledAttr} title="Empate">X</button>
-            <button class="pb ${btnCls('2')}" onclick="setPred(${m.id},'2')" ${disabledAttr} title="Gana ${m.away}">2</button>
+            <button class="pb ${btnCls('1')}" onclick="setPred(${m.id},'1')" ${disabledAttr} title="Gana ${m.home}" style="color:${predResult==='1'?'':'#4ade80'}">${btn1Icon}</button>
+            <button class="pb ${btnCls('x')}" onclick="setPred(${m.id},'x')" ${disabledAttr} title="Empate">${btnXIcon}</button>
+            <button class="pb ${btnCls('2')}" onclick="setPred(${m.id},'2')" ${disabledAttr} title="Gana ${m.away}" style="color:${predResult==='2'?'':'#f87171'}">${btn2Icon}</button>
           </div>
           <div class="pred-goals">
             <input class="goals-input" type="number" min="0" max="20" placeholder="?"
@@ -675,6 +682,9 @@ function renderAdminProdePanel() {
                 : '→ Empate')
               : '(sin resultado)'}
           </span>
+          ${m.home_score !== null
+            ? `<button class="btn btn-o" style="font-size:.7rem;padding:4px 10px;color:var(--accent2)" onclick="clearMatchResult(${m.id})" title="Borrar resultado">🗑 Borrar</button>`
+            : ''}
         </div>
       </div>`).join('')}`;
 }
@@ -685,7 +695,6 @@ async function setMatchResult(matchId, side, value) {
   const v = value === '' ? null : Number(value);
   if (side === 'home') m.home_score = v;
   else                 m.away_score = v;
-  // Solo guardar cuando ambos goles están cargados
   if (m.home_score === null || m.away_score === null) return;
   try {
     await api('PUT', '/prode/matches/' + matchId + '/result', {
@@ -693,6 +702,16 @@ async function setMatchResult(matchId, side, value) {
       away_score: m.away_score
     });
     toast('Resultado guardado', 's');
+    renderProde();
+  } catch(e) { toast(e.message, 'e'); }
+}
+
+// ── Borrar resultado de un partido (solo admin) ───────────────
+async function clearMatchResult(matchId) {
+  if (!confirm('¿Borrás el resultado de este partido?')) return;
+  try {
+    await api('DELETE', '/prode/matches/' + matchId + '/result');
+    toast('Resultado borrado', 'e');
     renderProde();
   } catch(e) { toast(e.message, 'e'); }
 }
@@ -706,13 +725,10 @@ async function setPred(matchId, val) {
   const pH = existing.home_score !== null && existing.home_score !== undefined ? Number(existing.home_score) : null;
   const pA = existing.away_score !== null && existing.away_score !== undefined ? Number(existing.away_score) : null;
 
-  // Guardar el resultado explícito; si ya tenía goles que coincidan con ese resultado, mantenerlos
-  // Si los goles existentes contradicen el nuevo resultado, limpiarlos
   const currentGoalResult = goalsToResult(pH, pA);
   let newHome = pH;
   let newAway = pA;
   if (currentGoalResult !== val) {
-    // Los goles no coinciden con el nuevo resultado: limpiar
     newHome = null;
     newAway = null;
   }
@@ -728,7 +744,6 @@ async function setPredGoals(matchId, side, value) {
   const newHome  = side === 'home' ? (value === '' ? null : Number(value)) : (existing.home_score !== null && existing.home_score !== undefined ? Number(existing.home_score) : null);
   const newAway  = side === 'away' ? (value === '' ? null : Number(value)) : (existing.away_score !== null && existing.away_score !== undefined ? Number(existing.away_score) : null);
 
-  // Inferir resultado de los goles si ambos están cargados
   const inferredResult = goalsToResult(newHome, newAway) || existing.result || null;
 
   await savePrediction(matchId, inferredResult, newHome, newAway);
@@ -750,7 +765,6 @@ async function savePrediction(matchId, result, homeScore, awayScore) {
 // ══════════════════════════════════════════════════════════════
 //  USUARIOS (solo admin)
 // ══════════════════════════════════════════════════════════════
-
 async function renderUsers() {
   try {
     const users = await api('GET', '/auth/users');
@@ -763,8 +777,6 @@ async function renderUsers() {
     if (!userSection) return;
 
     userSection.innerHTML = `
-
-      <!-- Pendientes -->
       <div class="card" style="margin-bottom:16px">
         <div class="ctit" style="display:flex;align-items:center;gap:8px">
           ⏳ Pendientes de aprobación
@@ -788,7 +800,6 @@ async function renderUsers() {
             </div>`}
       </div>
 
-      <!-- Activos -->
       <div class="card" style="margin-bottom:16px">
         <div class="ctit">✅ Usuarios activos</div>
         ${active.length === 0
@@ -809,7 +820,6 @@ async function renderUsers() {
             </div>`}
       </div>
 
-      <!-- Baneados -->
       ${banned.length > 0 ? `
       <div class="card">
         <div class="ctit">🚫 Usuarios baneados</div>
