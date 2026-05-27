@@ -1370,7 +1370,7 @@ function renderMundial() {
       y: finalMidY - 32,
       width: '36',
       height: '46',
-      href: 'mundialcopa.png'
+      href: 'copa.png'
     });
     mSvg.appendChild(trophyImg);
     // Date label
