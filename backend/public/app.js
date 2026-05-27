@@ -338,6 +338,8 @@ function renderTraining() {
 // ══════════════════════════════════════════════════════════════
 let localNews = [];
 
+function setNewsFilter(f) { newsFilter = f === "Todos" ? "" : f; renderNews(); }
+
 async function renderNews() {
   try { localNews = await api('GET', '/news'); }
   catch { localNews = []; }
