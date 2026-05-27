@@ -16,7 +16,7 @@ let scorePeriod    = 'Abr 2026';
 let newsFilter     = '';
 let editingMemberId = null;
 
-// ── API helper ────────────────────────────────────────────────
+// ── API helper ────────────────────────────────────s────────────
 async function api(method, path, body) {
   const token = sessionStorage.getItem('qh_token');
   const opts = {
@@ -186,7 +186,7 @@ function showIntro(callback) {
       intro.style.transition = '';
       callback();
     }, 500);
-  }, 6000);
+  }, 2500);
 }
 
 function bootApp() {
@@ -388,58 +388,16 @@ async function renderNews() {
 
 function newsMediaHTML(url) {
   if (!url) return '';
-
   // YouTube
   const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?/]+)/);
-  if (yt) {
-    return `
-      <div class="news-media">
-        <iframe
-          src="https://www.youtube.com/embed/${yt[1]}"
-          frameborder="0"
-          allowfullscreen>
-        </iframe>
-      </div>
-    `;
-  }
-
+  if (yt) return `<div class="news-media"><iframe src="https://www.youtube.com/embed/${yt[1]}" frameborder="0" allowfullscreen></iframe></div>`;
   // Vimeo
   const vi = url.match(/vimeo\.com\/(\d+)/);
-  if (vi) {
-    return `
-      <div class="news-media">
-        <iframe
-          src="https://player.vimeo.com/video/${vi[1]}"
-          frameborder="0"
-          allowfullscreen>
-        </iframe>
-      </div>
-    `;
-  }
-
-  // Artículos de La Nación
-  if (url.includes('lanacion.com.ar')) {
-    return `
-      <div class="news-media">
-        <iframe
-          src="${url}"
-          frameborder="0"
-          allowfullscreen>
-        </iframe>
-      </div>
-    `;
-  }
-
+  if (vi) return `<div class="news-media"><iframe src="https://player.vimeo.com/video/${vi[1]}" frameborder="0" allowfullscreen></iframe></div>`;
   // Imagen o gif
-  return `
-    <div class="news-media">
-      <img
-        src="${url}"
-        alt=""
-        onerror="this.parentElement.style.display='none'">
-    </div>
-  `;
+  return `<div class="news-media"><img src="${url}" alt="" onerror="this.parentElement.style.display='none'"></div>`;
 }
+
 function openNewsModal() {
   ['n-title','n-body','n-author','n-image'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('n-emoji').value = '📋';
@@ -693,19 +651,8 @@ function renderAdminProdePanel() {
                 : '→ Empate')
               : '(sin resultado)'}
           </span>
-          <button class="btn btn-o" style="font-size:.7rem;padding:4px 8px;color:var(--accent2)"
-            onclick="resetMatchResult(${m.id})" title="Borrar resultado">✕</button>
         </div>
       </div>`).join('')}`;
-}
-
-async function resetMatchResult(matchId) {
-  if (!confirm('¿Borrás el resultado de este partido?')) return;
-  try {
-    await api('DELETE', '/prode/matches/' + matchId + '/result');
-    toast('Resultado borrado', 's');
-    renderProde();
-  } catch(e) { toast(e.message, 'e'); }
 }
 
 async function setMatchResult(matchId, side, value) {

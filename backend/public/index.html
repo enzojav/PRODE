@@ -16,7 +16,7 @@
   <div class="auth-card">
 
     <div class="auth-brand">
-      <div class="auth-logo-icon">⚽</div>
+      <img src="copa.png" alt="Logo" class="auth-logo-icon">
       <div class="auth-brand-name">Calidad & Capacitación</div>
       <div class="auth-brand-sub">Sistema interno de equipo</div>
     </div>
@@ -76,20 +76,12 @@
 
     <div class="auth-divider"></div>
     <div class="auth-admin-hint">
-     
+      Admin por defecto → usuario: <code>preguntar</code> · contraseña: <code>enzo
+      </code>
     </div>
 
   </div>
 </div>
-
-<!-- ══════════════════════════════════════════
-     INTRO SCREEN (gif al login)
-══════════════════════════════════════════ -->
-<div id="intro-screen" style="display:none">
-  <img src="logo_latido.gif" alt="Logo">
-</div>
-
-<audio id="login-audio" src="login.mp3" preload="auto"></audio>
 
 <!-- ══════════════════════════════════════════
      APP SHELL (visible tras login)
@@ -104,16 +96,7 @@
   </div>
 
   <!-- SIDEBAR -->
-  <aside class="sb" id="sidebar">
-    <div class="sb-logo">
-      <div class="lt">Calidad & Cap.</div>
-      <div class="ls">Panel interno</div>
-    </div>
-    <button class="sb-toggle" id="sb-toggle" onclick="toggleSidebar()" title="Colapsar menú">
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" width="14" height="14">
-        <path d="M10 3L5 8l5 5"/>
-      </svg>
-    </button>
+  <aside class="sb">
     <div class="sb-logo">
       <div class="lt">Calidad & Cap.</div>
       <div class="ls">Panel interno</div>
@@ -145,10 +128,6 @@
       <div class="ni" data-s="members">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
         Miembros
-      </div>
-      <div class="ni" data-s="users">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="5" r="3"/><path d="M1 14c0-2.8 2.2-5 5-5M13 11v4M11 13h4"/></svg>
-        Usuarios
       </div>
     </nav>
     <div class="sb-foot">
@@ -302,9 +281,6 @@
         </div>
       </section>
 
-      <!-- ── USUARIOS ── -->
-      <section class="sec" id="s-users"></section>
-
     </div><!-- /content -->
   </div><!-- /main -->
 
@@ -353,7 +329,6 @@
         <div class="ff"><label>Emoji</label><input type="text" id="n-emoji" placeholder="📋" maxlength="4"></div>
         <div class="ff"><label>Autor</label><input type="text" id="n-author" placeholder="Tu nombre"></div>
         <div class="ff full"><label>Contenido</label><textarea id="n-body" placeholder="Escribí el contenido…"></textarea></div>
-        <div class="ff full"><label>Imagen o Video (URL)</label><input type="text" id="n-image" placeholder="https://… (imagen, gif, o link de YouTube/Vimeo)"></div>
       </div>
       <div class="mact">
         <button class="btn btn-o" onclick="closeM('n-modal')">Cancelar</button>
