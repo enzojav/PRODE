@@ -174,7 +174,6 @@ function applySidebarState() {
 
 function showIntro(callback) {
   const intro = document.getElementById('intro-screen');
-  if (!intro) { callback(); return; }  // ← esta línea arregla todo
   const audio = document.getElementById('login-audio');
   intro.style.display = 'flex';
   audio?.play().catch(() => {});
@@ -338,8 +337,6 @@ function renderTraining() {
 // ══════════════════════════════════════════════════════════════
 let localNews = [];
 
-function setNewsFilter(f) { newsFilter = f === "Todos" ? "" : f; renderNews(); }
-
 async function renderNews() {
   try { localNews = await api('GET', '/news'); }
   catch { localNews = []; }
@@ -370,6 +367,7 @@ async function renderNews() {
       <div class="hero-title">${hero.title}</div>
       <div class="hero-body">${hero.body}</div>
       <div class="hero-meta">Por ${hero.author}
+        ${hero.image_url ? `<a href="${hero.image_url}" target="_blank" style="margin-left:12px;color:var(--accent);font-size:.75rem;font-weight:600;">Leer más →</a>` : ''}
         ${currentUser.role === 'admin' ? `<button class="ib dr" onclick="deleteNews(${hero.id})" style="margin-left:8px">
           <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 3h8M5 3V2h2v1M4 3v7h4V3"/></svg>
         </button>` : ''}
