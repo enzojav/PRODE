@@ -32,8 +32,8 @@ html, body {
 }
 
 .auth-logo-icon {
-  width: 300px;       /* ajustá el tamaño que quieras */
-  height: 300px;
+  width: 350px;       /* ajustá el tamaño que quieras */
+  height: 350px;
   object-fit: contain;
   display: block;
   margin: 0 auto;    /* esto lo centra */
