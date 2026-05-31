@@ -835,10 +835,10 @@ async function renderUsers() {
                     <div style="font-size:.75rem;color:var(--text3)">@${u.username}</div>
                   </div>
                   <div>
-                    <button class="btn btn-o" style="font-size:.75rem;padding:6px 12px" onclick="setUserStatus(${u.id},'banned')">🚫</button>
-                  </div>               
-                   <div>
-                    <button class="btn btn-o" style="font-size:.75rem;padding:6px 12px;color:var(--accent2)" onclick="deleteUser(${u.id},'${u.display_name.replace(/'/g,"\\'")}')">🗑️</button>
+                    <div style="display:flex; gap:20px;">
+                    <button class="ib">🚫</button>
+                    <button class="ib dr">🗑️</button>
+                    </div>
                    </div>
                 </div>`).join('')}
             </div>`}
