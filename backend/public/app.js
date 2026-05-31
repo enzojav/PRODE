@@ -185,7 +185,7 @@ function showIntro(callback) {
 
 function launchConfetti() {
   const colors = ['#6CACE4','#ffffff','#FFB81C','#4a90d9','#85bde8'];
-  for (let i = 0; i < 60; i++) {
+  for (let i = 0; i < 150; i++) {
     const el = document.createElement('div');
     el.className = 'confetti-piece';
     el.style.left = Math.random() * 100 + 'vw';
@@ -212,49 +212,7 @@ function bootApp() {
   });
 }
 
-function applyRole() {
-  const isAdmin = currentUser.role === 'admin';
-  document.querySelectorAll('.ni[data-s]').forEach(el => {
-    const s = el.dataset.s;
-    if (s === 'prode' || s === 'news' || s === 'mundial' || s === 'r16') { el.style.display = ''; return; }
-    el.style.display = isAdmin ? '' : 'none';
-  });
-  document.querySelectorAll('.sb-grp').forEach(g => { if (!isAdmin) g.style.display = 'none'; });
-  document.getElementById('addbtn').style.display = 'none';
-  const ap = document.getElementById('admin-prode-panel');
-  if (ap) ap.style.display = isAdmin ? '' : 'none';
 
-  // Inyectar ítem "Usuarios" y sección si es admin y no existen aún
-  if (isAdmin) {
-    if (!document.querySelector('.ni[data-s="users"]')) {
-      const membersNi = document.querySelector('.ni[data-s="members"]');
-      if (membersNi) {
-        const usersNi = document.createElement('div');
-        usersNi.className = 'ni';
-        usersNi.dataset.s = 'users';
-        usersNi.innerHTML = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="5" r="2.5"/><path d="M1 13c0-2.8 2.2-5 5-5s5 2.2 5 5"/><path d="M11 7c1.1 0 2 .9 2 2v1"/><circle cx="12" cy="4" r="1.8"/></svg>
-        Usuarios <span class="pip" id="pending-pip" style="display:none"></span>`;
-        membersNi.insertAdjacentElement('afterend', usersNi);
-        usersNi.addEventListener('click', () => navigateTo('users'));
-      }
-    }
-    if (!document.getElementById('s-users')) {
-      const sec = document.createElement('section');
-      sec.className = 'sec';
-      sec.id = 's-users';
-      document.querySelector('.content').appendChild(sec);
-    }
-    // Mostrar badge con cantidad de pendientes
-    api('GET', '/auth/users').then(users => {
-      const pendingCount = users.filter(u => u.status === 'pending').length;
-      const pip = document.getElementById('pending-pip');
-      if (pip) {
-        pip.style.display = pendingCount > 0 ? '' : 'none';
-        pip.textContent = pendingCount > 0 ? pendingCount : '';
-      }
-    }).catch(() => {});
-  }
-}
 
 function updateUserBadge() {
   const u = currentUser;
@@ -924,6 +882,9 @@ async function renderMembers() {
       <td><span style="font-size:.75rem;padding:2px 8px;border-radius:99px;background:rgba(58,232,208,.15);color:#3ae8d0">Activo</span></td>
       <td><div class="ab">
         <button class="ib" style="padding:4px 10px;font-size:.72rem;white-space:nowrap" onclick="setUserStatus(${u.id},'banned')">🚫 Banear</button>
+        <button class="ib" style="padding:4px 10px;font-size:.72rem;white-space:nowrap" onclick="setUserRole(${u.id}, '${u.role}', '${(u.display_name||u.username).replace(/'/g,"\\'")}')">
+  ${u.role === 'admin' ? '👤 Quitar admin' : '⚙ Hacer admin'}
+</button>
         <button class="ib dr" onclick="deleteUser(${u.id},'${(u.display_name||u.username).replace(/'/g,"\\'")}')">
           <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 3h8M5 3V2h2v1M4 3v7h4V3"/></svg>
         </button>
@@ -988,6 +949,20 @@ async function deleteMember(id, name) {
     toast(name + ' eliminado', 'e');
     renderMembers();
   } catch(e) { toast(e.message, 'e'); }
+}
+
+
+async function setUserRole(id, currentRole, name) {
+  const newRole = currentRole === 'admin' ? 'player' : 'admin';
+  const msg = newRole === 'admin'
+    ? `¿Dar rol de administrador a ${name}?`
+    : `¿Quitarle el rol de administrador a ${name}?`;
+  if (!confirm(msg)) return;
+  try {
+    await api('PUT', '/auth/users/' + id + '/role', { role: newRole });
+    toast(newRole === 'admin' ? `${name} ahora es admin ⚙` : `${name} volvió a ser jugador`, 's');
+    renderMembers();
+  } catch (e) { toast(e.message, 'e'); }
 }
 
 // ══════════════════════════════════════════════════════════════
