@@ -1288,6 +1288,17 @@ tbody tr:hover td { background: var(--bg3); }
   font-weight: 600;
 }
 
+#mundial-embed {
+  width: 100%;
+  height: 100vh;
+}
+
+#mw-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
 /* ══════════════════════════════════════════════
    FIFA PRODE — NUEVO DISEÑO
 ══════════════════════════════════════════════ */
