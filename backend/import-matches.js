@@ -39,7 +39,7 @@ const FLAGS = {
   'Canada':'🇨🇦','Bosnia':'🇧🇦','Qatar':'🇶🇦','Switzerland':'🇨🇭',
   'Brazil':'🇧🇷','Morocco':'🇲🇦','Haiti':'🇭🇹','Scotland':'🏴󠁧󠁢󠁳󠁣󠁴󠁿',
   'USA':'🇺🇸','Paraguay':'🇵🇾','Australia':'🇦🇺','Turkey':'🇹🇷',
-  'Germany':'🇩🇪',"Ivory Coast":'🇨🇮',"Cote d'Ivoire":'🇨🇮','Curaçao':'🏳️',
+  'Germany':'🇩🇪',"Ivory Coast":'🇨🇮',"Cote d'Ivoire":'🇨🇮','Curaçao':'🇨🇼',
   'Netherlands':'🇳🇱','Japan':'🇯🇵','Tunisia':'🇹🇳','Sweden':'🇸🇪',
   'Belgium':'🇧🇪','New Zealand':'🇳🇿','Egypt':'🇪🇬','Iran':'🇮🇷',
   'Spain':'🇪🇸','Cape Verde':'🇨🇻','Uruguay':'🇺🇾','Saudi Arabia':'🇸🇦',

@@ -45,10 +45,10 @@ const DB_MATCHES = [
   { id:24, group:"D", round:"Grupo D · Jornada 3", date:"Vie 26 Jun", time:"20:00", venue:"Lumen Field, Seattle",         home:"Turquía",         home_flag:"🇹🇷", away:"Estados Unidos", away_flag:"🇺🇸" },
   // ─── GRUPO E ───
   { id:25, group:"E", round:"Grupo E · Jornada 1", date:"Dom 14 Jun", time:"19:00", venue:"AT&T Stadium, Dallas",         home:"Alemania",        home_flag:"🇩🇪", away:"Costa de Marfil",away_flag:"🇨🇮" },
-  { id:26, group:"E", round:"Grupo E · Jornada 1", date:"Sáb 14 Jun", time:"22:00", venue:"Arrowhead, Kansas City",       home:"Ecuador",         home_flag:"🇪🇨", away:"Curazao",        away_flag:"🏳️" },
+  { id:26, group:"E", round:"Grupo E · Jornada 1", date:"Sáb 14 Jun", time:"22:00", venue:"Arrowhead, Kansas City",       home:"Ecuador",         home_flag:"🇪🇨", away:"Curazao",        away_flag:"🇨🇼" },
   { id:27, group:"E", round:"Grupo E · Jornada 2", date:"Sáb 20 Jun", time:"17:00", venue:"AT&T Stadium, Dallas",         home:"Alemania",        home_flag:"🇩🇪", away:"Ecuador",        away_flag:"🇪🇨" },
-  { id:28, group:"E", round:"Grupo E · Jornada 2", date:"Sáb 20 Jun", time:"21:00", venue:"Lincoln Financial, Filadelfia",home:"Costa de Marfil", home_flag:"🇨🇮", away:"Curazao",        away_flag:"🏳️" },
-  { id:29, group:"E", round:"Grupo E · Jornada 3", date:"Vie 26 Jun", time:"20:00", venue:"Arrowhead, Kansas City",       home:"Alemania",        home_flag:"🇩🇪", away:"Curazao",        away_flag:"🏳️" },
+  { id:28, group:"E", round:"Grupo E · Jornada 2", date:"Sáb 20 Jun", time:"21:00", venue:"Lincoln Financial, Filadelfia",home:"Costa de Marfil", home_flag:"🇨🇮", away:"Curazao",        away_flag:"🇨🇼" },
+  { id:29, group:"E", round:"Grupo E · Jornada 3", date:"Vie 26 Jun", time:"20:00", venue:"Arrowhead, Kansas City",       home:"Alemania",        home_flag:"🇩🇪", away:"Curazao",        away_flag:"🇨🇼" },
   { id:30, group:"E", round:"Grupo E · Jornada 3", date:"Vie 26 Jun", time:"20:00", venue:"AT&T Stadium, Dallas",         home:"Costa de Marfil", home_flag:"🇨🇮", away:"Ecuador",        away_flag:"🇪🇨" },
   // ─── GRUPO F ───
   { id:31, group:"F", round:"Grupo F · Jornada 1", date:"Dom 14 Jun", time:"16:00", venue:"Lincoln Financial, Filadelfia",home:"Países Bajos",    home_flag:"🇳🇱", away:"Japón",          away_flag:"🇯🇵" },
