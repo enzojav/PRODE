@@ -623,6 +623,9 @@ function renderMatchCard(m) {
 
   const disabledAttr = locked ? 'disabled' : '';
   const lockIcon     = locked ? '<span style="font-size:.7rem;color:var(--text3)">🔒</span>' : '';
+  const votedIcon    = (predResult || (pH !== null && pA !== null))
+    ? '<span style="font-size:.7rem;color:#3ae8b0;font-weight:600">✓ Votado</span>'
+    : '<span style="font-size:.7rem;color:rgba(255,255,255,.25)">Sin voto</span>';
   const resultBadge  = played
     ? `<span class="match-result-badge">${mH} - ${mA}</span>`
     : `<span class="match-vs">VS</span>`;
@@ -631,6 +634,7 @@ function renderMatchCard(m) {
     <div class="match-card${played ? ' played' : ''}${locked ? ' locked' : ''}">
       <div class="match-meta">
         <span class="match-date">${m.time || ''} hs · ${m.venue || ''}</span>
+        ${votedIcon}
         ${lockIcon}
       </div>
       <div class="match-body">
@@ -684,7 +688,7 @@ function renderAdminProdePanel() {
     </p>
     ${groupMatches.map(m => `
       <div class="admin-match-row">
-        <span class="admin-match-name">${m.home_flag || ''} ${m.home} vs ${m.away_flag || ''} ${m.away}</span>
+        <span class="admin-match-name"><span style="color:var(--amber);font-size:.68rem;font-weight:700">${m.group_name || ''}</span> · ${m.home_flag || ''} ${m.home} vs ${m.away_flag || ''} ${m.away}</span>
         <span style="font-size:.7rem;color:var(--text3)">${m.match_date}</span>
         <div class="admin-goals-row">
           <input class="goals-input admin-goals-input" type="number" min="0" max="20"
@@ -1083,6 +1087,9 @@ function renderR16Card(m) {
 
   const disabledAttr = locked ? 'disabled' : '';
   const lockIcon     = locked ? '<span class="r16-lock">🔒</span>' : '';
+  const votedIcon    = predResult
+    ? '<span style="font-size:.7rem;color:#3ae8b0;font-weight:600">✓ Votado</span>'
+    : '<span style="font-size:.7rem;color:rgba(255,255,255,.25)">Sin voto</span>';
 
   const winnerLabel = played
     ? (realResult === '1' ? `🏆 ${m.home}` : realResult === '2' ? `🏆 ${m.away}` : '— Empate')
@@ -1093,6 +1100,7 @@ function renderR16Card(m) {
       <div class="r16-meta">
         <span class="r16-group">${m.group_name || ''}</span>
         <span class="r16-date">${m.match_date || ''} · ${m.time || ''} hs</span>
+        ${votedIcon}
         ${lockIcon}
         ${currentUser.role === 'admin' ? `
           <div class="r16-admin-scores">
