@@ -81,16 +81,18 @@ router.post('/predictions', requireAuth, async (req, res) => {
     if (!match) return res.status(404).json({ error: 'Partido no encontrado.' });
 
     // Verificar lock por fecha/hora
-    const MONTH_MAP = { Ene:0,Feb:1,Mar:2,Abr:3,May:4,Jun:5,Jul:6,Ago:7,Sep:8,Oct:9,Nov:10,Dic:11 };
-    try {
-      const parts = (match.match_date || '').split(' ');
-      const day   = parseInt(parts[1]);
-      const month = MONTH_MAP[parts[2]];
-      const [hh, mm] = (match.time || '00:00').split(':').map(Number);
-      const matchTime = new Date(2026, month, day, hh, mm, 0);
-      if (new Date() >= matchTime)
-        return res.status(403).json({ error: 'El partido ya comenzó, no podés modificar tu pronóstico.' });
-    } catch { /* si falla el parse, dejar pasar */ }
+   
+    // Verificar lock por fecha/hora
+const MONTH_MAP = { Ene:0,Feb:1,Mar:2,Abr:3,May:4,Jun:5,Jul:6,Ago:7,Sep:8,Oct:9,Nov:10,Dic:11 };
+try {
+  const parts = (match.match_date || '').split(' ');
+  const day   = parseInt(parts[1]);
+  const month = MONTH_MAP[parts[2]];
+  const [hh, mm] = (match.time || '00:00').split(':').map(Number);
+  const matchTime = new Date(2026, month, day, hh, mm, 0);
+  if (new Date() >= matchTime)
+    return res.status(403).json({ error: 'El partido ya comenzó, no podés modificar tu pronóstico.' });
+} catch { /* si falla el parse, dejar pasar */ }
 
     // Upsert predicción
     const exists = await db.query(

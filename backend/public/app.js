@@ -48,7 +48,8 @@ function isMatchLocked(m) {
     const day     = parseInt(parts[dayIdx]);
     const month   = MONTH_MAP[parts[monIdx]];
     const [hh,mm] = (m.time || '00:00').split(':').map(Number);
-    return new Date() >= new Date(2026, month, day, hh, mm, 0);
+    const matchTime = new Date(Date.UTC(2026, month, day, hh + 3, mm, 0));
+    return new Date() >= new Date(matchTime.getTime() - 60 * 60 * 1000);
   } catch { return false; }
 }
 
@@ -140,31 +141,22 @@ async function doRegister() {
   const displayName = document.getElementById('r-name').value.trim();
   const username    = document.getElementById('r-user').value.trim();
   const password    = document.getElementById('r-pass').value;
-  const legajo      = document.getElementById('r-legajo').value.trim();
-  const dni         = document.getElementById('r-dni').value.trim();
+  const legajo      = document.getElementById('r-legajo')?.value.trim() || '';
   const errEl       = document.getElementById('auth-error');
-  errEl.style.color = '';
-  errEl.textContent = '';
-
-  if (!displayName || !username || !password || !legajo || !dni) {
-    errEl.textContent = 'Completá todos los campos.'; return;
-  }
-
+  if (!displayName || !username || !password || !legajo) { errEl.textContent = 'Completá todos los campos incluyendo el legajo.'; return; }
+  if (password.length < 4)    { errEl.textContent = 'La contraseña debe tener al menos 4 caracteres.'; return; }
   try {
-    const data = await api('POST', '/auth/register', { username, password, displayName, legajo, dni });
-    if (data.token) {
-      errEl.style.color = '#4caf50';
-      errEl.textContent = '✓ Cuenta creada. Iniciando sesión...';
-      setTimeout(() => {
-        sessionStorage.setItem('qh_token', data.token);
-        currentUser = data.user;
-        bootApp();
-      }, 1000);
-    }
-  } catch (e) {
-    errEl.textContent = e.message || 'Error al registrarse.';
-  }
+    const data = await api('POST', '/auth/register', { username, password, displayName, legajo });
+    errEl.style.color = 'var(--accent)';
+    errEl.textContent = data.message || 'Cuenta creada. Esperá la aprobación del administrador.';
+    setTimeout(() => {
+      switchAuthTab('login');
+      errEl.textContent = '';
+      errEl.style.color = '';
+    }, 3500);
+  } catch (e) { errEl.textContent = e.message || 'Error al registrarse.'; }
 }
+
 function doLogout() {
   currentUser = null;
   sessionStorage.removeItem('qh_token');
@@ -508,12 +500,13 @@ async function renderProde() {
     if (currentUser.role === 'admin') renderAdminProdePanel();
   }
 
-  const allDates = [...new Set(localMatches.map(m => m.match_date))];
+  const groupMatches = localMatches.filter(m => m.phase !== 'R16');
+  const allDates = [...new Set(groupMatches.map(m => m.match_date))];
   allDates.sort((a, b) => parseDateToSort(a) - parseDateToSort(b));
   if (!activeDate || !allDates.includes(activeDate)) activeDate = allDates[0];
 
   document.getElementById('date-strip').innerHTML = allDates.map(d => {
-    const dayM      = localMatches.filter(m => m.match_date === d);
+    const dayM      = groupMatches.filter(m => m.match_date === d);
     const hasResult = dayM.some(m => m.home_score !== null);
     const parts     = d.split(' ');
     return `<button class="date-chip${d === activeDate ? ' active' : ''}${hasResult ? ' has-result' : ''}" onclick="setDate('${d}')">
@@ -524,7 +517,7 @@ async function renderProde() {
     </button>`;
   }).join('');
 
-  const dayMatches = localMatches.filter(m => m.match_date === activeDate);
+  const dayMatches = groupMatches.filter(m => m.match_date === activeDate);
   const dayEl = document.getElementById('matches-day');
   if (!dayMatches.length) {
     dayEl.innerHTML = '<div class="no-matches">No hay partidos este día.</div>';
@@ -675,7 +668,7 @@ function renderMatchCard(m) {
 function renderAdminProdePanel() {
   const panel = document.getElementById('admin-match-list');
   if (!panel) return;
-  const groupMatches = activeDate ? localMatches.filter(m => m.match_date === activeDate) : localMatches;
+  const groupMatches = activeDate ? localMatches.filter(m => m.match_date === activeDate && m.phase !== 'R16') : localMatches.filter(m => m.phase !== 'R16');
   panel.innerHTML = `
     <p style="font-size:.75rem;color:var(--text3);margin-bottom:10px">
       Cargá resultados del día <strong>${activeDate || 'seleccionado'}</strong>.

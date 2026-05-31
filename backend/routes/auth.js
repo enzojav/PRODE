@@ -62,7 +62,7 @@ if (empleado.rows.length === 0)
       [username.trim(), hash, displayName.trim(), color, legajo.trim(), dni.trim()]
     );
 
-    const newUser = result.rows[0];
+    const newUser = result.rows[0]; 
     const token = jwt.sign(
       { id: newUser.id, username: username.trim(), role: 'player' },
       process.env.JWT_SECRET,
