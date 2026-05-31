@@ -48,13 +48,9 @@ router.post('/register', async (req, res) => {
     return res.status(400).json({ error: 'El usuario no puede tener espacios.' });
 
   try {
-    const byLegajo = await db.query('SELECT id FROM users WHERE legajo = $1', [legajo.trim()]);
-    if (byLegajo.rows.length > 0)
-      return res.status(409).json({ error: 'Ese legajo ya está registrado.' });
-
-    const byDni = await db.query('SELECT id FROM users WHERE dni = $1', [dni.trim()]);
-    if (byDni.rows.length > 0)
-      return res.status(409).json({ error: 'Ese DNI ya está registrado.' });
+    const empleado = await db.query('SELECT legajo FROM empleados WHERE legajo = $1 AND dni = $2', [legajo.trim(), dni.trim()]);
+if (empleado.rows.length === 0)
+  return res.status(409).json({ error: 'Legajo o DNI no válidos.' });
 
     const hash  = bcrypt.hashSync(password, 10);
     const color = ['#6CACE4','#FFB81C','#85bde8','#002470','#3ae8d0'][Math.floor(Math.random() * 5)];
