@@ -798,41 +798,68 @@ async function renderUsers() {
     const userSection = document.getElementById('s-users');
     if (!userSection) return;
 
-    <div class="card" style="margin-bottom:16px">
-  <div class="ctit">✅ Usuarios activos</div>
-  ${active.length === 0
-    ? '<p style="color:var(--text3);font-size:.85rem;margin-top:8px">Sin usuarios activos.</p>'
-    : `<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
-        ${active.map(u => `
-          <div class="user-row">
-            <div class="av" style="background:${avc(u.id)};width:34px;height:34px;font-size:.7rem;flex-shrink:0">
-              ${ini(u.display_name)}
-            </div>
+    userSection.innerHTML = `
+      <div class="card" style="margin-bottom:16px">
+        <div class="ctit" style="display:flex;align-items:center;gap:8px">
+          ⏳ Pendientes de aprobación
+          ${pending.length ? `<span style="background:var(--accent);color:#fff;font-size:.7rem;padding:2px 8px;border-radius:99px;font-weight:600">${pending.length}</span>` : ''}
+        </div>
+        ${pending.length === 0
+          ? '<p style="color:var(--text3);font-size:.85rem;margin-top:8px">No hay usuarios pendientes.</p>'
+          : `<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+              ${pending.map(u => `
+                <div class="user-row">
+                  <div class="av" style="background:#FFB81C;width:34px;height:34px;font-size:.7rem;flex-shrink:0">${ini(u.display_name)}</div>
+                  <div style="flex:1">
+                    <div style="font-weight:500;font-size:.9rem">${u.display_name}</div>
+                    <div style="font-size:.75rem;color:var(--text3)">@${u.username} · Registrado ${new Date(u.created_at).toLocaleDateString('es-AR')}</div>
+                  </div>
+                  <div style="display:flex;gap:6px">
+                    <button class="btn btn-a" style="font-size:.75rem;padding:6px 12px" onclick="setUserStatus(${u.id},'active')">✓ Aprobar</button>
+                    <button class="btn btn-o" style="font-size:.75rem;padding:6px 12px;color:var(--accent2)" onclick="deleteUser(${u.id},'${u.display_name.replace(/'/g,"\\'")}')">✕ Rechazar</button>
+                  </div>
+                </div>`).join('')}
+            </div>`}
+      </div>
 
-            <div style="flex:1">
-              <div style="font-weight:500;font-size:.9rem">${u.display_name}</div>
-              <div style="font-size:.75rem;color:var(--text3)">@${u.username}</div>
-            </div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="ctit">✅ Usuarios activos</div>
+        ${active.length === 0
+          ? '<p style="color:var(--text3);font-size:.85rem;margin-top:8px">Sin usuarios activos.</p>'
+          : `<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+              ${active.map(u => `
+                <div class="user-row">
+                  <div class="av" style="background:${avc(u.id)};width:34px;height:34px;font-size:.7rem;flex-shrink:0">${ini(u.display_name)}</div>
+                  <div style="flex:1">
+                    <div style="font-weight:500;font-size:.9rem">${u.display_name}</div>
+                    <div style="font-size:.75rem;color:var(--text3)">@${u.username}</div>
+                  </div>
+                  <div style="display:flex;gap:6px">
+                    <button class="btn btn-o" style="font-size:.75rem;padding:6px 12px" onclick="setUserStatus(${u.id},'banned')">🚫 Banear</button>
+                    <button class="btn btn-o" style="font-size:.75rem;padding:6px 12px;color:var(--accent2)" onclick="deleteUser(${u.id},'${u.display_name.replace(/'/g,"\\'")}')">🗑 Eliminar</button>
+                  </div>
+                </div>`).join('')}
+            </div>`}
+      </div>
 
-            <div style="display:flex;gap:12px">
-              <button
-                class="btn btn-o"
-                style="font-size:.75rem;padding:6px 12px"
-                onclick="setUserStatus(${u.id},'banned')">
-                🚫 Banear
-              </button>
-
-              <button
-                class="btn btn-o"
-                style="font-size:.75rem;padding:6px 12px;color:var(--accent2)"
-                onclick="deleteUser(${u.id},'${u.display_name.replace(/'/g,"\\'")}')">
-                🗑 Eliminar
-              </button>
-            </div>
-          </div>
-        `).join('')}
-      </div>`}
-</div>
+      ${banned.length > 0 ? `
+      <div class="card">
+        <div class="ctit">🚫 Usuarios baneados</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+          ${banned.map(u => `
+            <div class="user-row">
+              <div class="av" style="background:#555;width:34px;height:34px;font-size:.7rem;flex-shrink:0">${ini(u.display_name)}</div>
+              <div style="flex:1">
+                <div style="font-weight:500;font-size:.9rem;color:var(--text3)">${u.display_name}</div>
+                <div style="font-size:.75rem;color:var(--text3)">@${u.username}</div>
+              </div>
+              <div style="display:flex;gap:6px">
+                <button class="btn btn-o" style="font-size:.75rem;padding:6px 12px" onclick="setUserStatus(${u.id},'active')">↩ Reactivar</button>
+                <button class="btn btn-o" style="font-size:.75rem;padding:6px 12px;color:var(--accent2)" onclick="deleteUser(${u.id},'${u.display_name.replace(/'/g,"\\'")}')">🗑 Eliminar</button>
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>` : ''}`;
 
   } catch (e) {
     toast('Error al cargar usuarios: ' + e.message, 'e');
