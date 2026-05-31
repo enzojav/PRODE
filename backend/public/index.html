@@ -38,36 +38,45 @@
     </div>
 
     <!-- REGISTRO -->
-<div id="auth-register" style="display:none">
-  <div class="auth-field">
-    <label>Nombre completo</label>
-    <input type="text" id="r-name" placeholder="Ej: Juan Pérez" autocomplete="name">
-  </div>
-  <div class="auth-field">
-    <label>Usuario</label>
-    <input type="text" id="r-user" placeholder="Sin espacios · Ej: juanp" autocomplete="username">
-  </div>
-  <div class="auth-grid2">
-    <div class="auth-field">
-      <label>Contraseña</label>
-      <input type="password" id="r-pass" placeholder="Mínimo 4 caracteres" autocomplete="new-password">
+    <div id="auth-register" style="display:none">
+      <div class="auth-field">
+        <label>Nombre completo</label>
+        <input type="text" id="r-name" placeholder="Ej: Juan Pérez" autocomplete="name">
+      </div>
+      <div class="auth-field">
+        <label>Usuario</label>
+        <input type="text" id="r-user" placeholder="Sin espacios · Ej: juanp" autocomplete="username">
+      </div>
+      <div class="auth-grid2">
+        <div class="auth-field">
+          <label>Contraseña</label>
+          <input type="password" id="r-pass" placeholder="Mínimo 4 caracteres" autocomplete="new-password">
+        </div>
+        <div class="auth-field">
+          <label>Número de legajo</label>
+          <input type="text" id="r-legajo" placeholder="Ej: 12345">
+        </div>
+      </div>
+      <div class="auth-field">
+        <label>DNI</label>
+        <input type="text" id="r-dni" placeholder="Sin puntos · Ej: 30123456">
+      </div>
+      <div class="auth-role-note">
+        <span>🎮</span>
+        <span>Al registrarte vas a poder participar del <strong>Prode</strong>. El acceso completo lo asigna un administrador.</span>
+      </div>
+      <button class="btn btn-a auth-submit" onclick="doRegister()">Crear cuenta</button>
+      <div class="auth-hint">¿Ya tenés cuenta? <span onclick="switchAuthTab('login')">Iniciá sesión</span></div>
     </div>
-    <div class="auth-field">
-      <label>Número de legajo</label>
-      <input type="text" id="r-legajo" placeholder="Ej: 12345">
+
+    <div class="auth-error" id="auth-error"></div>
+    <div class="auth-divider"></div>
+    <div class="auth-admin-hint">
+      En caso de error: <code>email: enzo.aguirre@gestiondeingresos.com</code>
     </div>
-  </div>
-  <div class="auth-field">
-    <label>DNI</label>
-    <input type="text" id="r-dni" placeholder="Sin puntos · Ej: 30123456">
-  </div>
-  <div class="auth-role-note">
-    <span>🎮</span>
-    <span>Al registrarte vas a poder participar del <strong>Prode</strong>. El acceso completo lo asigna un administrador.</span>
-  </div>
-  <button class="btn btn-a auth-submit" onclick="doRegister()">Crear cuenta</button>
-  <div class="auth-hint">¿Ya tenés cuenta? <span onclick="switchAuthTab('login')">Iniciá sesión</span></div>
-</div>
+
+  </div><!-- /auth-card -->
+</div><!-- /auth-screen -->
 
 <!-- ══ APP SHELL ══════════════════════════════════════════════ -->
 <div id="app-shell" style="display:none">
