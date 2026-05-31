@@ -143,6 +143,7 @@ async function doRegister() {
   const legajo      = document.getElementById('r-legajo').value.trim();
   const dni         = document.getElementById('r-dni').value.trim();
   const errEl       = document.getElementById('auth-error');
+  errEl.style.color = '';
   errEl.textContent = '';
 
   if (!displayName || !username || !password || !legajo || !dni) {
@@ -151,10 +152,14 @@ async function doRegister() {
 
   try {
     const data = await api('POST', '/auth/register', { username, password, displayName, legajo, dni });
-    if (data.pending) {
+    if (data.token) {
       errEl.style.color = '#4caf50';
-      errEl.textContent = data.message;
-      switchAuthTab('login');
+      errEl.textContent = '✓ Cuenta creada. Iniciando sesión...';
+      setTimeout(() => {
+        sessionStorage.setItem('qh_token', data.token);
+        currentUser = data.user;
+        bootApp();
+      }, 1000);
     }
   } catch (e) {
     errEl.textContent = e.message || 'Error al registrarse.';
