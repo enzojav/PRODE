@@ -272,11 +272,11 @@ const DB_MATCHES = [
 
   { id:28, group:"E", round:"Grupo E · Jornada 2", date:"Sáb 20 Jun", time:"21:00", venue:"Lincoln Financial, Filadelfia",
     home:{ name:"Costa de Marfil",flag:"🇨🇮", known:true  },
-    away:{ name:"Curazao",        flag:"🏳️", known:true  }, result:"" },
+    away:{ name:"Curazao",        flag:"🇨🇼", known:true  }, result:"" },
 
   { id:29, group:"E", round:"Grupo E · Jornada 3", date:"Vie 26 Jun", time:"20:00", venue:"Arrowhead, Kansas City",
     home:{ name:"Alemania",        flag:"🇩🇪", known:true  },
-    away:{ name:"Curazao",         flag:"🏳️", known:true  }, result:"" },
+    away:{ name:"Curazao",         flag:"🇨🇼", known:true  }, result:"" },
 
   { id:30, group:"E", round:"Grupo E · Jornada 3", date:"Vie 26 Jun", time:"20:00", venue:"AT&T Stadium, Dallas",
     home:{ name:"Costa de Marfil", flag:"🇨🇮", known:true  },
