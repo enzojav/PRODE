@@ -91,4 +91,4 @@ async function createMatchNews(match) {
 
 module.exports = { router, createMatchNews };
 
-module.exports = router;
+
