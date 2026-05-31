@@ -264,7 +264,7 @@ const DB_MATCHES = [
 
   { id:26, group:"E", round:"Grupo E · Jornada 1", date:"Dom 14 Jun", time:"22:00", venue:"Arrowhead, Kansas City",
     home:{ name:"Ecuador",  flag:"🇪🇨", known:true  },
-    away:{ name:"Curazao",  flag:"🏳️", known:true  }, result:"" },
+    away:{ name:"Curazao",  flag:"🇨🇼", known:true  }, result:"" },
 
   { id:27, group:"E", round:"Grupo E · Jornada 2", date:"Sáb 20 Jun", time:"17:00", venue:"AT&T Stadium, Dallas",
     home:{ name:"Alemania",     flag:"🇩🇪", known:true  },
