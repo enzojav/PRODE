@@ -42,9 +42,7 @@ app.use('/api/auth',    require('./routes/auth'));
 app.use('/api/members', require('./routes/members'));
 app.use('/api/scores',  require('./routes/scores'));
 app.use('/api/prode',   require('./routes/prode'));
-app.use('/api/sync',    require('./routes/sync'));
 
-// news usa exports nombrado por el createMatchNews
 const { router: newsRouter } = require('./routes/news');
 app.use('/api/news', newsRouter);
 
