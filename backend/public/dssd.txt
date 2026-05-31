@@ -183,30 +183,12 @@ function showIntro(callback) {
   }, 2500);
 }
 
-function launchConfetti() {
-  const colors = ['#6CACE4','#ffffff','#FFB81C','#4a90d9','#85bde8'];
-  for (let i = 0; i < 60; i++) {
-    const el = document.createElement('div');
-    el.className = 'confetti-piece';
-    el.style.left = Math.random() * 100 + 'vw';
-    el.style.background = colors[Math.floor(Math.random() * colors.length)];
-    el.style.width  = (Math.random() * 8 + 5) + 'px';
-    el.style.height = (Math.random() * 8 + 5) + 'px';
-    el.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
-    el.style.animationDuration = (Math.random() * 2 + 2) + 's';
-    el.style.animationDelay = (Math.random() * 1.5) + 's';
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), 4000);
-  }
-}
-
 function bootApp() {
   showIntro(() => {
     showApp();
     applyRole();
     setupNav();
     updateUserBadge();
-    launchConfetti();
     if (currentUser.role === 'admin') navigateTo('dashboard');
     else navigateTo('prode');
   });
