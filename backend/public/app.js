@@ -207,36 +207,6 @@ function applyRole() {
   if (ap) ap.style.display = isAdmin ? '' : 'none';
 
   // Inyectar ítem "Usuarios" y sección si es admin y no existen aún
-  if (isAdmin) {
-    if (!document.querySelector('.ni[data-s="users"]')) {
-      const membersNi = document.querySelector('.ni[data-s="members"]');
-      if (membersNi) {
-        const usersNi = document.createElement('div');
-        usersNi.className = 'ni';
-        usersNi.dataset.s = 'users';
-        usersNi.innerHTML = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="5" r="2.5"/><path d="M1 13c0-2.8 2.2-5 5-5s5 2.2 5 5"/><path d="M11 7c1.1 0 2 .9 2 2v1"/><circle cx="12" cy="4" r="1.8"/></svg>
-        Usuarios <span class="pip" id="pending-pip" style="display:none"></span>`;
-        membersNi.insertAdjacentElement('afterend', usersNi);
-        usersNi.addEventListener('click', () => navigateTo('users'));
-      }
-    }
-    if (!document.getElementById('s-users')) {
-      const sec = document.createElement('section');
-      sec.className = 'sec';
-      sec.id = 's-users';
-      document.querySelector('.content').appendChild(sec);
-    }
-    // Mostrar badge con cantidad de pendientes
-    api('GET', '/auth/users').then(users => {
-      const pendingCount = users.filter(u => u.status === 'pending').length;
-      const pip = document.getElementById('pending-pip');
-      if (pip) {
-        pip.style.display = pendingCount > 0 ? '' : 'none';
-        pip.textContent = pendingCount > 0 ? pendingCount : '';
-      }
-    }).catch(() => {});
-  }
-}
 
 function updateUserBadge() {
   const u = currentUser;
