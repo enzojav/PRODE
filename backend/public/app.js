@@ -141,20 +141,30 @@ async function doRegister() {
   const displayName = document.getElementById('r-name').value.trim();
   const username    = document.getElementById('r-user').value.trim();
   const password    = document.getElementById('r-pass').value;
-  const legajo      = document.getElementById('r-legajo')?.value.trim() || '';
+  const legajo      = document.getElementById('r-legajo').value.trim();
+  const dni         = document.getElementById('r-dni').value.trim();
   const errEl       = document.getElementById('auth-error');
-  if (!displayName || !username || !password || !legajo) { errEl.textContent = 'Completá todos los campos incluyendo el legajo.'; return; }
-  if (password.length < 4)    { errEl.textContent = 'La contraseña debe tener al menos 4 caracteres.'; return; }
+  errEl.style.color = '';
+  errEl.textContent = '';
+
+  if (!displayName || !username || !password || !legajo || !dni) {
+    errEl.textContent = 'Completá todos los campos.'; return;
+  }
+
   try {
-    const data = await api('POST', '/auth/register', { username, password, displayName, legajo });
-    errEl.style.color = 'var(--accent)';
-    errEl.textContent = data.message || 'Cuenta creada. Esperá la aprobación del administrador.';
-    setTimeout(() => {
-      switchAuthTab('login');
-      errEl.textContent = '';
-      errEl.style.color = '';
-    }, 3500);
-  } catch (e) { errEl.textContent = e.message || 'Error al registrarse.'; }
+    const data = await api('POST', '/auth/register', { username, password, displayName, legajo, dni });
+    if (data.token) {
+      errEl.style.color = '#4caf50';
+      errEl.textContent = '✓ Cuenta creada. Iniciando sesión...';
+      setTimeout(() => {
+        sessionStorage.setItem('qh_token', data.token);
+        currentUser = data.user;
+        bootApp();
+      }, 1000);
+    }
+  } catch (e) {
+    errEl.textContent = e.message || 'Error al registrarse.';
+  }
 }
 
 function doLogout() {
