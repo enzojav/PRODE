@@ -1887,7 +1887,9 @@ tbody tr:hover td { background: var(--bg3); }
 
 /* INTRO SCREEN — fondo con gradiente argentino */
 #intro-screen {
-  background: radial-gradient(ellipse at center, #001a3d 0%, #000510 60%, #000 100%) !important;
+  #intro-screen {
+  background: var(--bg) !important;
+}
 }
 
 #intro-screen::before {

@@ -61,4 +61,34 @@ router.get('/preview', requireAuth, async (req, res) => {
   }
 });
 
+// ─── AUTO NOTICIA de resultado ────────────────────────────────
+async function createMatchNews(match) {
+  try {
+    const hS = match.home_score;
+    const aS = match.away_score;
+    const hF = match.home_flag || '🏳️';
+    const aF = match.away_flag || '🏳️';
+    const home = match.home;
+    const away = match.away;
+
+    const winner = hS > aS ? home : hS < aS ? away : null;
+    const emoji  = hS > aS ? hF : hS < aS ? aF : '🤝';
+
+    const title = `${hF} ${home} ${hS} - ${aS} ${away} ${aF}`;
+    const body  = winner
+      ? `¡${winner} se lleva los 3 puntos! Resultado final: ${home} ${hS} - ${aS} ${away}.`
+      : `¡Empate! ${home} y ${away} se reparten los puntos. Resultado final: ${hS} - ${aS}.`;
+
+    await db.query(
+      `INSERT INTO news (title, body, category, emoji, author, image_url)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [title, body, match.group_name || 'Mundial 2026', emoji, 'Sistema', null]
+    );
+  } catch (e) {
+    console.error('Error creando noticia automática:', e.message);
+  }
+}
+
+module.exports = { router, createMatchNews };
+
 module.exports = router;
