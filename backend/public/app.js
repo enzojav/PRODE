@@ -207,6 +207,36 @@ function applyRole() {
   if (ap) ap.style.display = isAdmin ? '' : 'none';
 
   // Inyectar ítem "Usuarios" y sección si es admin y no existen aún
+  if (isAdmin) {
+    if (!document.querySelector('.ni[data-s="users"]')) {
+      const membersNi = document.querySelector('.ni[data-s="members"]');
+      if (membersNi) {
+        const usersNi = document.createElement('div');
+        usersNi.className = 'ni';
+        usersNi.dataset.s = 'users';
+        usersNi.innerHTML = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="5" r="2.5"/><path d="M1 13c0-2.8 2.2-5 5-5s5 2.2 5 5"/><path d="M11 7c1.1 0 2 .9 2 2v1"/><circle cx="12" cy="4" r="1.8"/></svg>
+        Usuarios <span class="pip" id="pending-pip" style="display:none"></span>`;
+        membersNi.insertAdjacentElement('afterend', usersNi);
+        usersNi.addEventListener('click', () => navigateTo('users'));
+      }
+    }
+    if (!document.getElementById('s-users')) {
+      const sec = document.createElement('section');
+      sec.className = 'sec';
+      sec.id = 's-users';
+      document.querySelector('.content').appendChild(sec);
+    }
+    // Mostrar badge con cantidad de pendientes
+    api('GET', '/auth/users').then(users => {
+      const pendingCount = users.filter(u => u.status === 'pending').length;
+      const pip = document.getElementById('pending-pip');
+      if (pip) {
+        pip.style.display = pendingCount > 0 ? '' : 'none';
+        pip.textContent = pendingCount > 0 ? pendingCount : '';
+      }
+    }).catch(() => {});
+  }
+}
 
 function updateUserBadge() {
   const u = currentUser;
@@ -995,85 +1025,83 @@ async function renderR16() {
   await renderR16Standings();
 }
 
+function calcR16Points(pred, match) {
+  const mH = match.home_score !== null && match.home_score !== undefined ? Number(match.home_score) : null;
+  const mA = match.away_score !== null && match.away_score !== undefined ? Number(match.away_score) : null;
+  if (mH === null || mA === null || isNaN(mH) || isNaN(mA)) return -1;
+  const realResult = goalsToResult(mH, mA);
+  const predResult = pred.result || null;
+  if (!predResult || !realResult) return 0;
+  return predResult === realResult ? 5 : 0;
+}
+
 function renderR16Card(m) {
   const pred   = r16Preds[m.id] || {};
   const locked = isMatchLocked(m);
 
   const mH = m.home_score !== null && m.home_score !== undefined ? Number(m.home_score) : null;
   const mA = m.away_score !== null && m.away_score !== undefined ? Number(m.away_score) : null;
-  const played = mH !== null && mA !== null;
-
-  const pH = pred.home_score !== null && pred.home_score !== undefined ? Number(pred.home_score) : null;
-  const pA = pred.away_score !== null && pred.away_score !== undefined ? Number(pred.away_score) : null;
-
-  const predResult = pred.result || goalsToResult(pH, pA);
+  const played   = mH !== null && mA !== null;
   const realResult = goalsToResult(mH, mA);
-  const matchPts   = calcMatchPoints(pred, m);
+  const predResult = pred.result || null;
+  const matchPts   = calcR16Points(pred, m);
 
   let ptsLabel = '';
-  if (matchPts === 10) ptsLabel = '🎯 +10 exacto';
-  else if (matchPts === 5) ptsLabel = '✓ +5 ganador';
+  if (matchPts === 5)           ptsLabel = '✓ +5 pts';
   else if (matchPts === 0 && played) ptsLabel = '✗ 0 pts';
 
   function btnCls(val) {
-    const sel = 'sel' + (val === '1' ? '1' : val === 'x' ? 'x' : '2');
-    if (!predResult) return '';
-    if (predResult !== val) return '';
-    if (!played) return sel;
+    if (!predResult || predResult !== val) return '';
+    if (!played) return val === '1' ? 'r16-sel-home' : 'r16-sel-away';
     return predResult === realResult ? 'ok' : 'fail';
   }
 
   const disabledAttr = locked ? 'disabled' : '';
-  const lockIcon     = locked ? '<span style="font-size:.7rem;color:rgba(255,255,255,.3)">🔒</span>' : '';
-  const resultBadge  = played
-    ? `<span class="match-result-badge">${mH} - ${mA}</span>`
-    : `<span class="match-vs">VS</span>`;
+  const lockIcon     = locked ? '<span class="r16-lock">🔒</span>' : '';
+
+  const winnerLabel = played
+    ? (realResult === '1' ? `🏆 ${m.home}` : realResult === '2' ? `🏆 ${m.away}` : '— Empate')
+    : '';
 
   return `
-    <div class="match-card${played ? ' played' : ''}${locked ? ' locked' : ''}">
-      <div class="match-meta">
-        <span class="match-date">${m.group_name || ''} · ${m.match_date || ''} ${m.time || ''}</span>
+    <div class="r16-card${played ? ' played' : ''}${locked ? ' locked' : ''}">
+      <div class="r16-meta">
+        <span class="r16-group">${m.group_name || ''}</span>
+        <span class="r16-date">${m.match_date || ''} · ${m.time || ''} hs</span>
         ${lockIcon}
         ${currentUser.role === 'admin' ? `
-          <div style="display:flex;gap:4px;margin-left:auto">
-            <input type="number" min="0" max="20" placeholder="L" style="width:36px;height:24px;text-align:center;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:5px;color:#fff;font-size:.75rem;outline:none"
+          <div class="r16-admin-scores">
+            <input type="number" min="0" max="20" placeholder="L" class="r16-score-input"
               value="${mH !== null ? mH : ''}"
               onchange="setR16Result(${m.id},'home',this.value)">
-            <span style="color:rgba(255,255,255,.3);font-size:.8rem">:</span>
-            <input type="number" min="0" max="20" placeholder="V" style="width:36px;height:24px;text-align:center;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:5px;color:#fff;font-size:.75rem;outline:none"
+            <span class="r16-score-sep">:</span>
+            <input type="number" min="0" max="20" placeholder="V" class="r16-score-input"
               value="${mA !== null ? mA : ''}"
               onchange="setR16Result(${m.id},'away',this.value)">
           </div>` : ''}
       </div>
-      <div class="match-body">
-        <div class="match-team home">
-          <span class="team-flag">${m.home_flag || '🏳️'}</span>
-          <span class="team-name">${m.home}</span>
+
+      <div class="r16-body">
+        <button class="r16-team-btn ${btnCls('1')}" onclick="setR16Pred(${m.id},'1')" ${disabledAttr}>
+          <span class="r16-flag">${m.home_flag || '🏳️'}</span>
+          <span class="r16-name">${m.home}</span>
+          ${played && realResult === '1' ? '<span class="r16-winner-badge">GANÓ</span>' : ''}
+        </button>
+
+        <div class="r16-center">
+          ${played
+            ? `<div class="r16-score">${mH} - ${mA}</div>`
+            : `<div class="r16-vs">VS</div>`}
+          ${played && matchPts >= 0
+            ? `<div class="r16-pts ${matchPts === 5 ? 'ok' : 'fail'}">${ptsLabel}</div>`
+            : '<div class="r16-hint">¿Quién pasa?</div>'}
         </div>
-        <div class="match-center">
-          ${resultBadge}
-          <div class="pred-btns">
-            <button class="pb ${btnCls('1')}" onclick="setR16Pred(${m.id},'1')" ${disabledAttr}>1</button>
-            <button class="pb ${btnCls('x')}" onclick="setR16Pred(${m.id},'x')" ${disabledAttr}>X</button>
-            <button class="pb ${btnCls('2')}" onclick="setR16Pred(${m.id},'2')" ${disabledAttr}>2</button>
-          </div>
-          <div class="pred-goals">
-            <input class="goals-input" type="number" min="0" max="20" placeholder="?"
-              value="${pH !== null ? pH : ''}" ${disabledAttr}
-              onchange="setR16PredGoals(${m.id},'home',this.value)"
-              oninput="if(this.value<0)this.value=0">
-            <span class="goals-sep">:</span>
-            <input class="goals-input" type="number" min="0" max="20" placeholder="?"
-              value="${pA !== null ? pA : ''}" ${disabledAttr}
-              onchange="setR16PredGoals(${m.id},'away',this.value)"
-              oninput="if(this.value<0)this.value=0">
-          </div>
-          ${played && matchPts >= 0 ? `<div class="match-result-row ${matchPts === 10 ? 'exact' : matchPts === 5 ? 'ok' : 'fail'}">${ptsLabel}</div>` : ''}
-        </div>
-        <div class="match-team away">
-          <span class="team-name">${m.away}</span>
-          <span class="team-flag">${m.away_flag || '🏳️'}</span>
-        </div>
+
+        <button class="r16-team-btn ${btnCls('2')}" onclick="setR16Pred(${m.id},'2')" ${disabledAttr}>
+          <span class="r16-flag">${m.away_flag || '🏳️'}</span>
+          <span class="r16-name">${m.away}</span>
+          ${played && realResult === '2' ? '<span class="r16-winner-badge">GANÓ</span>' : ''}
+        </button>
       </div>
     </div>`;
 }
@@ -1081,23 +1109,7 @@ function renderR16Card(m) {
 async function setR16Pred(matchId, val) {
   const match = r16Matches.find(m => m.id === matchId);
   if (!match || isMatchLocked(match)) return;
-  const existing = r16Preds[matchId] || {};
-  const pH = existing.home_score !== null && existing.home_score !== undefined ? Number(existing.home_score) : null;
-  const pA = existing.away_score !== null && existing.away_score !== undefined ? Number(existing.away_score) : null;
-  const currentGoalResult = goalsToResult(pH, pA);
-  let newHome = pH, newAway = pA;
-  if (currentGoalResult !== val) { newHome = null; newAway = null; }
-  await saveR16Prediction(matchId, val, newHome, newAway);
-}
-
-async function setR16PredGoals(matchId, side, value) {
-  const match = r16Matches.find(m => m.id === matchId);
-  if (!match || isMatchLocked(match)) return;
-  const existing = r16Preds[matchId] || {};
-  const newHome = side === 'home' ? (value === '' ? null : Number(value)) : (existing.home_score ?? null);
-  const newAway = side === 'away' ? (value === '' ? null : Number(value)) : (existing.away_score ?? null);
-  const inferredResult = goalsToResult(newHome, newAway) || existing.result || null;
-  await saveR16Prediction(matchId, inferredResult, newHome, newAway);
+  await saveR16Prediction(matchId, val, null, null);
 }
 
 async function saveR16Prediction(matchId, result, homeScore, awayScore) {
