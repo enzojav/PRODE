@@ -1047,7 +1047,351 @@ async function renderR16() {
   document.getElementById('r16-my-pts').textContent = myPts;
 
   // Bracket SVG
-  renderR16Bracket();
+  function renderR16Bracket() {
+  const container = document.getElementById('r16-bracket');
+  if (!container) return;
+
+  const AMBER = '#FFB81C';
+  const LINE  = 'rgba(108,172,228,.22)';
+  const FONT  = "'Inter', system-ui, sans-serif";
+
+  // ── Helpers SVG ──────────────────────────────────────────────
+  function el(tag, attrs, parent) {
+    const e = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+    parent?.appendChild(e);
+    return e;
+  }
+  function txt(svg, x, y, content, opts = {}) {
+    const t = el('text', {
+      x, y,
+      'font-size':   opts.size   || '10.5',
+      'font-family': FONT,
+      'font-weight': opts.bold   ? '700'  : '400',
+      fill:          opts.color  || 'rgba(255,255,255,.8)',
+      'text-anchor': opts.anchor || 'start',
+    }, svg);
+    t.textContent = content;
+    return t;
+  }
+  function polyline(svg, points, color = LINE, w = '1.2') {
+    el('polyline', { points: points.join(' '), fill: 'none', stroke: color, 'stroke-width': w }, svg);
+  }
+  function vline(svg, x, y1, y2, color = LINE) {
+    el('line', { x1: x, y1, x2: x, y2, stroke: color, 'stroke-width': '1.2' }, svg);
+  }
+
+  // ── Tarjeta de partido (80avos/16avos) ──────────────────────
+  // x, y = esquina sup izq. La línea de conexión sale por el borde DERECHO en el midY
+  function drawMatchCard(svg, m, x, y) {
+    const W = 200, H = 54, midY = y + H / 2;
+    const mh = m?.home_score, ma = m?.away_score;
+    const played = mh !== null && mh !== undefined && ma !== null && ma !== undefined;
+    const wHome  = played && Number(mh) > Number(ma);
+    const wAway  = played && Number(ma) > Number(mh);
+
+    // sombra
+    el('rect', { x: x+1, y: y+2, width: W, height: H, rx: '7', fill: 'rgba(0,0,0,.4)' }, svg);
+    // fondo
+    el('rect', { x, y, width: W, height: H, rx: '7', fill: '#0d1b38',
+      stroke: played ? 'rgba(255,184,28,.3)' : 'rgba(255,255,255,.1)', 'stroke-width': '1' }, svg);
+    // divisor
+    el('line', { x1: x+1, y1: y+H/2, x2: x+W-1, y2: y+H/2,
+      stroke: 'rgba(255,255,255,.05)', 'stroke-width': '1' }, svg);
+
+    // barra ganador (lado izquierdo de la card)
+    if (wHome) el('rect', { x, y, width: 3, height: H/2, rx: '2', fill: 'rgba(255,184,28,.7)' }, svg);
+    if (wAway) el('rect', { x, y: y+H/2, width: 3, height: H/2, rx: '2', fill: 'rgba(255,184,28,.7)' }, svg);
+
+    const teams = [
+      { flag: m?.home_flag||'🏳️', name: m?.home||'?', score: mh, isW: wHome, isL: wAway, oy: y + H/4 },
+      { flag: m?.away_flag||'🏳️', name: m?.away||'?', score: ma, isW: wAway, isL: wHome, oy: y + 3*H/4 },
+    ];
+
+    teams.forEach(({ flag, name, score, isW, isL, oy }) => {
+      // bandera (emoji via text)
+      const ft = el('text', { x: x+10, y: oy+4, 'font-size': '12', 'font-family': FONT }, svg);
+      ft.textContent = flag;
+
+      // nombre
+      const nt = el('text', { x: x+30, y: oy+5, 'font-size': '10.5', 'font-family': FONT,
+        'font-weight': isW ? '700' : '400',
+        fill: isW ? AMBER : isL ? 'rgba(255,255,255,.28)' : 'rgba(255,255,255,.8)' }, svg);
+      nt.textContent = name.length > 12 ? name.slice(0, 11) + '…' : name;
+
+      // score box
+      if (score !== null && score !== undefined) {
+        el('rect', { x: x+W-26, y: oy-9, width: 20, height: 17, rx: '4',
+          fill:   isW ? 'rgba(255,184,28,.18)' : 'rgba(255,255,255,.05)',
+          stroke: isW ? 'rgba(255,184,28,.35)'  : 'rgba(255,255,255,.08)',
+          'stroke-width': '1' }, svg);
+        const st = el('text', { x: x+W-16, y: oy+5, 'font-size': '10',
+          'font-family': FONT, 'font-weight': '800',
+          fill: isW ? AMBER : 'rgba(255,255,255,.35)',
+          'text-anchor': 'middle' }, svg);
+        st.textContent = score;
+      }
+    });
+
+    // fecha
+    if (m?.match_date) {
+      const dt = el('text', { x: x + W/2, y: y + H + 11,
+        'font-size': '7.5', 'text-anchor': 'middle',
+        fill: 'rgba(255,255,255,.18)', 'font-family': FONT }, svg);
+      dt.textContent = m.match_date;
+    }
+
+    return { midY, rightX: x + W }; // punto de conexión
+  }
+
+  // ── Slot de ronda siguiente ───────────────────────────────────
+  // Muestra el ganador (bandera+nombre) o un hueco punteado
+  function drawSlot(svg, team, x, y) {
+    const W = 140, H = 36;
+    if (team) {
+      // ganador conocido
+      el('rect', { x: x+1, y: y+2, width: W, height: H, rx: '6', fill: 'rgba(0,0,0,.3)' }, svg);
+      el('rect', { x, y, width: W, height: H, rx: '6', fill: '#0d1b38',
+        stroke: 'rgba(255,184,28,.4)', 'stroke-width': '1' }, svg);
+      el('rect', { x, y, width: 3, height: H, rx: '2', fill: 'rgba(255,184,28,.6)' }, svg);
+      const ft = el('text', { x: x+10, y: y+H/2+4, 'font-size': '12', 'font-family': FONT }, svg);
+      ft.textContent = team.flag || '🏳️';
+      const nt = el('text', { x: x+30, y: y+H/2+5, 'font-size': '10', 'font-family': FONT,
+        'font-weight': '700', fill: AMBER }, svg);
+      nt.textContent = (team.name||'?').length > 11 ? (team.name||'?').slice(0,10)+'…' : (team.name||'?');
+    } else {
+      // hueco
+      el('rect', { x, y, width: W, height: H, rx: '6',
+        fill: 'rgba(255,255,255,.02)',
+        stroke: 'rgba(255,255,255,.07)', 'stroke-width': '1',
+        'stroke-dasharray': '4 3' }, svg);
+      const qt = el('text', { x: x+W/2, y: y+H/2+4,
+        'font-size': '9.5', 'text-anchor': 'middle',
+        fill: 'rgba(255,255,255,.18)', 'font-family': FONT }, svg);
+      qt.textContent = '?';
+    }
+    return { midY: y + H/2, leftX: x, rightX: x + W };
+  }
+
+  // ── Obtener ganador de un partido ────────────────────────────
+  function getWinner(m) {
+    if (!m) return null;
+    const h = m.home_score, a = m.away_score;
+    if (h === null || h === undefined || a === null || a === undefined) return null;
+    if (Number(h) > Number(a)) return { flag: m.home_flag||'🏳️', name: m.home||'?' };
+    if (Number(a) > Number(h)) return { flag: m.away_flag||'🏳️', name: m.away||'?' };
+    return null;
+  }
+
+  // ── Layout constants ─────────────────────────────────────────
+  // 16 partidos: 8 izquierda + 8 derecha
+  // Columnas (x): card16=20, conn1=224, slot_qf=244, conn2=388, slot_sf=408, conn3=552, final=572
+  const CARD_W  = 200;
+  const SLOT_QF = 140; // ancho slots cuartos
+  const SLOT_SF = 130; // ancho slots semis
+  const FINAL_W = 150;
+
+  const COL_L16  = 20;                              // tarjetas 16avos izquierda
+  const CONN1_LX = COL_L16 + CARD_W + 4;           // 224
+  const COL_LQF  = CONN1_LX + 20;                  // 244 slots cuartos izq
+  const CONN2_LX = COL_LQF + SLOT_QF + 4;          // 388
+  const COL_LSF  = CONN2_LX + 20;                  // 408 slots semis izq
+  const CONN3_LX = COL_LSF + SLOT_SF + 4;          // 542
+  const COL_FIN  = CONN3_LX + 20;                  // 562 final (centro)
+
+  // Espejo derecha
+  const SVG_W    = COL_FIN + FINAL_W + COL_FIN;    // total
+  const COL_R16  = SVG_W - COL_L16  - CARD_W;
+  const COL_RQF  = SVG_W - COL_LQF  - SLOT_QF;
+  const COL_RSF  = SVG_W - COL_LSF  - SLOT_SF;
+
+  // Filas: 8 partidos por lado, espaciado vertical
+  const ROW_H    = 96;   // distancia entre centros de partidos (par de la misma llave)
+  const PAIR_GAP = 20;   // espacio extra entre pares
+  const TOP      = 28;
+
+  // y base de cada partido izquierda (8 partidos, agrupados de a 2)
+  function rowY(i) {
+    // i = 0..7, agrupados en 4 pares
+    const pair  = Math.floor(i / 2);
+    const inner = i % 2;
+    return TOP + pair * (ROW_H * 2 + PAIR_GAP) + inner * ROW_H;
+  }
+
+  const SVG_H = TOP + 4 * (ROW_H * 2 + PAIR_GAP) + 60;
+  const svgW  = SVG_W > 1100 ? SVG_W : 1100;
+
+  // ── Crear SVG ────────────────────────────────────────────────
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('width', '100%');
+  svg.setAttribute('viewBox', `0 0 ${svgW} ${SVG_H}`);
+  svg.style.display = 'block';
+  svg.style.maxWidth = '100%';
+  svg.style.overflowX = 'auto';
+
+  // Etiquetas de ronda
+  const roundLabels = [
+    { label: '16AVOS',  x: COL_L16 + CARD_W/2 },
+    { label: 'CUARTOS', x: COL_LQF + SLOT_QF/2 },
+    { label: 'SEMIS',   x: COL_LSF + SLOT_SF/2 },
+    { label: 'FINAL',   x: COL_FIN + FINAL_W/2 },
+  ];
+  roundLabels.forEach(({ label, x }) => {
+    const t = el('text', { x, y: '14', 'font-size': '7.5', 'text-anchor': 'middle',
+      fill: 'rgba(255,255,255,.22)', 'font-family': FONT, 'letter-spacing': '1.5' }, svg);
+    t.textContent = label;
+    // espejo derecha
+    const t2 = el('text', { x: svgW - x, y: '14', 'font-size': '7.5', 'text-anchor': 'middle',
+      fill: 'rgba(255,255,255,.22)', 'font-family': FONT, 'letter-spacing': '1.5' }, svg);
+    t2.textContent = label;
+  });
+
+  // ── Dibujar los 16 partidos + conectores ─────────────────────
+  // Izquierda: r16Matches índices 0-7
+  // Derecha:   r16Matches índices 8-15
+  const lSlots = []; // puntos {midY, x} de cuartos izquierda
+  const rSlots = [];
+
+  for (let pair = 0; pair < 4; pair++) {
+    const i0 = pair * 2;
+    const i1 = pair * 2 + 1;
+
+    const y0 = rowY(i0);
+    const y1 = rowY(i1);
+    const m0 = r16Matches[i0];
+    const m1 = r16Matches[i1];
+
+    // --- IZQUIERDA ---
+    const c0 = drawMatchCard(svg, m0, COL_L16, y0);
+    const c1 = drawMatchCard(svg, m1, COL_L16, y1);
+
+    // Conectores L16 → llave → QF
+    const midCard0 = c0.midY;
+    const midCard1 = c1.midY;
+    const junctionX = CONN1_LX + 14;
+    const junctionY = (midCard0 + midCard1) / 2;
+
+    // líneas horizontales de cada tarjeta al punto de unión
+    el('line', { x1: c0.rightX, y1: midCard0, x2: junctionX, y2: midCard0,
+      stroke: LINE, 'stroke-width': '1.2' }, svg);
+    el('line', { x1: c1.rightX, y1: midCard1, x2: junctionX, y2: midCard1,
+      stroke: LINE, 'stroke-width': '1.2' }, svg);
+    // línea vertical que une los dos
+    vline(svg, junctionX, midCard0, midCard1);
+    // línea horizontal al slot de cuartos
+    el('line', { x1: junctionX, y1: junctionY, x2: COL_LQF, y2: junctionY,
+      stroke: LINE, 'stroke-width': '1.2' }, svg);
+
+    // Slot cuartos izquierda
+    const winner0 = getWinner(m0);
+    const winner1 = getWinner(m1);
+    // solo mostramos ganador si ambos partidos del par terminaron
+    const qfWinner = (winner0 && winner1) ? null : (winner0 || winner1);
+    const slotQF = drawSlot(svg, qfWinner, COL_LQF, junctionY - 18);
+    lSlots.push({ midY: slotQF.midY, rightX: slotQF.rightX });
+
+    // --- DERECHA (espejo) ---
+    const ri0 = 8 + i0;
+    const ri1 = 8 + i1;
+    const rm0 = r16Matches[ri0];
+    const rm1 = r16Matches[ri1];
+    const rc0 = drawMatchCard(svg, rm0, COL_R16, y0);
+    const rc1 = drawMatchCard(svg, rm1, COL_R16, y1);
+
+    const rJunctionX = svgW - junctionX;
+    el('line', { x1: rc0.rightX - CARD_W, y1: midCard0, x2: rJunctionX, y2: midCard0,
+      stroke: LINE, 'stroke-width': '1.2' }, svg);
+    el('line', { x1: rc1.rightX - CARD_W, y1: midCard1, x2: rJunctionX, y2: midCard1,
+      stroke: LINE, 'stroke-width': '1.2' }, svg);
+    vline(svg, rJunctionX, midCard0, midCard1);
+    el('line', { x1: rJunctionX, y1: junctionY, x2: COL_RQF + SLOT_QF, y2: junctionY,
+      stroke: LINE, 'stroke-width': '1.2' }, svg);
+
+    const rw0 = getWinner(rm0);
+    const rw1 = getWinner(rm1);
+    const rQfWinner = (rw0 && rw1) ? null : (rw0 || rw1);
+    const rSlotQF = drawSlot(svg, rQfWinner, COL_RQF, junctionY - 18);
+    rSlots.push({ midY: rSlotQF.midY, leftX: rSlotQF.leftX });
+  }
+
+  // ── Cuartos → Semis izquierda ─────────────────────────────────
+  const lSF = [];
+  for (let s = 0; s < 2; s++) {
+    const s0 = lSlots[s * 2];
+    const s1 = lSlots[s * 2 + 1];
+    const jX = CONN2_LX + 14;
+    const jY = (s0.midY + s1.midY) / 2;
+
+    el('line', { x1: s0.rightX, y1: s0.midY, x2: jX, y2: s0.midY, stroke: 'rgba(108,172,228,.17)', 'stroke-width': '1.2' }, svg);
+    el('line', { x1: s1.rightX, y1: s1.midY, x2: jX, y2: s1.midY, stroke: 'rgba(108,172,228,.17)', 'stroke-width': '1.2' }, svg);
+    vline(svg, jX, s0.midY, s1.midY, 'rgba(108,172,228,.17)');
+    el('line', { x1: jX, y1: jY, x2: COL_LSF, y2: jY, stroke: 'rgba(108,172,228,.17)', 'stroke-width': '1.2' }, svg);
+
+    const sfSlot = drawSlot(svg, null, COL_LSF, jY - 18);
+    lSF.push({ midY: sfSlot.midY, rightX: sfSlot.rightX });
+  }
+
+  // ── Semis → Final izquierda ───────────────────────────────────
+  const fJX_L = CONN3_LX + 14;
+  const fJY   = (lSF[0].midY + lSF[1].midY) / 2;
+  el('line', { x1: lSF[0].rightX, y1: lSF[0].midY, x2: fJX_L, y2: lSF[0].midY, stroke: 'rgba(108,172,228,.13)', 'stroke-width': '1.2' }, svg);
+  el('line', { x1: lSF[1].rightX, y1: lSF[1].midY, x2: fJX_L, y2: lSF[1].midY, stroke: 'rgba(108,172,228,.13)', 'stroke-width': '1.2' }, svg);
+  vline(svg, fJX_L, lSF[0].midY, lSF[1].midY, 'rgba(108,172,228,.13)');
+  el('line', { x1: fJX_L, y1: fJY, x2: COL_FIN, y2: fJY, stroke: 'rgba(108,172,228,.13)', 'stroke-width': '1.2' }, svg);
+
+  // ── Cuartos → Semis derecha ───────────────────────────────────
+  const rSF = [];
+  for (let s = 0; s < 2; s++) {
+    const s0 = rSlots[s * 2];
+    const s1 = rSlots[s * 2 + 1];
+    const jX = svgW - CONN2_LX - 14;
+    const jY = (s0.midY + s1.midY) / 2;
+
+    el('line', { x1: s0.leftX, y1: s0.midY, x2: jX, y2: s0.midY, stroke: 'rgba(108,172,228,.17)', 'stroke-width': '1.2' }, svg);
+    el('line', { x1: s1.leftX, y1: s1.midY, x2: jX, y2: s1.midY, stroke: 'rgba(108,172,228,.17)', 'stroke-width': '1.2' }, svg);
+    vline(svg, jX, s0.midY, s1.midY, 'rgba(108,172,228,.17)');
+    el('line', { x1: jX, y1: jY, x2: COL_RSF + SLOT_SF, y2: jY, stroke: 'rgba(108,172,228,.17)', 'stroke-width': '1.2' }, svg);
+
+    const sfSlot = drawSlot(svg, null, COL_RSF, jY - 18);
+    rSF.push({ midY: sfSlot.midY, leftX: sfSlot.leftX });
+  }
+
+  // ── Semis derecha → Final ─────────────────────────────────────
+  const fJX_R = svgW - fJX_L;
+  el('line', { x1: rSF[0].leftX, y1: rSF[0].midY, x2: fJX_R, y2: rSF[0].midY, stroke: 'rgba(108,172,228,.13)', 'stroke-width': '1.2' }, svg);
+  el('line', { x1: rSF[1].leftX, y1: rSF[1].midY, x2: fJX_R, y2: rSF[1].midY, stroke: 'rgba(108,172,228,.13)', 'stroke-width': '1.2' }, svg);
+  vline(svg, fJX_R, rSF[0].midY, rSF[1].midY, 'rgba(108,172,228,.13)');
+  el('line', { x1: fJX_R, y1: fJY, x2: COL_FIN + FINAL_W, y2: fJY, stroke: 'rgba(108,172,228,.13)', 'stroke-width': '1.2' }, svg);
+
+  // ── Slot Final (centro) ───────────────────────────────────────
+  const finalSlotY = fJY - 28;
+  el('rect', { x: COL_FIN + 1, y: finalSlotY + 2, width: FINAL_W, height: 56, rx: '9', fill: 'rgba(0,0,0,.35)' }, svg);
+  el('rect', { x: COL_FIN, y: finalSlotY, width: FINAL_W, height: 56, rx: '9',
+    fill: '#0a1226', stroke: 'rgba(255,184,28,.3)', 'stroke-width': '1.5',
+    'stroke-dasharray': '6 3' }, svg);
+  const ft = el('text', { x: COL_FIN + FINAL_W/2, y: finalSlotY + 22,
+    'font-size': '8', 'text-anchor': 'middle',
+    fill: 'rgba(255,255,255,.2)', 'font-family': FONT, 'letter-spacing': '2' }, svg);
+  ft.textContent = 'FINAL';
+  const fs = el('text', { x: COL_FIN + FINAL_W/2, y: finalSlotY + 40,
+    'font-size': '11', 'text-anchor': 'middle',
+    fill: 'rgba(255,255,255,.15)', 'font-family': FONT }, svg);
+  fs.textContent = '? vs ?';
+
+  // Copa
+  const tSize = 160;
+  el('image', {
+    href: 'copa.png',
+    x: COL_FIN + FINAL_W/2 - tSize/2,
+    y: finalSlotY + 60,
+    width: tSize,
+    height: tSize,
+  }, svg);
+
+  container.innerHTML = '';
+  container.style.overflowX = 'auto';
+  container.appendChild(svg);
+}
 
   // Tarjetas de votación
   document.getElementById('r16-matches-grid').innerHTML =
