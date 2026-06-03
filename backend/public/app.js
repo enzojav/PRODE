@@ -1192,10 +1192,14 @@ async function renderR16Standings() {
 // ══════════════════════════════════════════════════════════════
 //  MUNDIAL 2026 — Bracket 16avos
 // ══════════════════════════════════════════════════════════════
-let mundialRendered = false;
-function renderMundial() {
-  if (mundialRendered) return;
-  mundialRendered = true;
+async function renderMundial() {
+  // Cargar partidos R16 desde la API
+  try {
+    const apiMatches = await api('GET', '/prode/matches/r16');
+    if (apiMatches && apiMatches.length > 0) {
+      window._r16ApiMatches = apiMatches;
+    }
+  } catch(e) { console.warn('No se pudieron cargar partidos R16:', e); }
 
   const container = document.getElementById('mundial-embed');
   if (!container) return;
@@ -1225,17 +1229,31 @@ function renderMundial() {
     {id:16, home:{f:'🏳️',n:'1K'},      away:{f:'🏳️',n:'3 DEIJL'}, date:'4 Jul',  hs:null, as:null},
   ];
 
+  // Usar datos de la API si están disponibles, sino usar defaults
   let mMatches;
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    mMatches = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultMatches));
-  } catch { mMatches = JSON.parse(JSON.stringify(defaultMatches)); }
+  if (window._r16ApiMatches && window._r16ApiMatches.length > 0) {
+    // Mapear formato API -> formato bracket
+    mMatches = window._r16ApiMatches.map((m, i) => ({
+      id:   i + 1,
+      home: { f: m.home_flag || '🏳️', n: m.home || '?' },
+      away: { f: m.away_flag || '🏳️', n: m.away || '?' },
+      date: m.match_date || '',
+      hs:   m.home_score !== null && m.home_score !== undefined ? Number(m.home_score) : null,
+      as:   m.away_score !== null && m.away_score !== undefined ? Number(m.away_score) : null,
+      _apiId: m.id
+    }));
+  } else {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      mMatches = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultMatches));
+    } catch { mMatches = JSON.parse(JSON.stringify(defaultMatches)); }
+  }
 
   const leftIds  = [1,2,3,4,5,6,7,8];
   const rightIds = [9,10,11,12,13,14,15,16];
   let mEditTarget = null;
 
-  function mSave() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(mMatches)); } catch {} }
+  function mSave() { if (!window._r16ApiMatches) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(mMatches)); } catch {} } }
   function mWinner(m) {
     if (m.hs === null || m.as === null) return null;
     return m.hs > m.as ? 'home' : m.hs < m.as ? 'away' : null;
