@@ -226,7 +226,7 @@ function applyRole() {
   const isAdmin = currentUser.role === 'admin';
   document.querySelectorAll('.ni[data-s]').forEach(el => {
     const s = el.dataset.s;
-    if (s === 'prode' || s === 'news' || s === 'mundial') { el.style.display = ''; return; }
+    if (s === 'prode' || s === 'news' || s === 'mundial' || s === 'r16') { el.style.display = ''; return; }
     el.style.display = isAdmin ? '' : 'none';
   });
   document.querySelectorAll('.sb-grp').forEach(g => { if (!isAdmin) g.style.display = 'none'; });
@@ -1674,4 +1674,8 @@ async function setR16Result(matchId, side, value) {
 // ── Mundial 2026 — redirige a r16 ─────────────────────────────
 function renderMundial() {
   navigateTo('r16');
+}
+
+function toggleSidebar() {
+  document.querySelector('.sb').classList.toggle('sb-collapsed');
 }
