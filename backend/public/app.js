@@ -1158,18 +1158,19 @@ function renderR16Bracket() {
   r16Matches.forEach(m => { byId[m.id] = m; });
 
   // 8 llaves, cada llave tiene 2 partidos
- const BRACKET = [
-  // LADO IZQUIERDO (4 llaves)
-  { pair: [byId[1],  byId[2]],  side: 'left',  qfIdx: 0 },
-  { pair: [byId[3],  byId[4]],  side: 'left',  qfIdx: 1 },
-  { pair: [byId[5],  byId[6]],  side: 'left',  qfIdx: 2 },
-  { pair: [byId[7],  byId[8]],  side: 'left',  qfIdx: 3 },
-  // LADO DERECHO (4 llaves, espejo)
-  { pair: [byId[9],  byId[10]], side: 'right', qfIdx: 0 },
-  { pair: [byId[11], byId[12]], side: 'right', qfIdx: 1 },
-  { pair: [byId[13], byId[14]], side: 'right', qfIdx: 2 },
-  { pair: [byId[15], byId[16]], side: 'right', qfIdx: 3 },
-];
+  const BRACKET = [
+    // LADO IZQUIERDO (4 llaves)
+    { pair: [byId[200], byId[201]], side: 'left',  qfIdx: 0 },
+    { pair: [byId[202], byId[203]], side: 'left',  qfIdx: 1 },
+    { pair: [byId[204], byId[205]], side: 'left',  qfIdx: 2 },
+    { pair: [byId[206], byId[207]], side: 'left',  qfIdx: 3 },
+    // LADO DERECHO (4 llaves, espejo)
+    { pair: [byId[208], byId[209]], side: 'right', qfIdx: 0 },
+    { pair: [byId[210], byId[211]], side: 'right', qfIdx: 1 },
+    { pair: [byId[212], byId[213]], side: 'right', qfIdx: 2 },
+    { pair: [byId[214], byId[215]], side: 'right', qfIdx: 3 },
+  ];
+
   // ── Helpers SVG ───────────────────────────────────────────────
   function el(tag, attrs, parent) {
     const e = document.createElementNS('http://www.w3.org/2000/svg', tag);
