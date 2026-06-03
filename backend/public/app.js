@@ -745,7 +745,7 @@ async function clearMatchResult(matchId) {
 // ── Predicciones ──────────────────────────────────────────────
 async function setPred(matchId, val) {
   const match = localMatches.find(m => m.id === matchId);
-  if (!match || isMatchLocked(match)) return;
+  if (!match) return;
 
   const existing = localPreds[matchId] || {};
   const pH = existing.home_score !== null && existing.home_score !== undefined ? Number(existing.home_score) : null;
@@ -1242,26 +1242,27 @@ function renderR16Bracket() {
     });
 
     // admin score inputs (superpuestos, solo admin)
-    if (currentUser.role === 'admin') {
-      // Usamos foreignObject para los inputs
-      const fo = svgEl('foreignObject', { x:x+CARD_W-25, y:y+4, width:22, height:22 }, svg);
-      const inp1 = document.createElement('input');
-      inp1.type='number'; inp1.min=0; inp1.max=20;
-      inp1.value = mH !== null ? mH : '';
-      inp1.placeholder='—';
-      inp1.style.cssText='width:22px;background:transparent;border:none;color:#FFB81C;font-size:10px;font-weight:800;text-align:center;padding:0;outline:none';
-      inp1.addEventListener('change', e => setR16Result(m.id, 'home', e.target.value));
-      fo.appendChild(inp1);
+    // admin score inputs (superpuestos, solo admin)
+if (currentUser.role === 'admin') {
+  // Usamos foreignObject para los inputs
+  const fo = svgEl('foreignObject', { x:x+CARD_W-25, y:y+4, width:22, height:22 }, svg);
+  const inp1 = document.createElement('input');
+  inp1.type='number'; inp1.min=0; inp1.max=20;
+  inp1.value = mH !== null ? mH : '';
+  inp1.placeholder='—';
+  inp1.style.cssText='width:22px;background:transparent;border:none;color:#FFB81C;font-size:10px;font-weight:800;text-align:center;padding:0;outline:none';
+  inp1.addEventListener('change', e => setR16Result(m.id, 'home', e.target.value));
+  fo.appendChild(inp1);
 
-      const fo2 = svgEl('foreignObject', { x:x+CARD_W-25, y:y+CARD_H/2+4, width:22, height:22 }, svg);
-      const inp2 = document.createElement('input');
-      inp2.type='number'; inp2.min=0; inp2.max=20;
-      inp2.value = mA !== null ? mA : '';
-      inp2.placeholder='—';
-      inp2.style.cssText='width:22px;background:transparent;border:none;color:rgba(255,255,255,.4);font-size:10px;font-weight:800;text-align:center;padding:0;outline:none';
-      inp2.addEventListener('change', e => setR16Result(m.id, 'away', e.target.value));
-      fo2.appendChild(inp2);
-    }
+  const fo2 = svgEl('foreignObject', { x:x+CARD_W-25, y:y+CARD_H/2+4, width:22, height:22 }, svg);
+  const inp2 = document.createElement('input');
+  inp2.type='number'; inp2.min=0; inp2.max=20;
+  inp2.value = mA !== null ? mA : '';
+  inp2.placeholder='—';
+  inp2.style.cssText='width:22px;background:transparent;border:none;color:rgba(255,255,255,.4);font-size:10px;font-weight:800;text-align:center;padding:0;outline:none';
+  inp2.addEventListener('change', e => setR16Result(m.id, 'away', e.target.value));
+  fo2.appendChild(inp2);
+}
 
     // pts label bajo la card
     if (played && pts >= 0) {
@@ -1531,6 +1532,40 @@ async function setR16Pred(matchId, val) {
     });
     r16Preds[matchId] = saved;
     renderR16Bracket();
+    if (currentUser.role === 'admin') renderR16AdminPanel();
+
+    function renderR16AdminPanel() {
+  let panel = document.getElementById('r16-admin-panel');
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.id = 'r16-admin-panel';
+    panel.className = 'card admin-panel';
+    panel.style.marginBottom = '20px';
+    document.getElementById('r16-bracket').after(panel);
+  }
+  panel.innerHTML = `
+    <div class="admin-panel-hdr">
+      <span>⚙ Cargar resultados · 16avos</span>
+      <span class="admin-badge">Solo vos ves esto</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
+      ${r16Matches.map(m => `
+        <div class="admin-match-row">
+          <span class="admin-match-name">${m.home_flag||''} ${m.home} vs ${m.away_flag||''} ${m.away}</span>
+          <div class="admin-goals-row">
+            <input class="goals-input admin-goals-input" type="number" min="0" max="20"
+              value="${m.home_score !== null && m.home_score !== undefined ? m.home_score : ''}"
+              placeholder="L"
+              onchange="setR16Result(${m.id},'home',this.value)">
+            <span class="goals-sep">:</span>
+            <input class="goals-input admin-goals-input" type="number" min="0" max="20"
+              value="${m.away_score !== null && m.away_score !== undefined ? m.away_score : ''}"
+              placeholder="V"
+              onchange="setR16Result(${m.id},'away',this.value)">
+          </div>
+        </div>`).join('')}
+    </div>`;
+}
   } catch(e) { toast(e.message, 'e'); }
 }
 
@@ -1554,4 +1589,4 @@ async function setR16Result(matchId, side, value) {
 // ── Mundial 2026 — redirige a r16 ─────────────────────────────
 function renderMundial() {
   navigateTo('r16');
-}
+}  
