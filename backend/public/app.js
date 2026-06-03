@@ -1157,20 +1157,18 @@ function renderR16Bracket() {
   const byId = {};
   r16Matches.forEach(m => { byId[m.id] = m; });
 
-  // 8 llaves, cada llave tiene 2 partidos
   const BRACKET = [
-    // LADO IZQUIERDO (4 llaves)
-    { pair: [byId[200], byId[201]], side: 'left',  qfIdx: 0 },
-    { pair: [byId[202], byId[203]], side: 'left',  qfIdx: 1 },
-    { pair: [byId[204], byId[205]], side: 'left',  qfIdx: 2 },
-    { pair: [byId[206], byId[207]], side: 'left',  qfIdx: 3 },
-    // LADO DERECHO (4 llaves, espejo)
-    { pair: [byId[208], byId[209]], side: 'right', qfIdx: 0 },
-    { pair: [byId[210], byId[211]], side: 'right', qfIdx: 1 },
-    { pair: [byId[212], byId[213]], side: 'right', qfIdx: 2 },
-    { pair: [byId[214], byId[215]], side: 'right', qfIdx: 3 },
-  ];
-
+  // LADO IZQUIERDO (4 llaves)
+  { pair: [byId[1],  byId[2]],  side: 'left',  qfIdx: 0 },
+  { pair: [byId[3],  byId[4]],  side: 'left',  qfIdx: 1 },
+  { pair: [byId[5],  byId[6]],  side: 'left',  qfIdx: 2 },
+  { pair: [byId[7],  byId[8]],  side: 'left',  qfIdx: 3 },
+  // LADO DERECHO (4 llaves, espejo)
+  { pair: [byId[9],  byId[10]], side: 'right', qfIdx: 0 },
+  { pair: [byId[11], byId[12]], side: 'right', qfIdx: 1 },
+  { pair: [byId[13], byId[14]], side: 'right', qfIdx: 2 },
+  { pair: [byId[15], byId[16]], side: 'right', qfIdx: 3 },
+];
   // ── Helpers SVG ───────────────────────────────────────────────
   function el(tag, attrs, parent) {
     const e = document.createElementNS('http://www.w3.org/2000/svg', tag);
@@ -1348,31 +1346,43 @@ function renderR16Bracket() {
   }
 
   // ── Slot de avance (QF/SF) ────────────────────────────────────
-  function drawSlot(svg, team, x, y, label) {
-    if (team) {
-      el('rect', { x: x+1, y: y+2, width: SW, height: SH, rx: '6', fill: 'rgba(0,0,0,.35)' }, svg);
-      el('rect', { x, y, width: SW, height: SH, rx: '6',
-        fill: '#0d1b38', stroke: 'rgba(255,184,28,.45)', 'stroke-width': '1' }, svg);
-      el('rect', { x, y, width: 3, height: SH, rx: '2', fill: 'rgba(255,184,28,.7)' }, svg);
-      const ft = el('text', { x: x + 10, y: y + SH/2 + 4, 'font-size': '12', 'font-family': FONT }, svg);
-      ft.textContent = team.flag || '🏳️';
-      const nt = el('text', { x: x + 28, y: y + SH/2 + 5,
-        'font-size': '10', 'font-family': FONT, 'font-weight': '700', fill: AMBER }, svg);
-      nt.textContent = trunc(team.name, 11);
-    } else {
-      el('rect', { x, y, width: SW, height: SH, rx: '6',
-        fill: 'rgba(255,255,255,.02)',
-        stroke: 'rgba(255,255,255,.07)', 'stroke-width': '1',
-        'stroke-dasharray': '4 3' }, svg);
-      if (label) {
-        const lt = el('text', { x: x + SW/2, y: y + SH/2 + 4,
+  function drawSlot(svg, teamA, teamB, x, y, label) {
+  if (teamA || teamB) {
+    el('rect', { x: x+1, y: y+2, width: SW, height: SH*2+1, rx: '6', fill: 'rgba(0,0,0,.35)' }, svg);
+    el('rect', { x, y, width: SW, height: SH*2+1, rx: '6',
+      fill: '#0d1b38', stroke: 'rgba(255,184,28,.45)', 'stroke-width': '1' }, svg);
+    el('line', { x1: x+1, y1: y+SH, x2: x+SW-1, y2: y+SH,
+      stroke: 'rgba(255,255,255,.05)', 'stroke-width': '1' }, svg);
+    [teamA, teamB].forEach((team, i) => {
+      const oy = y + SH/2 + i*SH;
+      if (team) {
+        el('rect', { x, y: y + i*SH, width: 3, height: SH, rx: '2', fill: 'rgba(255,184,28,.7)' }, svg);
+        const ft = el('text', { x: x+10, y: oy+4, 'font-size': '12', 'font-family': FONT }, svg);
+        ft.textContent = team.flag || '🏳️';
+        const nt = el('text', { x: x+28, y: oy+5,
+          'font-size': '10', 'font-family': FONT, 'font-weight': '700', fill: AMBER }, svg);
+        nt.textContent = trunc(team.name, 11);
+      } else {
+        const lt = el('text', { x: x+SW/2, y: oy+5,
           'font-size': '8', 'text-anchor': 'middle',
           fill: 'rgba(255,255,255,.18)', 'font-family': FONT }, svg);
-        lt.textContent = label;
+        lt.textContent = '?';
       }
+    });
+  } else {
+    el('rect', { x, y, width: SW, height: SH*2+1, rx: '6',
+      fill: 'rgba(255,255,255,.02)',
+      stroke: 'rgba(255,255,255,.07)', 'stroke-width': '1',
+      'stroke-dasharray': '4 3' }, svg);
+    if (label) {
+      const lt = el('text', { x: x+SW/2, y: y+SH+4,
+        'font-size': '8', 'text-anchor': 'middle',
+        fill: 'rgba(255,255,255,.18)', 'font-family': FONT }, svg);
+      lt.textContent = label;
     }
-    return { midY: y + SH/2, rightX: x + SW, leftX: x };
   }
+  return { midY: y + SH, rightX: x + SW, leftX: x };
+}
 
   // ── Final central ─────────────────────────────────────────────
   function drawFinal(svg, x, y) {
@@ -1534,15 +1544,15 @@ function renderR16Bracket() {
       const toX     = isLeft ? qfX       : qfX + SW;
 
       // connectors de las cards al QF slot
+      // connectors de las cards al QF slot
       drawBracketConnector(svg, fromX, cA.midY, cB.midY, toX, pairMidY, LINE1, dir);
 
-      // QF slot
-      // Mostramos el ganador si existe uno, sino vacío
-      // En un bracket real el QF sería el enfrentamiento entre wA y wB
-      // pero como no hay partido en BD, solo mostramos quién avanzó si hay ganador
-      const qfWinner = wA || wB || null;
-const slotLabel = wA && wB ? `${trunc(wA.name,8)} vs ${trunc(wB.name,8)}` : 'Por definir';
-const qfSlot = drawSlot(svg, qfWinner, isLeft ? qfX : R_QF, qfSlotY, slotLabel);
+      // QF slot — muestra los dos ganadores enfrentados
+    // connectors de las cards al QF slot
+      drawBracketConnector(svg, fromX, cA.midY, cB.midY, toX, pairMidY, LINE1, dir);
+
+      // QF slot — muestra los dos ganadores enfrentados
+      const qfSlot = drawSlot(svg, wA, wB, isLeft ? qfX : R_QF, qfSlotY, 'Por definir');
 
       qfMidYs.push(qfSlot.midY);
     }
