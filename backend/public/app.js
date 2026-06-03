@@ -1089,12 +1089,13 @@ async function renderR16Standings() {
 // ══════════════════════════════════════════════════════════════
 //  BRACKET SVG
 // ══════════════════════════════════════════════════════════════
-function renderR16Bracket() {
-  // ============================================================
+ // ============================================================
 //  APP.JS — Conectado al backend real (JWT + PostgreSQL)
 //  Roles: "admin" (acceso total) | "player" (solo Prode)
 //  PUNTOS: exacto (goles) = 10pts · resultado (1/x/2) = 5pts
 // ============================================================
+
+function renderR16Bracket() { 
 
 const AVATAR_COLORS = ['#6CACE4','#FFB81C','#85bde8','#002470','#3ae8d0','#ff8c42','#a8d8ea','#43e8b0'];
 const avc = i => AVATAR_COLORS[i % AVATAR_COLORS.length];
@@ -1124,7 +1125,7 @@ async function api(method, path, body) {
   if (!res.ok) throw new Error(data.error || 'Error del servidor');
   return data;
 }
-
+}
 // ── Lock de partidos por hora ─────────────────────────────────
 const MONTH_MAP = {
   'Ene':0,'Feb':1,'Mar':2,'Abr':3,'May':4,'Jun':5,
