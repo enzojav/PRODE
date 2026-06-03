@@ -2153,3 +2153,17 @@ tbody tr:hover td { background: var(--bg3); }
   transition: .15s;
 }
 .user-row:hover { border-color: rgba(108,172,228,.2); }
+
+
+#r16-bracket{
+    width:100vw;
+    height:100vh;
+    overflow:hidden;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    transform:scale(.75);
+    transform-origin:center center;
+}
