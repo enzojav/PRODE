@@ -96,6 +96,7 @@ async function initDB() {
     "ALTER TABLE prode_matches     ADD COLUMN IF NOT EXISTS venue      TEXT DEFAULT ''",
     "ALTER TABLE prode_predictions ADD COLUMN IF NOT EXISTS result     TEXT",
     "ALTER TABLE users             ADD COLUMN IF NOT EXISTS status     TEXT DEFAULT 'pending'",
+    "ALTER TABLE prode_matches ADD COLUMN IF NOT EXISTS phase TEXT DEFAULT 'Group Stage'",
   ];
   for (const q of alterQueries) {
     await pool.query(q).catch(() => {});
