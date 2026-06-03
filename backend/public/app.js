@@ -591,8 +591,7 @@ function setDate(d) { activeDate = d; renderProde(); }
 // ── Tarjeta de partido ────────────────────────────────────────
 function renderMatchCard(m) {
   const pred   = localPreds[m.id] || {};
-  const locked = isMatchLocked(m);
-
+  const locked = false //isMatchLocked(m); activar el 11
   const mH = m.home_score !== null && m.home_score !== undefined ? Number(m.home_score) : null;
   const mA = m.away_score !== null && m.away_score !== undefined ? Number(m.away_score) : null;
   const played = mH !== null && mA !== null;
