@@ -1540,7 +1540,9 @@ function renderR16Bracket() {
       // Mostramos el ganador si existe uno, sino vacío
       // En un bracket real el QF sería el enfrentamiento entre wA y wB
       // pero como no hay partido en BD, solo mostramos quién avanzó si hay ganador
-      const qfSlot = drawSlot(svg, null, isLeft ? qfX : R_QF, qfSlotY, 'Por definir');
+      const qfWinner = wA || wB || null;
+const slotLabel = wA && wB ? `${trunc(wA.name,8)} vs ${trunc(wB.name,8)}` : 'Por definir';
+const qfSlot = drawSlot(svg, qfWinner, isLeft ? qfX : R_QF, qfSlotY, slotLabel);
 
       qfMidYs.push(qfSlot.midY);
     }
