@@ -1566,7 +1566,7 @@ function renderR16Bracket() {
 
     drawBracketConnector(svg, qfFromX, qfMidYs[0], qfMidYs[1], sfToX, sfMidY, LINE2, dir);
 
-    drawSlot(svg, null, isLeft ? sfX : R_SF, sfSlotY, 'SF');
+    drawSlot(svg, null, null, isLeft ? sfX : R_SF, sfSlotY, 'SF');
 
     // Guardar sfMidY para el conector a la final
     return sfMidY;
