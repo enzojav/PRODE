@@ -1,0 +1,143 @@
+[33m06205ee[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m volviendo 1
+[33mebfe775[m 16avos match
+[33m6a4a84a[m 16avos match
+[33m97057b9[m 16avos match
+[33m390cf4e[m 16avos match
+[33m68d8aa9[m 16avos match
+[33m3f74563[m 16avos match
+[33mba9cdeb[m 16avos match
+[33m84f40ad[m 16avos match
+[33ma67b935[m 16avos match
+[33m014cac6[m 16avos match
+[33m95540c4[m 16avos match
+[33m0107ed0[m 16avos match
+[33m844edd3[m 16avos match
+[33mf11f228[m 16avos match
+[33m4a25f74[m 16avos match
+[33m91ab72f[m buttons
+[33ma22708e[m cambiaos
+[33m38d31af[m cambiaos
+[33m4c6ba3e[m cambiaos
+[33md11d360[m cambiaos
+[33mc8ca520[m cambiaos
+[33m18caf11[m cambiaos
+[33m93d792e[m cambiaos
+[33mc79b513[m cambiaos
+[33m050c0c4[m API
+[33mc139a81[m API
+[33md94be32[m API
+[33m4585430[m API
+[33m8c88003[m API
+[33m6cd79ad[m API
+[33m9b48a6c[m API
+[33m806ff63[m API
+[33m406a1b4[m API
+[33m0ed9748[m API
+[33m192b553[m API
+[33m8ec295f[m LEGAJO YNAME
+[33m1982a09[m LEGAJO YNAME
+[33m993d959[m LEGAJO YNAME
+[33mc19f15b[m cambio grande
+[33mce6ba83[m cambio grande
+[33m25d7008[m cambio grande
+[33m7753d12[m cambio grande
+[33m5fa3c06[m cambio grande
+[33m8f7403c[m cambio grande
+[33m55536ae[m cambio grande
+[33m4fb7982[m cambio grande
+[33m8e7bce8[m cambio grande
+[33m5620e5b[m cambio grande
+[33m69f6ba8[m cambio grande
+[33medb3d0d[m cambio grande
+[33mf5a055a[m cambio grande
+[33mbb06ccc[m cambio grande
+[33m75af1e1[m cambio grande
+[33mc8425ff[m cambio grande
+[33mdd73c58[m cambio grande
+[33me4371f6[m cambio grande
+[33me8eb933[m cambio grande
+[33m6f841ce[m feat: mundial bracket + copa trophy
+[33mbb63b4b[m feat: mundial bracket + copa trophy
+[33md00474c[m feat: navegacion r16
+[33mc306f1c[m feat: navegacion r16
+[33m4872f1c[m feat: navegacion r16
+[33m635a2cb[m feat: navegacion r16
+[33mbd16ce0[m fix: importar partidos desde openfootball
+[33m1345bd2[m cambio grande
+[33m42bcdbc[m cambio grande
+[33md018784[m cambio grande
+[33m47bc053[m feat: preview articulos en noticias
+[33m0e8532f[m feat: preview articulos en noticias
+[33me5ce375[m feat: preview de articulos en noticias
+[33m75b5fe3[m fix: boton leer mas en noticia hero
+[33m25de322[m fix: agregar setNewsFilter y campo n-image
+[33m8bdf020[m fix: centrar noticias y limitar tamaño imagen
+[33m1fa75ea[m app.js conectado al backend real
+[33mcff76c3[m fix: restaurar intro-screen
+[33mf11e304[m app.js conectado al backend real
+[33m5aba609[m app.js conectado al backend real
+[33m65f8334[m app.js conectado al backend real
+[33mb8648ad[m fix: reemplazar public con frontend actualizado
+[33m0976417[m clean: borrar carpeta olds
+[33me61fdf1[m fix: tamaño logo
+[33m1a26bd1[m fix: tamaño logo
+[33mc8b8b1c[m fix: tamaño logo
+[33m218e3f3[m fix: sincronizar frontend con public
+[33mf22ea05[m cambio grande
+[33md038e48[m Delete frontend directory
+[33m0edae85[m fix: remove duplicate auth-logo-icon
+[33m869f69f[m app.js conectado al backend real
+[33mefe3b02[m app.js conectado al backend real
+[33m1f240e3[m app.js conectado al backend real
+[33ma0b167d[m app.js conectado al backend real
+[33m47eef2d[m app.js conectado al backend real
+[33m4606c14[m cambio url articulo
+[33m16f1a1e[m Fix return statement for news media renderingcam
+[33m009605a[m Add support for La Nacion sports news iframe eliminar linea 400 in change
+[33m6396510[m Update database schema to include image_url
+[33m63974e6[m cambiodatabasee
+[33m98f690c[m trigger redeploy
+[33me7b68b8[m first commit
+[33m9825b9a[m cambio data base
+[33mffc3ec5[m cambio data base
+[33mddb41f7[m cambio grande
+[33md19486d[m cambio gif y tono
+[33md4506f2[m cambio gif y tono
+[33m06b51ff[m cambio gif y tono
+[33m080ffc5[m cambio grande
+[33m9fb4765[m side bar change
+[33md23f74d[m cambio grande
+[33me8bf45f[m cambio grande
+[33m8da2957[m cambio grande
+[33m695d142[m cambio grande
+[33md9e0d44[m cambio grande
+[33m2f0b609[m cambio grande
+[33mcb38fb1[m cambio grande
+[33m1a1ce00[m cambio grande
+[33mee6a530[m cambio grande
+[33m0f10844[m cambio grande
+[33m3179b83[m restaurar database.js con fixtures del mundial
+[33m3de4649[m restaurar database.js con fixtures del mundial
+[33m1a25019[m Rename style.css.old to style.css
+[33ma0107d0[m Remove horrible style.css filefeo
+[33mfc43050[m new style
+[33m5a858f6[m oldstyle
+[33m24785ee[m change
+[33m23b20a9[m Rename import-matches.js to import-matches.old
+[33m0a9dfad[m Create db.js to initialize database schema
+[33mc1d0223[m copia
+[33medebc53[m update localstorage
+[33m3b42792[m  update pass and admin
+[33ma8ea816[m cambio html
+[33m48acfc6[m cambio html
+[33ma2c9e37[m restaurar database.js con fixtures del mundial
+[33m7154513[m restaurar database.js con fixtures del mundial
+[33me01575e[m add database.js vacio para el frontend
+[33maf5e610[m actualizar public con frontend nuevo
+[33mc819a1b[m proyecto limpio sin EOF ni archivos basura
+[33mcf2b0f0[m force redeploy auth
+[33mafff3bf[m fix: borrar EOF de rutas
+[33mcfaf36b[m add root package.json para Railway
+[33m1046855[m add nixpacks config
+[33mc590b69[m fix: backend como carpeta normal no submodule
+[33m3df109e[m calidad y capa~cd
