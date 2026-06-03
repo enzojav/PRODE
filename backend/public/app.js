@@ -226,7 +226,7 @@ function applyRole() {
   const isAdmin = currentUser.role === 'admin';
   document.querySelectorAll('.ni[data-s]').forEach(el => {
     const s = el.dataset.s;
-    if (s === 'prode' || s === 'news' || s === 'mundial' || s === 'r16') { el.style.display = ''; return; }
+    if (s === 'prode' || s === 'news' || s === 'mundial') { el.style.display = ''; return; }
     el.style.display = isAdmin ? '' : 'none';
   });
   document.querySelectorAll('.sb-grp').forEach(g => { if (!isAdmin) g.style.display = 'none'; });
@@ -1063,8 +1063,9 @@ function renderR16Bracket() {
   const container = document.getElementById('r16-bracket');
   if (!container) return;
 
-  const W = 130, H = 42, GAP = 14;
-  const LINE_COLOR = 'rgba(108,172,228,.2)';
+  const W = 110, H = 36, GAP = 12;
+  const QW = 90, QH = 24; // cuartos de final slots
+  const LINE_COLOR = 'rgba(108,172,228,.25)';
   const AMBER = '#FFB81C';
   const FONT = "'Inter', system-ui, sans-serif";
 
@@ -1170,7 +1171,7 @@ function renderR16Bracket() {
     mLine(svg, rightX-H_CONN, y+H, rightX, y+H);
   });
 
-  // Función para obtener equipo ganador de un partido
+  // Ganador de un partido
   function getWinnerTeam(m) {
     if (!m) return null;
     const w = mWinner(m);
@@ -1180,74 +1181,79 @@ function renderR16Bracket() {
       : { f: m.away_flag||'🏳️', n: m.away||'?' };
   }
 
-  // Función para dibujar un slot de cuartos (equipo avanzado o TBD)
-  function drawAdvanced(svg, team, x, y, align) {
-    // team puede ser null (aún no definido)
+  // Slot compacto para cuartos (solo bandera + nombre corto)
+  function drawSlot(svg, team, cx, cy) {
+    const sw = QW, sh = QH;
+    const x = cx - sw/2, y = cy - sh/2;
     const g = mEl('g', {});
-    const slotW = W - 10;
-    g.appendChild(mEl('rect', { x, y: y-13, width: slotW, height: 26, rx: '5',
-      fill: team ? 'rgba(255,184,28,.07)' : 'rgba(255,255,255,.03)',
-      stroke: team ? 'rgba(255,184,28,.2)' : 'rgba(255,255,255,.05)', 'stroke-width': '1' }));
+    g.appendChild(mEl('rect', { x, y, width: sw, height: sh, rx: '5',
+      fill: team ? 'rgba(255,184,28,.1)' : 'rgba(255,255,255,.03)',
+      stroke: team ? 'rgba(255,184,28,.3)' : 'rgba(255,255,255,.06)', 'stroke-width': '1' }));
     if (team) {
-      const fl = mEl('text', { x: x+8, y: y+5, 'font-size': '11' });
+      const fl = mEl('text', { x: x+7, y: cy+5, 'font-size': '11' });
       fl.textContent = team.f;
       g.appendChild(fl);
-      const nt = mEl('text', { x: x+24, y: y+5, 'font-size': '9.5', 'font-family': FONT,
+      const nt = mEl('text', { x: x+22, y: cy+5, 'font-size': '9', 'font-family': FONT,
         'font-weight': '700', fill: AMBER });
-      nt.textContent = mTrunc(team.n, 11);
+      nt.textContent = mTrunc(team.n, 9);
       g.appendChild(nt);
     } else {
-      const nt = mEl('text', { x: x + slotW/2, y: y+5, 'font-size': '8.5', 'font-family': FONT,
-        fill: 'rgba(255,255,255,.2)', 'text-anchor': 'middle' });
-      nt.textContent = 'Por definir';
+      const nt = mEl('text', { x: cx, y: cy+4, 'font-size': '8', 'font-family': FONT,
+        fill: 'rgba(255,255,255,.18)', 'text-anchor': 'middle' });
+      nt.textContent = '?';
       g.appendChild(nt);
     }
     svg.appendChild(g);
   }
 
-  // Llaves izquierda + ganadores de cuartos izq
+  // Llaves izquierda
   const lS = [];
   for (let i = 0; i < 4; i++) {
     const t = getY(i*2)+H, b = getY(i*2+1)+H, my2 = (t+b)/2;
     const x1 = LEFT_X+W+H_CONN, x2 = x1+H_TREE;
     mLine(svg, x1, t, x1, b); mLine(svg, x1, my2, x2, my2);
-    // ganador del par i*2 vs i*2+1
-    const w1 = getWinnerTeam(r16Matches[leftIds[i*2]]);
-    const w2 = getWinnerTeam(r16Matches[leftIds[i*2+1]]);
-    if (w1) drawAdvanced(svg, w1, x2+2, t, 'left');
-    if (w2) drawAdvanced(svg, w2, x2+2, b, 'left');
     lS.push({ midY: my2, x: x2 });
   }
-
-  // Llaves derecha + ganadores de cuartos der
+  // Llaves derecha
   const rS = [];
   for (let i = 0; i < 4; i++) {
     const t = getY(i*2)+H, b = getY(i*2+1)+H, my2 = (t+b)/2;
     const x1 = rightX-H_CONN, x2 = x1-H_TREE;
     mLine(svg, x1, t, x1, b); mLine(svg, x2, my2, x1, my2);
-    const w1 = getWinnerTeam(r16Matches[rightIds[i*2]]);
-    const w2 = getWinnerTeam(r16Matches[rightIds[i*2+1]]);
-    const slotW = W - 10;
-    if (w1) drawAdvanced(svg, w1, x2-slotW-2, t, 'right');
-    if (w2) drawAdvanced(svg, w2, x2-slotW-2, b, 'right');
     rS.push({ midY: my2, x: x2 });
   }
 
-  // Segunda ronda izquierda
+  // Segunda ronda izquierda con slots de ganadores
   const lF = [];
   for (let i = 0; i < 2; i++) {
     const t = lS[i*2].midY, b = lS[i*2+1].midY, my2 = (t+b)/2;
-    const x1 = lS[i*2].x, x2 = x1+22;
-    mLine(svg, x1, t, x1, b); mLine(svg, x1, my2, x2, my2);
-    lF.push({ midY: my2, x: x2 });
+    const x1 = lS[i*2].x, x2 = x1 + H_TREE;
+    mLine(svg, x1, t, x1, b);
+    // slots de ganadores sobre las líneas
+    const w1 = getWinnerTeam(r16Matches[leftIds[i*2]]);
+    const w2 = getWinnerTeam(r16Matches[leftIds[i*2+1]]);
+    drawSlot(svg, w1, x1 + (x2-x1)/2, t);
+    mLine(svg, x1, t, x2, t);
+    drawSlot(svg, w2, x1 + (x2-x1)/2, b);
+    mLine(svg, x1, b, x2, b);
+    mLine(svg, x2, t, x2, b);
+    mLine(svg, x2, my2, x2+20, my2);
+    lF.push({ midY: my2, x: x2+20 });
   }
-  // Segunda ronda derecha
+  // Segunda ronda derecha con slots de ganadores
   const rF = [];
   for (let i = 0; i < 2; i++) {
     const t = rS[i*2].midY, b = rS[i*2+1].midY, my2 = (t+b)/2;
-    const x1 = rS[i*2].x, x2 = x1-22;
-    mLine(svg, x1, t, x1, b); mLine(svg, x2, my2, x1, my2);
-    rF.push({ midY: my2, x: x2 });
+    const x1 = rS[i*2].x, x2 = x1 - H_TREE;
+    mLine(svg, x2, t, x2, b);
+    const w1 = getWinnerTeam(r16Matches[rightIds[i*2]]);
+    const w2 = getWinnerTeam(r16Matches[rightIds[i*2+1]]);
+    drawSlot(svg, w1, x1 - (x1-x2)/2, t);
+    mLine(svg, x2, t, x1, t);
+    drawSlot(svg, w2, x1 - (x1-x2)/2, b);
+    mLine(svg, x2, b, x1, b);
+    mLine(svg, x2-20, my2, x2, my2);
+    rF.push({ midY: my2, x: x2-20 });
   }
 
   // Líneas al centro (cuartos)
