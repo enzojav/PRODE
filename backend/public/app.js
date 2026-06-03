@@ -1223,37 +1223,37 @@ function renderR16Bracket() {
     rS.push({ midY: my2, x: x2 });
   }
 
-  // Segunda ronda izquierda con slots de ganadores
+  // Segunda ronda izquierda — ganadores en las puntas de la llave
   const lF = [];
   for (let i = 0; i < 2; i++) {
     const t = lS[i*2].midY, b = lS[i*2+1].midY, my2 = (t+b)/2;
     const x1 = lS[i*2].x, x2 = x1 + H_TREE;
+    // línea vertical
     mLine(svg, x1, t, x1, b);
-    // slots de ganadores sobre las líneas
+    // línea horizontal al centro
+    mLine(svg, x1, my2, x2, my2);
+    // ganadores en las puntas (arriba y abajo de la línea vertical)
     const w1 = getWinnerTeam(r16Matches[leftIds[i*2]]);
     const w2 = getWinnerTeam(r16Matches[leftIds[i*2+1]]);
-    drawSlot(svg, w1, x1 + (x2-x1)/2, t);
-    mLine(svg, x1, t, x2, t);
-    drawSlot(svg, w2, x1 + (x2-x1)/2, b);
-    mLine(svg, x1, b, x2, b);
-    mLine(svg, x2, t, x2, b);
-    mLine(svg, x2, my2, x2+20, my2);
-    lF.push({ midY: my2, x: x2+20 });
+    drawSlot(svg, w1, x1 + QW/2 + 4, t);
+    drawSlot(svg, w2, x1 + QW/2 + 4, b);
+    lF.push({ midY: my2, x: x2 });
   }
-  // Segunda ronda derecha con slots de ganadores
+  // Segunda ronda derecha — ganadores en las puntas de la llave
   const rF = [];
   for (let i = 0; i < 2; i++) {
     const t = rS[i*2].midY, b = rS[i*2+1].midY, my2 = (t+b)/2;
     const x1 = rS[i*2].x, x2 = x1 - H_TREE;
-    mLine(svg, x2, t, x2, b);
+    // línea vertical
+    mLine(svg, x1, t, x1, b);
+    // línea horizontal al centro
+    mLine(svg, x2, my2, x1, my2);
+    // ganadores en las puntas
     const w1 = getWinnerTeam(r16Matches[rightIds[i*2]]);
     const w2 = getWinnerTeam(r16Matches[rightIds[i*2+1]]);
-    drawSlot(svg, w1, x1 - (x1-x2)/2, t);
-    mLine(svg, x2, t, x1, t);
-    drawSlot(svg, w2, x1 - (x1-x2)/2, b);
-    mLine(svg, x2, b, x1, b);
-    mLine(svg, x2-20, my2, x2, my2);
-    rF.push({ midY: my2, x: x2-20 });
+    drawSlot(svg, w1, x1 - QW/2 - 4, t);
+    drawSlot(svg, w2, x1 - QW/2 - 4, b);
+    rF.push({ midY: my2, x: x2 });
   }
 
   // Líneas al centro (cuartos)
