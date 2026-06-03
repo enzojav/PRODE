@@ -24,12 +24,12 @@ app.use(cors({ origin: process.env.CORS_ORIGIN || '*', credentials: true }));
 app.use(express.json({ limit: '1mb' }));
 
 app.use('/api/auth/login', rateLimit({
-  windowMs: 15 * 60 * 1000, max: 10,
-  message: { error: 'Demasiados intentos. Esperá 15 minutos.' },
+  windowMs: 5 * 60 * 1000, max: 10,
+  message: { error: 'Demasiados intentos. Esperá 5 minutos.' },
   standardHeaders: true, legacyHeaders: false,
 }));
 app.use('/api/auth/register', rateLimit({
-  windowMs: 60 * 60 * 1000, max: 5,
+  windowMs: 5 * 60 * 1000, max: 5,
   message: { error: 'Demasiados registros desde esta IP.' },
 }));
 app.use('/api', rateLimit({
