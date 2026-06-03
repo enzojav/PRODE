@@ -1022,7 +1022,7 @@ function toast(msg, type = '') {
 }
 
 // ══════════════════════════════════════════════════════════════
-//  16AVOS DE FINAL
+//  16AVOS DE FINAL — Bracket + Votación
 // ══════════════════════════════════════════════════════════════
 let r16Matches = [];
 let r16Preds   = {};
@@ -1036,49 +1036,221 @@ async function renderR16() {
     predsArr.forEach(p => { if (r16Matches.find(m => m.id === p.match_id)) r16Preds[p.match_id] = p; });
   } catch(e) { console.error('Error cargando R16:', e); return; }
 
-  const adminPanel = document.getElementById('admin-prode-panel');
-  if (adminPanel) adminPanel.style.display = 'none';
-
+  // Puntos propios
   let myPts = 0;
   r16Matches.forEach(m => {
     const pred = r16Preds[m.id];
     if (!pred) return;
-    const p = calcMatchPoints(pred, m);
+    const p = calcR16Points(pred, m);
     if (p > 0) myPts += p;
   });
   document.getElementById('r16-my-pts').textContent = myPts;
 
-  document.getElementById('r16-matches-grid').innerHTML = `
-    <div class="day-matches-grid" style="margin:24px 0">
-      ${r16Matches.map(m => renderR16Card(m)).join('')}
-    </div>`;
+  // Bracket SVG
+  renderR16Bracket();
+
+  // Tarjetas de votación
+  document.getElementById('r16-matches-grid').innerHTML =
+    '<div class="day-matches-grid" style="margin:24px 0">' +
+    r16Matches.map(m => renderR16Card(m)).join('') +
+    '</div>';
 
   await renderR16Standings();
 }
 
+// ── Bracket SVG ───────────────────────────────────────────────
+function renderR16Bracket() {
+  const container = document.getElementById('r16-bracket');
+  if (!container) return;
+
+  const W = 130, H = 42, GAP = 14;
+  const LINE_COLOR = 'rgba(108,172,228,.2)';
+  const AMBER = '#FFB81C';
+  const FONT = "'Inter', system-ui, sans-serif";
+
+  const leftIds  = [0,1,2,3,4,5,6,7];
+  const rightIds = [8,9,10,11,12,13,14,15];
+
+  function mWinner(m) {
+    if (m.home_score === null || m.away_score === null) return null;
+    const h = Number(m.home_score), a = Number(m.away_score);
+    return h > a ? 'home' : h < a ? 'away' : null;
+  }
+  function mTrunc(s, max) { return s && s.length > max ? s.slice(0, max-1)+'…' : (s || '?'); }
+  function mEl(tag, attrs) {
+    const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    for (const [k,v] of Object.entries(attrs)) el.setAttribute(k, v);
+    return el;
+  }
+  function mLine(svg, x1, y1, x2, y2) {
+    svg.appendChild(mEl('line', { x1, y1, x2, y2, stroke: LINE_COLOR, 'stroke-width': '1.5' }));
+  }
+
+  function mDrawMatch(svg, m, x, y) {
+    const winner = mWinner(m);
+    const mh2 = H * 2 + 1;
+    const g = mEl('g', {});
+    g.appendChild(mEl('rect', { x: x+1, y: y+2, width: W, height: mh2, rx: '7', fill: 'rgba(0,0,0,.35)' }));
+    g.appendChild(mEl('rect', { x, y, width: W, height: mh2, rx: '7', fill: '#0d1b38',
+      stroke: winner ? 'rgba(255,184,28,.25)' : 'rgba(255,255,255,.07)', 'stroke-width': '1' }));
+    g.appendChild(mEl('line', { x1: x+1, y1: y+H, x2: x+W-1, y2: y+H, stroke: 'rgba(255,255,255,.05)', 'stroke-width': '1' }));
+
+    [
+      { team: { f: m.home_flag||'🏳️', n: m.home||'?' }, score: m.home_score, side: 'home', wy: y + H/2 },
+      { team: { f: m.away_flag||'🏳️', n: m.away||'?' }, score: m.away_score, side: 'away', wy: y + H + H/2 }
+    ].forEach(({ team, score, side, wy }) => {
+      const isW = winner === side;
+      const isL = winner && winner !== side;
+      const tr = mEl('g', {});
+
+      if (isW) {
+        tr.appendChild(mEl('rect', { x, y: wy - H/2, width: W, height: H, rx: side==='home'?'7':'0', fill: 'rgba(255,184,28,.07)' }));
+        tr.appendChild(mEl('rect', { x, y: wy - H/2, width: 3, height: H, rx: '2', fill: 'rgba(255,184,28,.6)' }));
+      }
+
+      const fl = mEl('text', { x: x+9, y: wy+5, 'font-size': '12' });
+      fl.textContent = team.f;
+      tr.appendChild(fl);
+
+      const nt = mEl('text', { x: x+27, y: wy+5, 'font-size': '10', 'font-family': FONT,
+        'font-weight': isW ? '700' : '400',
+        fill: isW ? AMBER : isL ? 'rgba(255,255,255,.25)' : 'rgba(255,255,255,.8)' });
+      nt.textContent = mTrunc(team.n, 10);
+      tr.appendChild(nt);
+
+      if (score !== null && score !== undefined) {
+        tr.appendChild(mEl('rect', { x: x+W-22, y: wy-9, width: 18, height: 17, rx: '4',
+          fill: isW ? 'rgba(255,184,28,.15)' : 'rgba(255,255,255,.05)',
+          stroke: isW ? 'rgba(255,184,28,.3)' : 'rgba(255,255,255,.08)', 'stroke-width': '1' }));
+        const st = mEl('text', { x: x+W-13, y: wy+5, 'font-size': '10', 'font-family': FONT,
+          'font-weight': '800', fill: isW ? AMBER : 'rgba(255,255,255,.4)', 'text-anchor': 'middle' });
+        st.textContent = score;
+        tr.appendChild(st);
+      }
+      g.appendChild(tr);
+    });
+
+    const dt = mEl('text', { x: x + W/2, y: y + mh2 + 11, 'font-size': '7.5',
+      'text-anchor': 'middle', fill: 'rgba(255,255,255,.2)', 'font-family': FONT });
+    dt.textContent = m.match_date || '';
+    g.appendChild(dt);
+    svg.appendChild(g);
+  }
+
+  // Layout
+  const ROWS = 8, LEFT_X = 20, H_CONN = 60, H_TREE = 50, CENTER_GAP = 120;
+  const rightX  = LEFT_X + W + H_CONN + H_TREE + CENTER_GAP + H_TREE + H_CONN;
+  const centerX = LEFT_X + W + H_CONN + H_TREE + CENTER_GAP / 2;
+  const svgW    = rightX + W + 20;
+  const rowH    = H * 2 + GAP + 20;
+  const svgH    = ROWS * rowH + 40;
+
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('width', svgW);
+  svg.setAttribute('height', svgH);
+  svg.setAttribute('viewBox', `0 0 ${svgW} ${svgH}`);
+  svg.style.display = 'block';
+  svg.style.maxWidth = '100%';
+
+  function getY(i) { return 20 + i * rowH + rowH / 2 - H; }
+
+  // Dibujar los 16 partidos
+  leftIds.forEach((idx, i)  => {
+    const m = r16Matches[idx];
+    if (!m) return;
+    const y = getY(i);
+    mDrawMatch(svg, m, LEFT_X, y);
+    mLine(svg, LEFT_X+W, y+H, LEFT_X+W+H_CONN, y+H);
+  });
+  rightIds.forEach((idx, i) => {
+    const m = r16Matches[idx];
+    if (!m) return;
+    const y = getY(i);
+    mDrawMatch(svg, m, rightX, y);
+    mLine(svg, rightX-H_CONN, y+H, rightX, y+H);
+  });
+
+  // Llaves izquierda
+  const lS = [];
+  for (let i = 0; i < 4; i++) {
+    const t = getY(i*2)+H, b = getY(i*2+1)+H, my2 = (t+b)/2;
+    const x1 = LEFT_X+W+H_CONN, x2 = x1+H_TREE;
+    mLine(svg, x1, t, x1, b); mLine(svg, x1, my2, x2, my2);
+    lS.push({ midY: my2, x: x2 });
+  }
+  // Llaves derecha
+  const rS = [];
+  for (let i = 0; i < 4; i++) {
+    const t = getY(i*2)+H, b = getY(i*2+1)+H, my2 = (t+b)/2;
+    const x1 = rightX-H_CONN, x2 = x1-H_TREE;
+    mLine(svg, x1, t, x1, b); mLine(svg, x2, my2, x1, my2);
+    rS.push({ midY: my2, x: x2 });
+  }
+
+  // Segunda ronda izquierda
+  const lF = [];
+  for (let i = 0; i < 2; i++) {
+    const t = lS[i*2].midY, b = lS[i*2+1].midY, my2 = (t+b)/2;
+    const x1 = lS[i*2].x, x2 = x1+22;
+    mLine(svg, x1, t, x1, b); mLine(svg, x1, my2, x2, my2);
+    lF.push({ midY: my2, x: x2 });
+  }
+  // Segunda ronda derecha
+  const rF = [];
+  for (let i = 0; i < 2; i++) {
+    const t = rS[i*2].midY, b = rS[i*2+1].midY, my2 = (t+b)/2;
+    const x1 = rS[i*2].x, x2 = x1-22;
+    mLine(svg, x1, t, x1, b); mLine(svg, x2, my2, x1, my2);
+    rF.push({ midY: my2, x: x2 });
+  }
+
+  // Líneas al centro (cuartos)
+  const finalMidY = (lF[0].midY + lF[1].midY) / 2;
+  mLine(svg, lF[0].x, lF[0].midY, lF[0].x, lF[1].midY);
+  mLine(svg, lF[0].x, finalMidY, centerX - 40, finalMidY);
+  mLine(svg, rF[0].x, rF[0].midY, rF[0].x, rF[1].midY);
+  mLine(svg, centerX + 40, finalMidY, rF[0].x, finalMidY);
+
+  // Copa en el centro
+  const trophySize = 200;
+  const trophyImg = mEl('image', {
+    href: 'copa.png',
+    x: centerX - trophySize/2,
+    y: finalMidY - trophySize/2,
+    width: trophySize,
+    height: trophySize
+  });
+  svg.appendChild(trophyImg);
+
+  container.innerHTML = '';
+  container.appendChild(svg);
+}
+
+// ── Puntos R16 ────────────────────────────────────────────────
 function calcR16Points(pred, match) {
   const mH = match.home_score !== null && match.home_score !== undefined ? Number(match.home_score) : null;
   const mA = match.away_score !== null && match.away_score !== undefined ? Number(match.away_score) : null;
-  if (mH === null || mA === null || isNaN(mH) || isNaN(mA)) return -1;
+  if (mH === null || mA === null) return -1;
   const realResult = goalsToResult(mH, mA);
   const predResult = pred.result || null;
   if (!predResult || !realResult) return 0;
   return predResult === realResult ? 5 : 0;
 }
 
+// ── Tarjeta de votación ───────────────────────────────────────
 function renderR16Card(m) {
   const pred   = r16Preds[m.id] || {};
   const locked = isMatchLocked(m);
 
   const mH = m.home_score !== null && m.home_score !== undefined ? Number(m.home_score) : null;
   const mA = m.away_score !== null && m.away_score !== undefined ? Number(m.away_score) : null;
-  const played   = mH !== null && mA !== null;
+  const played     = mH !== null && mA !== null;
   const realResult = goalsToResult(mH, mA);
   const predResult = pred.result || null;
   const matchPts   = calcR16Points(pred, m);
 
   let ptsLabel = '';
-  if (matchPts === 5)           ptsLabel = '✓ +5 pts';
+  if (matchPts === 5) ptsLabel = '✓ +5 pts';
   else if (matchPts === 0 && played) ptsLabel = '✗ 0 pts';
 
   function btnCls(val) {
@@ -1088,14 +1260,10 @@ function renderR16Card(m) {
   }
 
   const disabledAttr = locked ? 'disabled' : '';
-  const lockIcon     = locked ? '<span class="r16-lock">🔒</span>' : '';
-  const votedIcon    = predResult
+  const lockIcon = locked ? '<span class="r16-lock">🔒</span>' : '';
+  const votedIcon = predResult
     ? '<span style="font-size:.7rem;color:#3ae8b0;font-weight:600">✓ Votado</span>'
     : '<span style="font-size:.7rem;color:rgba(255,255,255,.25)">Sin voto</span>';
-
-  const winnerLabel = played
-    ? (realResult === '1' ? `🏆 ${m.home}` : realResult === '2' ? `🏆 ${m.away}` : '— Empate')
-    : '';
 
   return `
     <div class="r16-card${played ? ' played' : ''}${locked ? ' locked' : ''}">
@@ -1115,26 +1283,21 @@ function renderR16Card(m) {
               onchange="setR16Result(${m.id},'away',this.value)">
           </div>` : ''}
       </div>
-
       <div class="r16-body">
         <button class="r16-team-btn ${btnCls('1')}" onclick="setR16Pred(${m.id},'1')" ${disabledAttr}>
           <span class="r16-flag">${m.home_flag || '🏳️'}</span>
-          <span class="r16-name">${m.home}</span>
+          <span class="r16-name">${m.home || '?'}</span>
           ${played && realResult === '1' ? '<span class="r16-winner-badge">GANÓ</span>' : ''}
         </button>
-
         <div class="r16-center">
-          ${played
-            ? `<div class="r16-score">${mH} - ${mA}</div>`
-            : `<div class="r16-vs">VS</div>`}
+          ${played ? `<div class="r16-score">${mH} - ${mA}</div>` : '<div class="r16-vs">VS</div>'}
           ${played && matchPts >= 0
             ? `<div class="r16-pts ${matchPts === 5 ? 'ok' : 'fail'}">${ptsLabel}</div>`
             : '<div class="r16-hint">¿Quién pasa?</div>'}
         </div>
-
         <button class="r16-team-btn ${btnCls('2')}" onclick="setR16Pred(${m.id},'2')" ${disabledAttr}>
           <span class="r16-flag">${m.away_flag || '🏳️'}</span>
-          <span class="r16-name">${m.away}</span>
+          <span class="r16-name">${m.away || '?'}</span>
           ${played && realResult === '2' ? '<span class="r16-winner-badge">GANÓ</span>' : ''}
         </button>
       </div>
@@ -1144,12 +1307,8 @@ function renderR16Card(m) {
 async function setR16Pred(matchId, val) {
   const match = r16Matches.find(m => m.id === matchId);
   if (!match || isMatchLocked(match)) return;
-  await saveR16Prediction(matchId, val, null, null);
-}
-
-async function saveR16Prediction(matchId, result, homeScore, awayScore) {
   try {
-    const saved = await api('POST', '/prode/predictions', { match_id: matchId, result, home_score: homeScore, away_score: awayScore });
+    const saved = await api('POST', '/prode/predictions', { match_id: matchId, result: val, home_score: null, away_score: null });
     r16Preds[matchId] = saved;
     renderR16();
   } catch(e) { toast(e.message, 'e'); }
@@ -1189,292 +1348,9 @@ async function renderR16Standings() {
   } catch { }
 }
 
-// ══════════════════════════════════════════════════════════════
-//  MUNDIAL 2026 — Bracket 16avos
-// ══════════════════════════════════════════════════════════════
-async function renderMundial() {
-  // Cargar partidos R16 desde la API
-  try {
-    const apiMatches = await api('GET', '/prode/matches/r16');
-    if (apiMatches && apiMatches.length > 0) {
-      window._r16ApiMatches = apiMatches;
-    }
-  } catch(e) { console.warn('No se pudieron cargar partidos R16:', e); }
-
-  const container = document.getElementById('mundial-embed');
-  if (!container) return;
-
-  const W = 130, H = 42, GAP = 14;
-  const LINE_COLOR = 'rgba(108,172,228,.2)';
-  const AMBER = '#FFB81C';
-  const FONT = "'Inter', system-ui, sans-serif";
-  const STORAGE_KEY = 'mundial2026_bracket';
-
-  const defaultMatches = [
-    {id:1,  home:{f:'🏳️',n:'1E'},      away:{f:'🏳️',n:'3 ABCDF'}, date:'27 Jun', hs:null, as:null},
-    {id:2,  home:{f:'🏳️',n:'1I'},      away:{f:'🏳️',n:'3 CDFGH'}, date:'27 Jun', hs:null, as:null},
-    {id:3,  home:{f:'🏳️',n:'2A'},      away:{f:'🏳️',n:'2B'},      date:'28 Jun', hs:null, as:null},
-    {id:4,  home:{f:'🏳️',n:'1F'},      away:{f:'🏳️',n:'2C'},      date:'28 Jun', hs:null, as:null},
-    {id:5,  home:{f:'🏳️',n:'2K'},      away:{f:'🏳️',n:'2L'},      date:'29 Jun', hs:null, as:null},
-    {id:6,  home:{f:'🏳️',n:'1H'},      away:{f:'🏳️',n:'2J'},      date:'29 Jun', hs:null, as:null},
-    {id:7,  home:{f:'🏳️',n:'1D'},      away:{f:'🏳️',n:'3 BEFIJ'}, date:'30 Jun', hs:null, as:null},
-    {id:8,  home:{f:'🏳️',n:'1G'},      away:{f:'🏳️',n:'3 AEHIJ'}, date:'30 Jun', hs:null, as:null},
-    {id:9,  home:{f:'🏳️',n:'1C'},      away:{f:'🏳️',n:'2F'},      date:'1 Jul',  hs:null, as:null},
-    {id:10, home:{f:'🏳️',n:'2E'},      away:{f:'🏳️',n:'2I'},      date:'1 Jul',  hs:null, as:null},
-    {id:11, home:{f:'🏳️',n:'1A'},      away:{f:'🏳️',n:'3 CEFHI'}, date:'2 Jul',  hs:null, as:null},
-    {id:12, home:{f:'🏳️',n:'1L'},      away:{f:'🏳️',n:'3 EHIJK'}, date:'2 Jul',  hs:null, as:null},
-    {id:13, home:{f:'🏳️',n:'1J'},      away:{f:'🏳️',n:'2H'},      date:'3 Jul',  hs:null, as:null},
-    {id:14, home:{f:'🏳️',n:'2D'},      away:{f:'🏳️',n:'2G'},      date:'3 Jul',  hs:null, as:null},
-    {id:15, home:{f:'🏳️',n:'1B'},      away:{f:'🏳️',n:'3 EFGIJ'}, date:'4 Jul',  hs:null, as:null},
-    {id:16, home:{f:'🏳️',n:'1K'},      away:{f:'🏳️',n:'3 DEIJL'}, date:'4 Jul',  hs:null, as:null},
-  ];
-
-  // Usar datos de la API si están disponibles, sino usar defaults
-  let mMatches;
-  if (window._r16ApiMatches && window._r16ApiMatches.length > 0) {
-    // Mapear formato API -> formato bracket
-    mMatches = window._r16ApiMatches.map((m, i) => ({
-      id:   i + 1,
-      home: { f: m.home_flag || '🏳️', n: m.home || '?' },
-      away: { f: m.away_flag || '🏳️', n: m.away || '?' },
-      date: m.match_date || '',
-      hs:   m.home_score !== null && m.home_score !== undefined ? Number(m.home_score) : null,
-      as:   m.away_score !== null && m.away_score !== undefined ? Number(m.away_score) : null,
-      _apiId: m.id
-    }));
-  } else {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      mMatches = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultMatches));
-    } catch { mMatches = JSON.parse(JSON.stringify(defaultMatches)); }
-  }
-
-  const leftIds  = [1,2,3,4,5,6,7,8];
-  const rightIds = [9,10,11,12,13,14,15,16];
-  let mEditTarget = null;
-
-  function mSave() { if (!window._r16ApiMatches) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(mMatches)); } catch {} } }
-  function mWinner(m) {
-    if (m.hs === null || m.as === null) return null;
-    return m.hs > m.as ? 'home' : m.hs < m.as ? 'away' : null;
-  }
-  function mTrunc(s, max) { return s.length > max ? s.slice(0, max-1)+'…' : s; }
-  function mEl(tag, attrs) {
-    const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
-    for (const [k,v] of Object.entries(attrs)) el.setAttribute(k, v);
-    return el;
-  }
-
-  container.innerHTML = `
-    <div style="background:linear-gradient(135deg,#060d1f 0%,#0f2347 50%,#060d1f 100%);border-bottom:1px solid rgba(108,172,228,.15);padding:16px 20px;display:flex;align-items:center;gap:14px;border-radius:12px 12px 0 0;margin-bottom:0">
-      <div style="width:44px;height:44px;background:radial-gradient(circle,rgba(255,184,28,.18),rgba(255,184,28,.04));border:1px solid rgba(255,184,28,.3);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🏆</div>
-      <div>
-        <div style="font-size:1.1rem;font-weight:800;color:#fff;letter-spacing:.02em">Mundial 2026 · 16avos de Final</div>
-        <div style="font-size:.68rem;color:rgba(255,255,255,.45);letter-spacing:.1em;text-transform:uppercase;margin-top:2px">USA · México · Canadá · Tocá un equipo para editar</div>
-      </div>
-      <div style="margin-left:auto;display:flex;gap:12px;text-align:center">
-        <div><div style="font-size:1.1rem;font-weight:800;color:#FFB81C;font-family:inherit" id="mw-played">0</div><div style="font-size:.6rem;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.08em">Jugados</div></div>
-        <div><div style="font-size:1.1rem;font-weight:800;color:#FFB81C;font-family:inherit" id="mw-goals">0</div><div style="font-size:.6rem;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.08em">Goles</div></div>
-      </div>
-    </div>
-    <div style="overflow-x:auto;padding:24px 16px;background:#0a0e1a;border-radius:0 0 12px 12px;border:1px solid rgba(255,255,255,.06);border-top:none;display:flex;justify-content:center">
-      <svg id="mw-svg" xmlns="http://www.w3.org/2000/svg" style="display:block"></svg>
-    </div>
-    <div id="mw-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:500;align-items:center;justify-content:center">
-      <div style="background:#131724;border:1px solid rgba(108,172,228,.2);border-radius:14px;padding:22px;width:290px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-          <div style="font-size:.9rem;font-weight:700;color:#fff">Editar equipo</div>
-          <button id="mw-mclose" style="background:rgba(255,255,255,.07);border:none;border-radius:6px;color:rgba(255,255,255,.5);cursor:pointer;width:24px;height:24px;font-size:14px">✕</button>
-        </div>
-        <div style="margin-bottom:10px"><label style="font-size:.68rem;color:rgba(255,255,255,.5);display:block;margin-bottom:4px">Bandera (emoji)</label><input id="mw-flag" maxlength="4" placeholder="🇦🇷" style="width:100%;background:#1a1f30;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px 10px;color:#fff;font-size:.82rem;outline:none;font-family:inherit"></div>
-        <div style="margin-bottom:10px"><label style="font-size:.68rem;color:rgba(255,255,255,.5);display:block;margin-bottom:4px">Equipo</label><input id="mw-name" placeholder="Argentina" style="width:100%;background:#1a1f30;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px 10px;color:#fff;font-size:.82rem;outline:none;font-family:inherit"></div>
-        <div style="margin-bottom:10px"><label style="font-size:.68rem;color:rgba(255,255,255,.5);display:block;margin-bottom:4px">Goles <span style="opacity:.4">(vacío si no jugó)</span></label><input id="mw-score" type="number" min="0" max="20" placeholder="—" style="width:100%;background:#1a1f30;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px 10px;color:#fff;font-size:.82rem;outline:none;font-family:inherit"></div>
-        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
-          <button id="mw-mcancel" style="padding:8px 16px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.07);color:rgba(255,255,255,.6);font-size:.8rem;font-weight:600;cursor:pointer;font-family:inherit">Cancelar</button>
-          <button id="mw-msave" style="padding:8px 16px;border-radius:8px;border:none;background:#6CACE4;color:#fff;font-size:.8rem;font-weight:600;cursor:pointer;font-family:inherit">Guardar</button>
-        </div>
-      </div>
-    </div>`;
-
-  const mSvg   = document.getElementById('mw-svg');
-  const mModal = document.getElementById('mw-modal');
-
-  document.getElementById('mw-mclose').addEventListener('click', mCloseModal);
-  document.getElementById('mw-mcancel').addEventListener('click', mCloseModal);
-  document.getElementById('mw-msave').addEventListener('click', mSaveModal);
-  mModal.addEventListener('click', e => { if (e.target === mModal) mCloseModal(); });
-
-  function mOpenModal(matchId, side) {
-    const m = mMatches.find(x => x.id === matchId);
-    const team  = side === 'home' ? m.home : m.away;
-    const score = side === 'home' ? m.hs   : m.as;
-    mEditTarget = { matchId, side };
-    document.getElementById('mw-flag').value  = team.f;
-    document.getElementById('mw-name').value  = team.n;
-    document.getElementById('mw-score').value = score !== null ? score : '';
-    mModal.style.display = 'flex';
-    document.getElementById('mw-name').focus();
-  }
-
-  function mCloseModal() {
-    mModal.style.display = 'none';
-    mEditTarget = null;
-  }
-
-  function mSaveModal() {
-    if (!mEditTarget) return;
-    const { matchId, side } = mEditTarget;
-    const m     = mMatches.find(x => x.id === matchId);
-    const flag  = document.getElementById('mw-flag').value.trim() || '🏳️';
-    const name  = document.getElementById('mw-name').value.trim();
-    const score = document.getElementById('mw-score').value;
-    if (side === 'home') { m.home = { f: flag, n: name || m.home.n }; m.hs = score !== '' ? Number(score) : null; }
-    else                 { m.away = { f: flag, n: name || m.away.n }; m.as = score !== '' ? Number(score) : null; }
-    mSave(); mCloseModal(); mRender();
-    toast('✓ Guardado', 's');
-  }
-
-  function mUpdateStats() {
-    const played = mMatches.filter(m => m.hs !== null && m.as !== null).length;
-    const goals  = mMatches.reduce((a, m) => a + (m.hs || 0) + (m.as || 0), 0);
-    const pe = document.getElementById('mw-played');
-    const ge = document.getElementById('mw-goals');
-    if (pe) pe.textContent = played;
-    if (ge) ge.textContent = goals;
-  }
-
-  function mDrawMatch(svg, m, x, y) {
-    const winner = mWinner(m);
-    const mx = Math.round(x), my = Math.round(y);
-    const mh2 = H * 2 + 1;
-    const g = mEl('g', {});
-    g.appendChild(mEl('rect', { x: mx+1, y: my+2, width: W, height: mh2, rx: '7', fill: 'rgba(0,0,0,.35)' }));
-    g.appendChild(mEl('rect', { x: mx, y: my, width: W, height: mh2, rx: '7', fill: '#0d1b38', stroke: winner ? 'rgba(255,184,28,.25)' : 'rgba(255,255,255,.07)', 'stroke-width': '1' }));
-    g.appendChild(mEl('line', { x1: mx+1, y1: my+H, x2: mx+W-1, y2: my+H, stroke: 'rgba(255,255,255,.05)', 'stroke-width': '1' }));
-
-    [
-      { team: m.home, score: m.hs, side: 'home', wy: my + H/2 },
-      { team: m.away, score: m.as, side: 'away', wy: my + H + H/2 }
-    ].forEach(({ team, score, side, wy }) => {
-      const isW = winner === side;
-      const isL = winner && winner !== side;
-      const tr  = mEl('g', { class: 'team-box', 'data-id': m.id, 'data-side': side });
-      tr.style.cursor = 'pointer';
-
-      if (isW) {
-        tr.appendChild(mEl('rect', { x: mx, y: wy - H/2, width: W, height: H, rx: side === 'home' ? '7' : '0', fill: 'rgba(255,184,28,.07)' }));
-        tr.appendChild(mEl('rect', { x: mx, y: wy - H/2, width: 3, height: H, rx: '2', fill: 'rgba(255,184,28,.6)' }));
-      } else {
-        tr.appendChild(mEl('rect', { x: mx, y: wy - H/2, width: W, height: H, rx: side === 'home' ? '7' : '0', fill: 'rgba(0,0,0,0)' }));
-      }
-
-      const fl = mEl('text', { x: mx+9, y: wy+5, 'font-size': '12' });
-      fl.textContent = team.f;
-      tr.appendChild(fl);
-
-      const nt = mEl('text', { x: mx+27, y: wy+5, 'font-size': '10', 'font-family': FONT, 'font-weight': isW ? '700' : '400', fill: isW ? AMBER : isL ? 'rgba(255,255,255,.25)' : 'rgba(255,255,255,.8)' });
-      nt.textContent = mTrunc(team.n, 9);
-      tr.appendChild(nt);
-
-      if (score !== null) {
-        tr.appendChild(mEl('rect', { x: mx+W-22, y: wy-9, width: 18, height: 17, rx: '4', fill: isW ? 'rgba(255,184,28,.15)' : 'rgba(255,255,255,.05)', stroke: isW ? 'rgba(255,184,28,.3)' : 'rgba(255,255,255,.08)', 'stroke-width': '1' }));
-        const st = mEl('text', { x: mx+W-13, y: wy+5, 'font-size': '10', 'font-family': FONT, 'font-weight': '800', fill: isW ? AMBER : 'rgba(255,255,255,.4)', 'text-anchor': 'middle' });
-        st.textContent = score;
-        tr.appendChild(st);
-      }
-
-      tr.addEventListener('click', () => mOpenModal(m.id, side));
-      g.appendChild(tr);
-    });
-
-    const dt = mEl('text', { x: mx + W/2, y: my + mh2 + 10, 'font-size': '7.5', 'text-anchor': 'middle', fill: 'rgba(255,255,255,.18)', 'font-family': FONT });
-    dt.textContent = m.date;
-    g.appendChild(dt);
-    svg.appendChild(g);
-  }
-
-  function mLine(svg, x1, y1, x2, y2) {
-    svg.appendChild(mEl('line', { x1, y1, x2, y2, stroke: LINE_COLOR, 'stroke-width': '1.5' }));
-  }
-
-  function mRender() {
-    mSvg.innerHTML = '';
-    const ROWS = 8, LEFT_X = 24, H_CONN = 72, H_TREE = 56, CENTER_GAP = 100;
-    const rightX  = LEFT_X + W + H_CONN + H_TREE + CENTER_GAP + H_TREE + H_CONN;
-    const centerX = LEFT_X + W + H_CONN + H_TREE + CENTER_GAP / 2;
-    const svgW    = rightX + W + 20;
-    const rowH_base = H * 2 + GAP + 16;
-    const svgH    = ROWS * rowH_base + 30;
-    const rowH    = (svgH - 40) / ROWS;
-
-    mSvg.setAttribute('width',   svgW);
-    mSvg.setAttribute('height',  svgH);
-    mSvg.setAttribute('viewBox', `0 0 ${svgW} ${svgH}`);
-
-    function getY(i) { return 20 + i * rowH + rowH / 2 - H; }
-
-    leftIds.forEach((id, i)  => { const m = mMatches.find(x => x.id === id), y = getY(i); mDrawMatch(mSvg, m, LEFT_X, y);  mLine(mSvg, LEFT_X+W, y+H, LEFT_X+W+H_CONN, y+H); });
-    rightIds.forEach((id, i) => { const m = mMatches.find(x => x.id === id), y = getY(i); mDrawMatch(mSvg, m, rightX, y); mLine(mSvg, rightX-H_CONN, y+H, rightX, y+H); });
-
-    const lS = [], rS = [];
-    for (let i = 0; i < 4; i++) {
-      const t = getY(i*2)+H, b = getY(i*2+1)+H, my2 = (t+b)/2;
-      const x1 = LEFT_X+W+H_CONN, x2 = x1+H_TREE;
-      mLine(mSvg, x1, t, x1, b); mLine(mSvg, x1, my2, x2, my2);
-      lS.push({ midY: my2, x: x2 });
-    }
-    for (let i = 0; i < 4; i++) {
-      const t = getY(i*2)+H, b = getY(i*2+1)+H, my2 = (t+b)/2;
-      const x1 = rightX-H_CONN, x2 = x1-H_TREE;
-      mLine(mSvg, x1, t, x1, b); mLine(mSvg, x2, my2, x1, my2);
-      rS.push({ midY: my2, x: x2 });
-    }
-
-    const lF = [], rF = [];
-    for (let i = 0; i < 2; i++) {
-      const t = lS[i*2].midY, b = lS[i*2+1].midY, my2 = (t+b)/2;
-      const x1 = lS[i*2].x, x2 = x1+22;
-      mLine(mSvg, x1, t, x1, b); mLine(mSvg, x1, my2, x2, my2);
-      lF.push({ midY: my2, x: x2 });
-    }
-    for (let i = 0; i < 2; i++) {
-      const t = rS[i*2].midY, b = rS[i*2+1].midY, my2 = (t+b)/2;
-      const x1 = rS[i*2].x, x2 = x1-22;
-      mLine(mSvg, x1, t, x1, b); mLine(mSvg, x2, my2, x1, my2);
-      rF.push({ midY: my2, x: x2 });
-    }
-
-    const finalMidY = (lF[0].midY + lF[1].midY) / 2;
-    mLine(mSvg, lF[0].x, lF[0].midY, lF[0].x, lF[1].midY);
-    mLine(mSvg, lF[0].x, finalMidY, centerX - 30, finalMidY);
-    mLine(mSvg, rF[0].x, rF[0].midY, rF[0].x, rF[1].midY);
-    mLine(mSvg, centerX + 30, finalMidY, rF[0].x, finalMidY);
-
-    // Dashed outer ring
-    
-    const trophyT = mEl('text', {
-  x: centerX,
-  y: finalMidY + 8,
-  'font-size': '28',
-  'text-anchor': 'middle',
-  'dominant-baseline': 'middle'
-});
-const trophySize = 250;
-
-const trophyImg = mEl('image', {
-  href: 'copa.png',
-  x: centerX - trophySize / 2,
-  y: finalMidY - trophySize / 2,
-  width: trophySize,
-  height: trophySize
-});
-
-mSvg.appendChild(trophyImg);
-
-    mUpdateStats();
-  }
-
-  mRender();
+// ── Mundial 2026 — solo redirige a r16 ───────────────────────
+function renderMundial() {
+  navigateTo('r16');
 }
 
 // ══════════════════════════════════════════════════════════════
