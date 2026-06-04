@@ -1301,17 +1301,18 @@ function renderR16Bracket() {
 
       // resultado (admin inputs o badge)
       if (currentUser.role === 'admin') {
-        const fo = el('foreignObject', { x: x + CW - 34, y: oy - 12, width: 32, height: 24 }, svg);
-        const inp = document.createElement('input');
-        inp.type = 'number'; inp.min = 0; inp.max = 20;
-        inp.value = score !== null && score !== undefined ? score : '';
-        inp.placeholder = '—';
-        inp.style.cssText = 'width:32px;height:24px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);border-radius:4px;color:' + (isW ? AMBER : '#fff') + ';font-size:12px;font-weight:800;text-align:center;padding:0;outline:none;box-sizing:border-box;';
-        const saveFn = e => setR16Result(m.id, side === '1' ? 'home' : 'away', e.target.value);
-        inp.addEventListener('blur', saveFn);
-        inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.target.blur(); } });
-        inp.addEventListener('click', e => e.stopPropagation());
-        fo.appendChild(inp);
+        // Badge clickeable que abre modal de resultado
+        const badgeBg = el('rect', { x: x + CW - 28, y: oy - 10, width: 24, height: 20, rx: '4',
+          fill: score !== null ? (isW ? 'rgba(255,184,28,.2)' : 'rgba(255,255,255,.08)') : 'rgba(108,172,228,.15)',
+          stroke: score !== null ? (isW ? 'rgba(255,184,28,.4)' : 'rgba(255,255,255,.1)') : 'rgba(108,172,228,.3)',
+          'stroke-width': '1', style: 'cursor:pointer' }, svg);
+        const badgeTxt = el('text', { x: x + CW - 16, y: oy + 5,
+          'font-size': '10', 'font-family': FONT, 'font-weight': '800',
+          fill: score !== null ? (isW ? AMBER : 'rgba(255,255,255,.5)') : 'rgba(108,172,228,.8)',
+          'text-anchor': 'middle', style: 'cursor:pointer' }, svg);
+        badgeTxt.textContent = score !== null ? score : '✎';
+        badgeBg.addEventListener('click', e => { e.stopPropagation(); openR16AdminModal(m.id); });
+        badgeTxt.addEventListener('click', e => { e.stopPropagation(); openR16AdminModal(m.id); });
       } else if (score !== null && score !== undefined) {
         // badge de resultado
         el('rect', { x: x + CW - 26, y: oy - 9, width: 22, height: 18, rx: '4',
@@ -1677,6 +1678,89 @@ async function setR16Result(matchId, side, value) {
       home_score: m.home_score, away_score: m.away_score,
     });
     toast('Resultado guardado', 's');
+    renderR16();
+  } catch(e) { toast(e.message, 'e'); }
+}
+
+// ── Modal admin resultado R16 ────────────────────────────────
+function openR16AdminModal(matchId) {
+  const m = r16Matches.find(x => x.id === matchId);
+  if (!m) return;
+
+  // Crear modal si no existe
+  let modal = document.getElementById('r16-admin-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'r16-admin-modal';
+    modal.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:9999;align-items:center;justify-content:center;';
+    modal.innerHTML = `
+      <div style="background:#131724;border:1px solid rgba(108,172,228,.2);border-radius:14px;padding:22px;width:300px;animation:slideUp .18s ease">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <div id="r16-modal-title" style="font-size:.92rem;font-weight:700;color:#fff"></div>
+          <button onclick="closeR16AdminModal()" style="width:24px;height:24px;background:rgba(255,255,255,.07);border:none;border-radius:6px;color:rgba(255,255,255,.5);cursor:pointer;font-size:14px">✕</button>
+        </div>
+        <div style="font-size:.62rem;color:rgba(255,184,28,.6);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">⚙ Cargar resultado</div>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:16px">
+          <span id="r16-modal-home" style="font-size:.75rem;color:rgba(255,255,255,.5);flex:1"></span>
+          <input id="r16-inp-home" type="number" min="0" max="20" placeholder="0"
+            style="width:50px;background:#1a1f30;border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:8px;color:#fff;font-size:1rem;font-weight:800;text-align:center;outline:none;font-family:inherit">
+          <span style="color:rgba(255,255,255,.3);font-weight:700">–</span>
+          <input id="r16-inp-away" type="number" min="0" max="20" placeholder="0"
+            style="width:50px;background:#1a1f30;border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:8px;color:#fff;font-size:1rem;font-weight:800;text-align:center;outline:none;font-family:inherit">
+          <span id="r16-modal-away" style="font-size:.75rem;color:rgba(255,255,255,.5);flex:1;text-align:right"></span>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button onclick="closeR16AdminModal()" style="padding:8px 16px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.07);color:rgba(255,255,255,.5);font-size:.8rem;font-weight:600;cursor:pointer;font-family:inherit">Cancelar</button>
+          <button id="r16-btn-del" onclick="deleteR16Result()" style="padding:8px 16px;border-radius:8px;border:1px solid rgba(255,91,106,.2);background:rgba(255,91,106,.1);color:#ff5b6a;font-size:.8rem;font-weight:600;cursor:pointer;font-family:inherit">Borrar</button>
+          <button onclick="saveR16AdminModal()" style="padding:8px 16px;border-radius:8px;border:none;background:#FFB81C;color:#000;font-size:.8rem;font-weight:700;cursor:pointer;font-family:inherit">Guardar</button>
+        </div>
+      </div>`;
+    modal.addEventListener('click', e => { if (e.target === modal) closeR16AdminModal(); });
+    document.body.appendChild(modal);
+  }
+
+  // Rellenar datos
+  const hasResult = m.home_score !== null && m.home_score !== undefined;
+  document.getElementById('r16-modal-title').textContent = (m.home_flag||'🏳️') + ' ' + (m.home||'?') + ' vs ' + (m.away_flag||'🏳️') + ' ' + (m.away||'?');
+  document.getElementById('r16-modal-home').textContent = m.home || '?';
+  document.getElementById('r16-modal-away').textContent = m.away || '?';
+  document.getElementById('r16-inp-home').value = hasResult ? m.home_score : '';
+  document.getElementById('r16-inp-away').value = hasResult ? m.away_score : '';
+  document.getElementById('r16-btn-del').style.display = hasResult ? '' : 'none';
+  modal._matchId = matchId;
+
+  modal.style.display = 'flex';
+  document.getElementById('r16-inp-home').focus();
+}
+
+function closeR16AdminModal() {
+  const modal = document.getElementById('r16-admin-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+async function saveR16AdminModal() {
+  const modal = document.getElementById('r16-admin-modal');
+  const matchId = modal._matchId;
+  const h = document.getElementById('r16-inp-home').value;
+  const a = document.getElementById('r16-inp-away').value;
+  if (h === '' || a === '') { toast('Completá ambos goles', 'e'); return; }
+  try {
+    await api('PUT', '/prode/matches/' + matchId + '/result', {
+      home_score: Number(h), away_score: Number(a)
+    });
+    toast('Resultado guardado', 's');
+    closeR16AdminModal();
+    renderR16();
+  } catch(e) { toast(e.message, 'e'); }
+}
+
+async function deleteR16Result() {
+  const modal = document.getElementById('r16-admin-modal');
+  const matchId = modal._matchId;
+  try {
+    await api('DELETE', '/prode/matches/' + matchId + '/result');
+    toast('Resultado borrado', 's');
+    closeR16AdminModal();
     renderR16();
   } catch(e) { toast(e.message, 'e'); }
 }
