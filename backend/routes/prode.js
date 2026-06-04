@@ -3,6 +3,11 @@ const db     = require('../config/db');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
 const { createMatchNews } = require('./news');
 
+// ─── /me — para que el frontend sepa el rol del usuario ─────
+router.get('/me', requireAuth, (req, res) => {
+  res.json({ username: req.user.username, role: req.user.role });
+});
+
 // ─── Helpers de puntos ────────────────────────────────────────
 function goalsToResult(h, a) {
   if (h === null || a === null || h === undefined || a === undefined) return null;

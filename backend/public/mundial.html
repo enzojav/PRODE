@@ -269,7 +269,12 @@ let isLocked = false;
 
 // ── TOKEN (sacado del sessionStorage del sistema principal) ───
 function getToken() {
-  return sessionStorage.getItem('qh_token') || localStorage.getItem('token') || '';
+  const keys = ['qh_token', 'token', 'jwt', 'authToken', 'auth_token', 'jwtToken', 'access_token'];
+  for (const k of keys) {
+    const v = sessionStorage.getItem(k) || localStorage.getItem(k);
+    if (v && v.startsWith('ey')) return v; // JWTs siempre empiezan con "ey"
+  }
+  return '';
 }
 
 function getUser() {
@@ -766,8 +771,17 @@ document.addEventListener('keydown', e => {
 
 // ── INIT ─────────────────────────────────────────────────────
 async function init() {
-  const user = getUser();
-  isAdmin = user && user.role === 'admin';
+  // Detectar rol via API (más confiable que parsear el JWT)
+  try {
+    const me = await apiFetch('/api/prode/me');
+    isAdmin = me.role === 'admin';
+  } catch {
+    // Fallback: parsear JWT manualmente
+    const user = getUser();
+    if (user) {
+      isAdmin = user.role === 'admin' || user.isAdmin === true;
+    }
+  }
 
   const ok = await loadMatches();
   document.getElementById('loading').style.display = 'none';
