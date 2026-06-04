@@ -1512,10 +1512,17 @@ function renderR16Bracket() {
   ];
   roundLabels.forEach(r => {
     [r.x, SVG_W - r.x].forEach(rx => {
-      const t = el('text', { x: rx, y: 20,
-        'font-size': '7', 'text-anchor': 'middle',
-        fill: 'rgba(255,255,255,.2)', 'font-family': FONT, 'letter-spacing': '1.5' }, svg);
-      t.textContent = r.label;
+      const t = el('text', {
+  x: rx,
+  y: 30,
+  'font-size': '14',
+  'text-anchor': 'middle',
+  fill: '#ffffff',
+  'font-family': FONT,
+  'letter-spacing': '1.5'
+}, svg);
+
+t.textContent = r.label;
     });
   });
 
