@@ -24,29 +24,17 @@
       --red: #ff5b6a;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
 
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'DM Sans', sans-serif;
-      min-height: 100vh;
-    }
-
-    /* ── HEADER ──────────────────────────────────── */
     .page-header {
       background: linear-gradient(135deg, #060d1f 0%, #0f2347 50%, #060d1f 100%);
       border-bottom: 1px solid rgba(108,172,228,.15);
       padding: 18px 24px 14px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      position: relative;
-      overflow: hidden;
+      display: flex; align-items: center; gap: 16px;
+      position: relative; overflow: hidden;
     }
     .page-header::before {
-      content:'';
-      position:absolute;
-      inset:0;
+      content:''; position:absolute; inset:0;
       background: radial-gradient(ellipse 60% 100% at 50% 0%, rgba(108,172,228,.08) 0%, transparent 70%);
       pointer-events:none;
     }
@@ -54,221 +42,136 @@
       width: 48px; height: 48px;
       background: radial-gradient(circle, rgba(255,184,28,.18) 0%, rgba(255,184,28,.04) 70%);
       border: 1px solid rgba(255,184,28,.25);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 24px;
-      flex-shrink: 0;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 24px; flex-shrink: 0;
       animation: glow 2.5s ease-in-out infinite;
     }
     @keyframes glow {
       0%,100% { box-shadow: 0 0 0 0 rgba(255,184,28,0); }
       50%      { box-shadow: 0 0 18px 4px rgba(255,184,28,.2); }
     }
-    .header-text .title {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 1.7rem;
-      letter-spacing: .06em;
-      color: #fff;
-      line-height: 1;
-    }
-    .header-text .subtitle {
-      font-size: .68rem;
-      color: var(--text2);
-      letter-spacing: .12em;
-      text-transform: uppercase;
-      margin-top: 3px;
-    }
+    .header-text .title { font-family: 'Bebas Neue', sans-serif; font-size: 1.7rem; letter-spacing: .06em; color: #fff; line-height: 1; }
+    .header-text .subtitle { font-size: .68rem; color: var(--text2); letter-spacing: .12em; text-transform: uppercase; margin-top: 3px; }
     .header-badge {
       margin-left: auto;
-      background: rgba(108,172,228,.1);
-      border: 1px solid rgba(108,172,228,.2);
-      border-radius: 20px;
-      padding: 4px 12px;
-      font-size: .68rem;
-      color: var(--accent);
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      font-weight: 700;
+      background: rgba(108,172,228,.1); border: 1px solid rgba(108,172,228,.2);
+      border-radius: 20px; padding: 4px 12px;
+      font-size: .68rem; color: var(--accent); letter-spacing: .08em;
+      text-transform: uppercase; font-weight: 700;
     }
 
-    /* ── STATS BAR ───────────────────────────────── */
-    .stats-bar {
-      display: flex;
-      gap: 1px;
-      background: var(--border);
-      border-bottom: 1px solid var(--border);
-    }
-    .stat-item {
-      flex: 1;
-      background: var(--bg2);
-      padding: 10px 16px;
-      text-align: center;
-    }
-    .stat-val {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 1.3rem;
-      color: var(--amber);
-      letter-spacing: .04em;
-    }
-    .stat-lbl {
-      font-size: .6rem;
-      color: var(--text3);
-      text-transform: uppercase;
-      letter-spacing: .1em;
-      margin-top: 1px;
-    }
+    .stats-bar { display: flex; gap: 1px; background: var(--border); border-bottom: 1px solid var(--border); }
+    .stat-item { flex: 1; background: var(--bg2); padding: 10px 16px; text-align: center; }
+    .stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; color: var(--amber); letter-spacing: .04em; }
+    .stat-lbl { font-size: .6rem; color: var(--text3); text-transform: uppercase; letter-spacing: .1em; margin-top: 1px; }
 
-    /* ── BRACKET AREA ────────────────────────────── */
-    .bracket-container {
-      padding: 20px 16px;
-      overflow-x: auto;
-    }
-
-    /* ── ROUND LABELS ────────────────────────────── */
-    .round-labels {
-      display: flex;
-      padding: 0 16px 0;
-      margin-bottom: -4px;
-    }
-    .rl { font-size: .62rem; color: var(--text3); text-transform: uppercase; letter-spacing: .1em; font-weight: 700; }
-
-    /* ── SVG BRACKET ─────────────────────────────── */
+    .bracket-container { padding: 20px 16px; overflow-x: auto; }
     .bracket-svg { display: block; }
 
     .team-box { cursor: pointer; }
     .team-box rect { transition: fill .15s; }
-    .team-box:hover rect { fill: rgba(108,172,228,.15) !important; }
+    .team-box:hover rect:first-child { opacity: .8; }
 
-    /* ── MODAL ───────────────────────────────────── */
+    /* Modal */
     .modal-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,.75);
-      backdrop-filter: blur(4px);
-      z-index: 200;
-      align-items: center;
-      justify-content: center;
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.75); backdrop-filter: blur(4px);
+      z-index: 200; align-items: center; justify-content: center;
     }
     .modal-overlay.open { display: flex; }
     .modal-box {
-      background: #131724;
-      border: 1px solid rgba(108,172,228,.2);
-      border-radius: 14px;
-      padding: 22px;
-      width: 300px;
+      background: #131724; border: 1px solid rgba(108,172,228,.2);
+      border-radius: 14px; padding: 22px; width: 320px;
       animation: slideUp .18s ease;
     }
-    @keyframes slideUp {
-      from { opacity:0; transform:translateY(12px); }
-      to   { opacity:1; transform:translateY(0); }
-    }
-    .modal-header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 16px;
-    }
+    @keyframes slideUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
     .modal-title { font-size: .92rem; font-weight: 700; color: #fff; }
     .modal-close {
-      width: 24px; height: 24px;
-      background: rgba(255,255,255,.07);
-      border: none;
-      border-radius: 6px;
-      color: var(--text2);
-      cursor: pointer;
-      font-size: 14px;
-      display: flex; align-items: center; justify-content: center;
-      font-family: inherit;
+      width: 24px; height: 24px; background: rgba(255,255,255,.07);
+      border: none; border-radius: 6px; color: var(--text2); cursor: pointer;
+      font-size: 14px; display: flex; align-items: center; justify-content: center; font-family: inherit;
     }
     .modal-close:hover { background: rgba(255,255,255,.12); }
-    .mf { margin-bottom: 10px; }
-    .mf label { font-size: .68rem; color: var(--text2); display: block; margin-bottom: 4px; letter-spacing: .05em; }
-    .mf input {
-      width: 100%;
-      background: #1a1f30;
+
+    /* Vote section inside modal */
+    .vote-section { margin-bottom: 16px; }
+    .vote-label { font-size: .68rem; color: var(--text2); letter-spacing: .05em; margin-bottom: 8px; display: block; }
+    .vote-btns { display: flex; gap: 8px; }
+    .vote-btn {
+      flex: 1; padding: 10px 8px; border-radius: 8px;
       border: 1px solid rgba(255,255,255,.1);
-      border-radius: 8px;
-      padding: 8px 10px;
-      color: #fff;
-      font-size: .82rem;
-      outline: none;
-      font-family: 'DM Sans', sans-serif;
+      background: #1a1f30; color: var(--text2);
+      font-size: .8rem; font-weight: 600; cursor: pointer;
+      font-family: 'DM Sans', sans-serif; transition: all .15s;
+      text-align: center;
+    }
+    .vote-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .vote-btn.selected { background: rgba(108,172,228,.15); border-color: var(--accent); color: var(--accent); }
+    .vote-btn.confirmed { background: rgba(58,232,176,.1); border-color: var(--green); color: var(--green); }
+
+    /* Admin result section */
+    .admin-section { border-top: 1px solid rgba(255,255,255,.06); padding-top: 14px; margin-top: 4px; }
+    .admin-label { font-size: .62rem; color: rgba(255,184,28,.6); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 10px; display: block; }
+    .score-row { display: flex; gap: 8px; align-items: center; }
+    .score-inp {
+      width: 60px; background: #1a1f30; border: 1px solid rgba(255,255,255,.1);
+      border-radius: 8px; padding: 8px 10px; color: #fff; font-size: .9rem;
+      outline: none; font-family: 'DM Sans', sans-serif; text-align: center;
       transition: border-color .15s;
     }
-    .mf input:focus { border-color: var(--accent); }
+    .score-inp:focus { border-color: var(--amber); }
+    .score-sep { color: var(--text3); font-size: 1.1rem; font-weight: 700; }
+    .score-team { font-size: .75rem; color: var(--text2); flex: 1; }
+    .score-team.right { text-align: right; }
+
     .mbtns { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
-    .mbtn {
-      padding: 8px 16px;
-      border-radius: 8px;
-      border: none;
-      font-size: .8rem;
-      font-weight: 600;
-      cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
-      transition: opacity .15s;
-    }
+    .mbtn { padding: 8px 16px; border-radius: 8px; border: none; font-size: .8rem; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: opacity .15s; }
     .mbtn:hover { opacity: .85; }
     .mbtn-a { background: var(--accent); color: #fff; }
+    .mbtn-amber { background: var(--amber); color: #000; }
     .mbtn-o { background: rgba(255,255,255,.07); color: var(--text2); border: 1px solid rgba(255,255,255,.1); }
+    .mbtn-red { background: rgba(255,91,106,.15); color: var(--red); border: 1px solid rgba(255,91,106,.2); }
 
-    /* ── TOAST ───────────────────────────────────── */
     .toast {
-      position: fixed;
-      bottom: 24px; left: 50%;
+      position: fixed; bottom: 24px; left: 50%;
       transform: translateX(-50%) translateY(20px);
-      background: #1e2a40;
-      border: 1px solid rgba(108,172,228,.3);
-      border-radius: 10px;
-      padding: 10px 20px;
-      font-size: .8rem;
-      color: var(--accent);
-      font-weight: 600;
-      opacity: 0;
-      transition: all .25s;
-      pointer-events: none;
-      z-index: 300;
-      white-space: nowrap;
+      background: #1e2a40; border: 1px solid rgba(108,172,228,.3);
+      border-radius: 10px; padding: 10px 20px;
+      font-size: .8rem; color: var(--accent); font-weight: 600;
+      opacity: 0; transition: all .25s; pointer-events: none; z-index: 300; white-space: nowrap;
     }
-    .toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.error { color: var(--red); border-color: rgba(255,91,106,.3); background: #1e1424; }
 
-    /* ── LEGEND ──────────────────────────────────── */
-    .legend {
-      display: flex;
-      gap: 16px;
-      padding: 0 16px 16px;
-      flex-wrap: wrap;
-    }
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: .65rem;
-      color: var(--text3);
+    .legend { display: flex; gap: 16px; padding: 0 16px 16px; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: .65rem; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; }
+    .legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+
+    .loading {
+      display: flex; align-items: center; justify-content: center;
+      padding: 60px; color: var(--text3); font-size: .8rem; letter-spacing: .1em;
       text-transform: uppercase;
-      letter-spacing: .08em;
     }
-    .legend-dot {
-      width: 8px; height: 8px;
-      border-radius: 2px;
-      flex-shrink: 0;
+    .spinner {
+      width: 20px; height: 20px; border: 2px solid rgba(108,172,228,.2);
+      border-top-color: var(--accent); border-radius: 50%;
+      animation: spin .7s linear infinite; margin-right: 10px;
     }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
 
-  <!-- HEADER -->
   <div class="page-header">
     <div class="trophy-wrap">🏆</div>
     <div class="header-text">
       <div class="title">Mundial 2026</div>
       <div class="subtitle">USA · México · Canadá · 16avos de Final</div>
     </div>
-    <div class="header-badge">En vivo</div>
+    <div class="header-badge" id="live-badge">Cargando…</div>
   </div>
 
-  <!-- STATS BAR -->
   <div class="stats-bar">
     <div class="stat-item">
       <div class="stat-val" id="st-partidos">16</div>
@@ -288,91 +191,141 @@
     </div>
   </div>
 
-  <!-- BRACKET -->
   <div class="bracket-container">
-    <svg class="bracket-svg" id="bsvg" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="loading" id="loading"><div class="spinner"></div>Cargando bracket…</div>
+    <svg class="bracket-svg" id="bsvg" xmlns="http://www.w3.org/2000/svg" style="display:none"></svg>
   </div>
 
-  <!-- LEGEND -->
   <div class="legend">
     <div class="legend-item"><div class="legend-dot" style="background:rgba(255,184,28,.6)"></div>Ganador</div>
     <div class="legend-item"><div class="legend-dot" style="background:rgba(255,255,255,.2)"></div>Perdedor</div>
     <div class="legend-item"><div class="legend-dot" style="background:rgba(108,172,228,.3)"></div>Por jugar</div>
-    <div class="legend-item" style="margin-left:auto;color:rgba(255,255,255,.3)">Toca un equipo para editar</div>
+    <div class="legend-item"><div class="legend-dot" style="background:rgba(58,232,176,.5)"></div>Tu voto</div>
+    <div class="legend-item" style="margin-left:auto;color:rgba(255,255,255,.3)">Toca un partido para votar</div>
   </div>
 
-  <!-- MODAL -->
+  <!-- MODAL DE VOTO / RESULTADO -->
   <div class="modal-overlay" id="modal">
     <div class="modal-box">
       <div class="modal-header">
-        <div class="modal-title">Editar equipo</div>
+        <div class="modal-title" id="modal-title">Partido</div>
         <button class="modal-close" onclick="closeModal()">✕</button>
       </div>
-      <div class="mf"><label>Bandera (emoji)</label><input id="mFlag" maxlength="4" placeholder="🇦🇷"></div>
-      <div class="mf"><label>Equipo</label><input id="mName" placeholder="Argentina"></div>
-      <div class="mf"><label>Goles <span style="opacity:.4">(dejar vacío si no jugó)</span></label><input id="mScore" type="number" min="0" max="20" placeholder="—"></div>
-      <div class="mbtns">
+
+      <!-- Sección de votación (siempre visible si el partido no tiene resultado) -->
+      <div class="vote-section" id="vote-section">
+        <span class="vote-label">¿Quién va a ganar?</span>
+        <div class="vote-btns">
+          <button class="vote-btn" id="vote-home" onclick="selectVote('1')">
+            <span id="vote-home-flag"></span> <span id="vote-home-name"></span>
+          </button>
+          <button class="vote-btn" id="vote-away" onclick="selectVote('2')">
+            <span id="vote-away-flag"></span> <span id="vote-away-name"></span>
+          </button>
+        </div>
+        <div id="vote-locked-msg" style="display:none;font-size:.72rem;color:var(--text3);margin-top:8px;text-align:center;">
+          🔒 Predicción cerrada
+        </div>
+      </div>
+
+      <!-- Sección admin: cargar resultado real -->
+      <div class="admin-section" id="admin-section" style="display:none">
+        <span class="admin-label">⚙ Cargar resultado (admin)</span>
+        <div class="score-row">
+          <span class="score-team" id="res-home-name">Local</span>
+          <input class="score-inp" type="number" id="res-home" min="0" max="20" placeholder="0">
+          <span class="score-sep">–</span>
+          <input class="score-inp" type="number" id="res-away" min="0" max="20" placeholder="0">
+          <span class="score-team right" id="res-away-name">Visitante</span>
+        </div>
+      </div>
+
+      <div class="mbtns" id="modal-btns">
         <button class="mbtn mbtn-o" onclick="closeModal()">Cancelar</button>
-        <button class="mbtn mbtn-a" onclick="saveModal()">Guardar</button>
+        <button class="mbtn mbtn-a" id="btn-vote" onclick="submitVote()">Votar</button>
+        <button class="mbtn mbtn-amber" id="btn-result" style="display:none" onclick="submitResult()">Guardar resultado</button>
+        <button class="mbtn mbtn-red" id="btn-del-result" style="display:none" onclick="deleteResult()">Borrar resultado</button>
       </div>
     </div>
   </div>
 
-  <!-- TOAST -->
   <div class="toast" id="toast"></div>
 
 <script>
+// ── CONFIG ────────────────────────────────────────────────────
 const W = 104, H = 36, GAP = 12;
-const COL_W = 120;
 const LINE_COLOR = 'rgba(108,172,228,.2)';
 const AMBER = '#FFB81C';
 const ACCENT = '#6CACE4';
+const GREEN = '#3ae8b0';
 const FONT = "'DM Sans', system-ui, sans-serif";
 
-const STORAGE_KEY = 'mundial2026_bracket';
+// ── STATE ─────────────────────────────────────────────────────
+let matches = [];
+let currentModal = null;
+let selectedVote = null;
+let isAdmin = false;
+let isLocked = false;
 
-const defaultMatches = [
-  {id:1,  home:{f:'🏳️',n:'1E'},      away:{f:'🏳️',n:'3 ABCDF'}, date:'27 Jun', hs:null, as:null},
-  {id:2,  home:{f:'🏳️',n:'1I'},      away:{f:'🏳️',n:'3 CDFGH'}, date:'27 Jun', hs:null, as:null},
-  {id:3,  home:{f:'🏳️',n:'2A'},      away:{f:'🏳️',n:'2B'},      date:'28 Jun', hs:null, as:null},
-  {id:4,  home:{f:'🏳️',n:'1F'},      away:{f:'🏳️',n:'2C'},      date:'28 Jun', hs:null, as:null},
-  {id:5,  home:{f:'🏳️',n:'2K'},      away:{f:'🏳️',n:'2L'},      date:'29 Jun', hs:null, as:null},
-  {id:6,  home:{f:'🏳️',n:'1H'},      away:{f:'🏳️',n:'2J'},      date:'29 Jun', hs:null, as:null},
-  {id:7,  home:{f:'🏳️',n:'1D'},      away:{f:'🏳️',n:'3 BEFIJ'}, date:'30 Jun', hs:null, as:null},
-  {id:8,  home:{f:'🏳️',n:'1G'},      away:{f:'🏳️',n:'3 AEHIJ'}, date:'30 Jun', hs:null, as:null},
-  {id:9,  home:{f:'🏳️',n:'1C'},      away:{f:'🏳️',n:'2F'},      date:'1 Jul',  hs:null, as:null},
-  {id:10, home:{f:'🏳️',n:'2E'},      away:{f:'🏳️',n:'2I'},      date:'1 Jul',  hs:null, as:null},
-  {id:11, home:{f:'🏳️',n:'1A'},      away:{f:'🏳️',n:'3 CEFHI'}, date:'2 Jul',  hs:null, as:null},
-  {id:12, home:{f:'🏳️',n:'1L'},      away:{f:'🏳️',n:'3 EHIJK'}, date:'2 Jul',  hs:null, as:null},
-  {id:13, home:{f:'🏳️',n:'1J'},      away:{f:'🏳️',n:'2H'},      date:'3 Jul',  hs:null, as:null},
-  {id:14, home:{f:'🏳️',n:'2D'},      away:{f:'🏳️',n:'2G'},      date:'3 Jul',  hs:null, as:null},
-  {id:15, home:{f:'🏳️',n:'1B'},      away:{f:'🏳️',n:'3 EFGIJ'}, date:'4 Jul',  hs:null, as:null},
-  {id:16, home:{f:'🏳️',n:'1K'},      away:{f:'🏳️',n:'3 DEIJL'}, date:'4 Jul',  hs:null, as:null},
-];
-
-let matches;
-try {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  matches = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultMatches));
-} catch(e) {
-  matches = JSON.parse(JSON.stringify(defaultMatches));
+// ── TOKEN (sacado del sessionStorage del sistema principal) ───
+function getToken() {
+  return sessionStorage.getItem('qh_token') || localStorage.getItem('token') || '';
 }
 
-function saveToStorage() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(matches)); } catch(e) {}
+function getUser() {
+  try {
+    const t = getToken();
+    if (!t) return null;
+    const payload = JSON.parse(atob(t.split('.')[1]));
+    return payload;
+  } catch { return null; }
 }
 
-const leftIds  = [1,2,3,4,5,6,7,8];
-const rightIds = [9,10,11,12,13,14,15,16];
+// ── API ───────────────────────────────────────────────────────
+async function apiFetch(path, opts = {}) {
+  const token = getToken();
+  const res = await fetch(path, {
+    ...opts,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : '',
+      ...(opts.headers || {})
+    }
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Error desconocido' }));
+    throw new Error(err.error || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
 
-let editTarget = null;
+async function loadMatches() {
+  try {
+    const data = await apiFetch('/api/prode/bracket/matches');
+    matches = data;
+    return true;
+  } catch (e) {
+    // Si no hay auth, cargamos igual desde /api/prode/matches y filtramos
+    try {
+      const data = await apiFetch('/api/prode/matches');
+      matches = data
+        .filter(m => ['R16','QF','SF','F'].includes(m.phase))
+        .map(m => ({ ...m, my_prediction: null }));
+      return true;
+    } catch { return false; }
+  }
+}
 
+// ── HELPERS ───────────────────────────────────────────────────
 function getWinner(m) {
-  if (m.hs === null || m.as === null) return null;
-  return m.hs > m.as ? 'home' : m.hs < m.as ? 'away' : null;
+  if (m.home_score === null || m.home_score === undefined) return null;
+  if (m.away_score === null || m.away_score === undefined) return null;
+  const h = Number(m.home_score), a = Number(m.away_score);
+  return h > a ? '1' : h < a ? '2' : null;
 }
 
 function truncate(s, max) {
+  if (!s) return '?';
   return s.length > max ? s.slice(0, max - 1) + '…' : s;
 }
 
@@ -382,128 +335,139 @@ function svgEl(tag, attrs) {
   return el;
 }
 
+function line(svg, x1, y1, x2, y2, dash = false) {
+  const l = svgEl('line', { x1, y1, x2, y2, stroke: LINE_COLOR, 'stroke-width': '1.5' });
+  if (dash) l.setAttribute('stroke-dasharray', '4 4');
+  svg.appendChild(l);
+}
+
+// ── DRAW MATCH ────────────────────────────────────────────────
 function drawMatch(svg, m, x, y) {
+  if (!m) {
+    // Placeholder para cuartos/semis/final vacíos
+    const mx = Math.round(x), my = Math.round(y);
+    const mh2 = H * 2 + 1;
+    const g = svgEl('g', {});
+    g.appendChild(svgEl('rect', {
+      x: mx, y: my, width: W, height: mh2, rx: '7',
+      fill: 'rgba(255,255,255,.02)',
+      stroke: 'rgba(255,255,255,.05)', 'stroke-width': '1',
+      'stroke-dasharray': '4 4'
+    }));
+    const t = svgEl('text', { x: mx + W/2, y: my + mh2/2 + 4, 'font-size': '9', 'text-anchor': 'middle', fill: 'rgba(255,255,255,.15)', 'font-family': FONT });
+    t.textContent = 'Por definir';
+    g.appendChild(t);
+    svg.appendChild(g);
+    return;
+  }
+
   const winner = getWinner(m);
   const mx = Math.round(x), my = Math.round(y);
   const mh2 = H * 2 + 1;
+  const myPred = m.my_prediction || null;
 
-  const g = svgEl('g', {});
+  const g = svgEl('g', { class: 'match-group', 'data-id': m.id, style: 'cursor:pointer' });
+  g.addEventListener('click', () => openModal(m.id));
 
-  // shadow
-  g.appendChild(svgEl('rect', {
-    x: mx+1, y: my+2, width: W, height: mh2, rx: '7',
-    fill: 'rgba(0,0,0,.35)'
-  }));
+  // Shadow
+  g.appendChild(svgEl('rect', { x: mx+1, y: my+2, width: W, height: mh2, rx: '7', fill: 'rgba(0,0,0,.35)' }));
 
-  // card bg
+  // Card bg — borde verde si el usuario ya votó
+  const hasPred = myPred !== null;
+  const cardStroke = winner ? 'rgba(255,184,28,.25)' : hasPred ? 'rgba(58,232,176,.3)' : 'rgba(255,255,255,.07)';
   g.appendChild(svgEl('rect', {
     x: mx, y: my, width: W, height: mh2, rx: '7',
     fill: '#0d1b38',
-    stroke: winner ? 'rgba(255,184,28,.25)' : 'rgba(255,255,255,.07)',
-    'stroke-width': '1'
+    stroke: cardStroke, 'stroke-width': '1'
   }));
 
-  // divider
-  g.appendChild(svgEl('line', {
-    x1: mx+1, y1: my+H, x2: mx+W-1, y2: my+H,
-    stroke: 'rgba(255,255,255,.05)', 'stroke-width': '1'
-  }));
+  // Divider
+  g.appendChild(svgEl('line', { x1: mx+1, y1: my+H, x2: mx+W-1, y2: my+H, stroke: 'rgba(255,255,255,.05)', 'stroke-width': '1' }));
+
+  // Indicador de voto (pequeño dot verde en esquina)
+  if (hasPred && !winner) {
+    g.appendChild(svgEl('circle', { cx: mx + W - 6, cy: my + 6, r: '3', fill: 'rgba(58,232,176,.7)' }));
+  }
 
   [
-    {team: m.home, score: m.hs, side: 'home', wy: my + H/2},
-    {team: m.away, score: m.as, side: 'away', wy: my + H + H/2},
-  ].forEach(({team, score, side, wy}) => {
+    { name: m.home, flag: m.home_flag || '🏳️', score: m.home_score, side: '1', wy: my + H/2 },
+    { name: m.away, flag: m.away_flag || '🏳️', score: m.away_score, side: '2', wy: my + H + H/2 },
+  ].forEach(({ name, flag, score, side, wy }) => {
     const isW = winner === side;
     const isL = winner && winner !== side;
+    const isPredWinner = !winner && myPred === side;
 
-    const tr = svgEl('g', {class: 'team-box', 'data-id': m.id, 'data-side': side});
+    const tr = svgEl('g', {});
 
-    // winner highlight bar
+    // Highlight bar
     if (isW) {
-      tr.appendChild(svgEl('rect', {
-        x: mx, y: wy - H/2,
-        width: W, height: H,
-        rx: side === 'home' ? '7' : '0',
-        fill: 'rgba(255,184,28,.07)'
-      }));
-      // left accent
-      tr.appendChild(svgEl('rect', {
-        x: mx, y: wy - H/2,
-        width: 3, height: H,
-        rx: '2',
-        fill: 'rgba(255,184,28,.6)'
-      }));
+      tr.appendChild(svgEl('rect', { x: mx, y: wy - H/2, width: W, height: H, rx: side === '1' ? '7' : '0', fill: 'rgba(255,184,28,.07)' }));
+      tr.appendChild(svgEl('rect', { x: mx, y: wy - H/2, width: 3, height: H, rx: '2', fill: 'rgba(255,184,28,.6)' }));
+    } else if (isPredWinner) {
+      tr.appendChild(svgEl('rect', { x: mx, y: wy - H/2, width: W, height: H, rx: side === '1' ? '7' : '0', fill: 'rgba(58,232,176,.05)' }));
+      tr.appendChild(svgEl('rect', { x: mx, y: wy - H/2, width: 3, height: H, rx: '2', fill: 'rgba(58,232,176,.5)' }));
     } else {
-      tr.appendChild(svgEl('rect', {
-        x: mx, y: wy - H/2, width: W, height: H,
-        rx: side === 'home' ? '7' : '0', fill: 'rgba(0,0,0,0)'
-      }));
+      tr.appendChild(svgEl('rect', { x: mx, y: wy - H/2, width: W, height: H, rx: side === '1' ? '7' : '0', fill: 'rgba(0,0,0,0)' }));
     }
 
-    // flag
-    const flagT = svgEl('text', {x: mx+9, y: wy+5, 'font-size': '12'});
-    flagT.textContent = team.f;
+    // Flag
+    const flagT = svgEl('text', { x: mx+9, y: wy+5, 'font-size': '12' });
+    flagT.textContent = flag;
     tr.appendChild(flagT);
 
-    // name
+    // Name
     const nameT = svgEl('text', {
       x: mx+27, y: wy+5,
       'font-size': '10', 'font-family': FONT,
-      'font-weight': isW ? '700' : '400',
-      fill: isW ? AMBER : isL ? 'rgba(255,255,255,.25)' : 'rgba(255,255,255,.8)'
+      'font-weight': (isW || isPredWinner) ? '700' : '400',
+      fill: isW ? AMBER : isPredWinner ? GREEN : isL ? 'rgba(255,255,255,.25)' : 'rgba(255,255,255,.8)'
     });
-    nameT.textContent = truncate(team.n, 9);
+    nameT.textContent = truncate(name || '?', 9);
     tr.appendChild(nameT);
 
-    // score badge
-    if (score !== null) {
+    // Score
+    if (score !== null && score !== undefined) {
       tr.appendChild(svgEl('rect', {
-        x: mx + W - 22, y: wy - 9,
-        width: 18, height: 17, rx: '4',
+        x: mx + W - 22, y: wy - 9, width: 18, height: 17, rx: '4',
         fill: isW ? 'rgba(255,184,28,.15)' : 'rgba(255,255,255,.05)',
-        stroke: isW ? 'rgba(255,184,28,.3)' : 'rgba(255,255,255,.08)',
-        'stroke-width': '1'
+        stroke: isW ? 'rgba(255,184,28,.3)' : 'rgba(255,255,255,.08)', 'stroke-width': '1'
       }));
       const scoreT = svgEl('text', {
         x: mx + W - 13, y: wy + 5,
-        'font-size': '10', 'font-family': FONT,
-        'font-weight': '800',
-        fill: isW ? AMBER : 'rgba(255,255,255,.4)',
-        'text-anchor': 'middle'
+        'font-size': '10', 'font-family': FONT, 'font-weight': '800',
+        fill: isW ? AMBER : 'rgba(255,255,255,.4)', 'text-anchor': 'middle'
       });
       scoreT.textContent = score;
       tr.appendChild(scoreT);
     }
 
-    tr.addEventListener('click', () => openModal(m.id, side));
     g.appendChild(tr);
   });
 
-  // date
-  const dateT = svgEl('text', {
-    x: mx + W/2, y: my + mh2 + 10,
-    'font-size': '7.5', 'text-anchor': 'middle',
-    fill: 'rgba(255,255,255,.18)', 'font-family': FONT
-  });
-  dateT.textContent = m.date;
-  g.appendChild(dateT);
+  // Date label
+  if (m.match_date || m.time) {
+    const dateT = svgEl('text', {
+      x: mx + W/2, y: my + mh2 + 10,
+      'font-size': '7.5', 'text-anchor': 'middle',
+      fill: 'rgba(255,255,255,.18)', 'font-family': FONT
+    });
+    dateT.textContent = (m.match_date || '') + (m.time ? ' · ' + m.time + 'hs' : '');
+    g.appendChild(dateT);
+  }
 
   svg.appendChild(g);
 }
 
-function line(svg, x1, y1, x2, y2) {
-  svg.appendChild(svgEl('line', {
-    x1, y1, x2, y2,
-    stroke: LINE_COLOR, 'stroke-width': '1.5',
-    'stroke-dasharray': '0'
-  }));
-}
+// ── RENDER ────────────────────────────────────────────────────
+const leftIds  = [200,201,202,203,204,205,206,207];
+const rightIds = [208,209,210,211,212,213,214,215];
 
 function updateStats() {
-  const played = matches.filter(m => m.hs !== null && m.as !== null).length;
-  const goals  = matches.reduce((a, m) => a + (m.hs||0) + (m.as||0), 0);
+  const played = matches.filter(m => m.home_score !== null && m.home_score !== undefined).length;
+  const goals  = matches.reduce((a, m) => a + (Number(m.home_score)||0) + (Number(m.away_score)||0), 0);
   document.getElementById('st-jugados').textContent = played;
   document.getElementById('st-goles').textContent = goals;
+  document.getElementById('live-badge').textContent = played > 0 ? 'En vivo' : 'Próximamente';
 }
 
 function render() {
@@ -512,49 +476,40 @@ function render() {
 
   const ROWS = 8;
   const LEFT_X   = 16;
-  const H_CONN   = 60;   // connector width
-  const H_TREE   = 44;   // tree connector width
-  const CENTER_GAP = 80; // center trophy area
+  const H_CONN   = 60;
+  const H_TREE   = 44;
+  const CENTER_GAP = 80;
 
   const rightX = LEFT_X + W + H_CONN + H_TREE + CENTER_GAP + H_TREE + H_CONN;
   const centerX = LEFT_X + W + H_CONN + H_TREE + CENTER_GAP/2;
   const svgW = rightX + W + 20;
-
   const rowH_base = H * 2 + GAP + 16;
   const totalH = ROWS * rowH_base + 30;
-  const svgH = totalH;
 
   svg.setAttribute('width', svgW);
-  svg.setAttribute('height', svgH);
-  svg.setAttribute('viewBox', `0 0 ${svgW} ${svgH}`);
+  svg.setAttribute('height', totalH);
+  svg.setAttribute('viewBox', `0 0 ${svgW} ${totalH}`);
 
-  const rowH = (svgH - 40) / ROWS;
+  const rowH = (totalH - 40) / ROWS;
+  function getMatchY(idx) { return 20 + idx * rowH + rowH/2 - H; }
 
-  function getMatchY(idx) {
-    return 20 + idx * rowH + rowH/2 - H;
-  }
-
-  // ── LEFT COLUMN
+  // ── LEFT R16
   leftIds.forEach((id, i) => {
     const m = matches.find(x => x.id === id);
     const y = getMatchY(i);
-    drawMatch(svg, m, LEFT_X, y);
-    const lineX = LEFT_X + W;
-    const midY = y + H;
-    line(svg, lineX, midY, lineX + H_CONN, midY);
+    drawMatch(svg, m || null, LEFT_X, y);
+    if (m) { line(svg, LEFT_X + W, y + H, LEFT_X + W + H_CONN, y + H); }
   });
 
-  // ── RIGHT COLUMN
+  // ── RIGHT R16
   rightIds.forEach((id, i) => {
     const m = matches.find(x => x.id === id);
     const y = getMatchY(i);
-    drawMatch(svg, m, rightX, y);
-    const lineX = rightX;
-    const midY = y + H;
-    line(svg, lineX - H_CONN, midY, lineX, midY);
+    drawMatch(svg, m || null, rightX, y);
+    if (m) { line(svg, rightX - H_CONN, y + H, rightX, y + H); }
   });
 
-  // ── LEFT TREE CONNECTORS (pairs → 4 seeds)
+  // ── LEFT TREE (R16 → QF)
   const lSeeds = [];
   for (let i = 0; i < 4; i++) {
     const top = getMatchY(i * 2) + H;
@@ -567,7 +522,7 @@ function render() {
     lSeeds.push({midY, x: x2});
   }
 
-  // ── RIGHT TREE CONNECTORS
+  // ── RIGHT TREE
   const rSeeds = [];
   for (let i = 0; i < 4; i++) {
     const top = getMatchY(i * 2) + H;
@@ -580,7 +535,7 @@ function render() {
     rSeeds.push({midY, x: x2});
   }
 
-  // ── LEFT SEMI CONNECTORS (4→2)
+  // ── LEFT SEMI (QF → SF)
   const lSemi = [];
   for (let i = 0; i < 2; i++) {
     const top = lSeeds[i*2].midY;
@@ -593,7 +548,7 @@ function render() {
     lSemi.push({midY, x: x2});
   }
 
-  // ── RIGHT SEMI CONNECTORS
+  // ── RIGHT SEMI
   const rSemi = [];
   for (let i = 0; i < 2; i++) {
     const top = rSeeds[i*2].midY;
@@ -606,158 +561,226 @@ function render() {
     rSemi.push({midY, x: x2});
   }
 
-  // ── CENTER LINES TO TROPHY
+  // ── CENTER / FINAL
   const finalMidY = (lSemi[0].midY + lSemi[1].midY) / 2;
-
-  // left final connector
   const lFinalX = lSemi[0].x;
   line(svg, lFinalX, lSemi[0].midY, lFinalX, lSemi[1].midY);
   line(svg, lFinalX, finalMidY, centerX - 30, finalMidY);
-
-  // right final connector
   const rFinalX = rSemi[0].x;
   line(svg, rFinalX, rSemi[0].midY, rFinalX, rSemi[1].midY);
   line(svg, centerX + 30, finalMidY, rFinalX, finalMidY);
 
-  // ── TROPHY CENTER
-  const R = 30;
-
-  // glow effect
+  // Trophy
   const defs = svgEl('defs', {});
   const filter = svgEl('filter', {id: 'glow', x: '-50%', y: '-50%', width: '200%', height: '200%'});
-  const feGaussianBlur = svgEl('feGaussianBlur', {stdDeviation: '3', result: 'blur'});
+  const feBlur = svgEl('feGaussianBlur', {stdDeviation: '3', result: 'blur'});
   const feMerge = svgEl('feMerge', {});
-  const feMergeNode1 = svgEl('feMergeNode', {in: 'blur'});
-  const feMergeNode2 = svgEl('feMergeNode', {in: 'SourceGraphic'});
-  feMerge.appendChild(feMergeNode1);
-  feMerge.appendChild(feMergeNode2);
-  filter.appendChild(feGaussianBlur);
-  filter.appendChild(feMerge);
+  feMerge.appendChild(svgEl('feMergeNode', {in: 'blur'}));
+  feMerge.appendChild(svgEl('feMergeNode', {in: 'SourceGraphic'}));
+  filter.appendChild(feBlur); filter.appendChild(feMerge);
   defs.appendChild(filter);
+  const grad = svgEl('radialGradient', {id: 'trophyGrad', cx: '40%', cy: '35%'});
+  grad.appendChild(svgEl('stop', {'offset': '0%', 'stop-color': '#1a3a6e'}));
+  grad.appendChild(svgEl('stop', {'offset': '100%', 'stop-color': '#091420'}));
+  defs.appendChild(grad);
   svg.appendChild(defs);
 
-  // outer ring
-  svg.appendChild(svgEl('circle', {
-    cx: centerX, cy: finalMidY, r: R + 8,
-    fill: 'none',
-    stroke: 'rgba(255,184,28,.1)',
-    'stroke-width': '1',
-    'stroke-dasharray': '3 4'
-  }));
-
-  // bg circle
-  svg.appendChild(svgEl('circle', {
-    cx: centerX, cy: finalMidY, r: R,
-    fill: 'url(#trophyGrad)',
-    stroke: 'rgba(255,184,28,.35)',
-    'stroke-width': '1.5',
-    filter: 'url(#glow)'
-  }));
-
-  // gradient def
-  const grad = svgEl('radialGradient', {id: 'trophyGrad', cx: '40%', cy: '35%'});
-  const s1 = svgEl('stop', {'offset': '0%', 'stop-color': '#1a3a6e'});
-  const s2 = svgEl('stop', {'offset': '100%', 'stop-color': '#091420'});
-  grad.appendChild(s1); grad.appendChild(s2);
-  defs.appendChild(grad);
-
-  // trophy emoji
-  const trophyT = svgEl('text', {
-    x: centerX, y: finalMidY - 4,
-    'font-size': '22', 'text-anchor': 'middle'
-  });
-  trophyT.textContent = '🏆';
-  svg.appendChild(trophyT);
-
-  // FINAL label
-  const finalT = svgEl('text', {
-    x: centerX, y: finalMidY + 17,
-    'font-size': '7', 'font-family': "'Bebas Neue', sans-serif",
-    fill: AMBER, 'text-anchor': 'middle', 'letter-spacing': '2'
-  });
-  finalT.textContent = 'FINAL';
-  svg.appendChild(finalT);
-
-  // date
-  const dateT2 = svgEl('text', {
-    x: centerX, y: finalMidY + 28,
-    'font-size': '6', 'font-family': FONT,
-    fill: 'rgba(255,255,255,.3)', 'text-anchor': 'middle'
-  });
-  dateT2.textContent = '19 Jul · MetLife NJ';
-  svg.appendChild(dateT2);
+  const R = 30;
+  svg.appendChild(svgEl('circle', { cx: centerX, cy: finalMidY, r: R + 8, fill: 'none', stroke: 'rgba(255,184,28,.1)', 'stroke-width': '1', 'stroke-dasharray': '3 4' }));
+  svg.appendChild(svgEl('circle', { cx: centerX, cy: finalMidY, r: R, fill: 'url(#trophyGrad)', stroke: 'rgba(255,184,28,.35)', 'stroke-width': '1.5', filter: 'url(#glow)' }));
+  const tT = svgEl('text', { x: centerX, y: finalMidY - 4, 'font-size': '22', 'text-anchor': 'middle' });
+  tT.textContent = '🏆';
+  svg.appendChild(tT);
+  const fT = svgEl('text', { x: centerX, y: finalMidY + 17, 'font-size': '7', 'font-family': "'Bebas Neue', sans-serif", fill: AMBER, 'text-anchor': 'middle', 'letter-spacing': '2' });
+  fT.textContent = 'GRAN FINAL';
+  svg.appendChild(fT);
+  const dT = svgEl('text', { x: centerX, y: finalMidY + 28, 'font-size': '6', 'font-family': FONT, fill: 'rgba(255,255,255,.3)', 'text-anchor': 'middle' });
+  dT.textContent = '19 Jul · MetLife NJ';
+  svg.appendChild(dT);
 
   updateStats();
 }
 
-// ── MODAL ────────────────────────────────────────────
-function openModal(matchId, side) {
+// ── MODAL ─────────────────────────────────────────────────────
+function openModal(matchId) {
   const m = matches.find(x => x.id === matchId);
-  const team = side === 'home' ? m.home : m.away;
-  const score = side === 'home' ? m.hs : m.as;
-  editTarget = {matchId, side};
-  document.getElementById('mFlag').value  = team.f;
-  document.getElementById('mName').value  = team.n;
-  document.getElementById('mScore').value = score !== null ? score : '';
+  if (!m) return;
+
+  currentModal = m;
+  selectedVote = m.my_prediction || null;
+  isLocked = false;
+
+  // Check lock time
+  try {
+    const parts = (m.match_date || '').split(' ');
+    const MONTH_MAP = { Ene:0,Feb:1,Mar:2,Abr:3,May:4,Jun:5,Jul:6,Ago:7,Sep:8,Oct:9,Nov:10,Dic:11 };
+    const day = parseInt(parts[1]);
+    const month = MONTH_MAP[parts[2]];
+    const [hh, mm] = (m.time || '00:00').split(':').map(Number);
+    const matchTime = new Date(Date.UTC(2026, month, day, hh + 3, mm, 0));
+    const lockTime = new Date(matchTime.getTime() - 60 * 60 * 1000);
+    if (new Date() >= lockTime) isLocked = true;
+  } catch {}
+
+  const hasResult = m.home_score !== null && m.home_score !== undefined;
+
+  // Title
+  document.getElementById('modal-title').textContent =
+    `${m.home_flag || '🏳️'} ${m.home || '?'} vs ${m.away_flag || '🏳️'} ${m.away || '?'}`;
+
+  // Vote section
+  const voteSection = document.getElementById('vote-section');
+  const lockedMsg = document.getElementById('vote-locked-msg');
+  const voteHome = document.getElementById('vote-home');
+  const voteAway = document.getElementById('vote-away');
+
+  document.getElementById('vote-home-flag').textContent = m.home_flag || '🏳️';
+  document.getElementById('vote-home-name').textContent = truncate(m.home || '?', 10);
+  document.getElementById('vote-away-flag').textContent = m.away_flag || '🏳️';
+  document.getElementById('vote-away-name').textContent = truncate(m.away || '?', 10);
+
+  voteHome.className = 'vote-btn';
+  voteAway.className = 'vote-btn';
+
+  if (hasResult) {
+    voteSection.style.display = 'none';
+  } else {
+    voteSection.style.display = 'block';
+    if (isLocked) {
+      lockedMsg.style.display = 'block';
+      voteHome.disabled = true; voteAway.disabled = true;
+    } else {
+      lockedMsg.style.display = 'none';
+      voteHome.disabled = false; voteAway.disabled = false;
+    }
+    if (selectedVote === '1') voteHome.className = 'vote-btn confirmed';
+    if (selectedVote === '2') voteAway.className = 'vote-btn confirmed';
+  }
+
+  // Admin section
+  const adminSection = document.getElementById('admin-section');
+  const btnResult = document.getElementById('btn-result');
+  const btnDelResult = document.getElementById('btn-del-result');
+  const btnVote = document.getElementById('btn-vote');
+
+  if (isAdmin) {
+    adminSection.style.display = 'block';
+    document.getElementById('res-home-name').textContent = truncate(m.home || '?', 10);
+    document.getElementById('res-away-name').textContent = truncate(m.away || '?', 10);
+    document.getElementById('res-home').value = hasResult ? m.home_score : '';
+    document.getElementById('res-away').value = hasResult ? m.away_score : '';
+    btnResult.style.display = '';
+    btnDelResult.style.display = hasResult ? '' : 'none';
+  } else {
+    adminSection.style.display = 'none';
+    btnResult.style.display = 'none';
+    btnDelResult.style.display = 'none';
+  }
+
+  // Ocultar botón votar si hay resultado o está bloqueado
+  btnVote.style.display = (hasResult || isLocked) ? 'none' : '';
+
   document.getElementById('modal').classList.add('open');
-  document.getElementById('mName').focus();
 }
 
 function closeModal() {
   document.getElementById('modal').classList.remove('open');
-  editTarget = null;
+  currentModal = null; selectedVote = null;
 }
 
-function saveModal() {
-  if (!editTarget) return;
-  const {matchId, side} = editTarget;
-  const m = matches.find(x => x.id === matchId);
-  const flag  = document.getElementById('mFlag').value.trim() || '🏳️';
-  const name  = document.getElementById('mName').value.trim();
-  const score = document.getElementById('mScore').value;
+function selectVote(side) {
+  if (isLocked) return;
+  selectedVote = side;
+  document.getElementById('vote-home').className = side === '1' ? 'vote-btn selected' : 'vote-btn';
+  document.getElementById('vote-away').className = side === '2' ? 'vote-btn selected' : 'vote-btn';
+}
 
-  if (side === 'home') {
-    m.home = {f: flag, n: name || m.home.n};
-    m.hs = score !== '' ? Number(score) : null;
-  } else {
-    m.away = {f: flag, n: name || m.away.n};
-    m.as = score !== '' ? Number(score) : null;
+async function submitVote() {
+  if (!currentModal || !selectedVote) { showToast('Seleccioná un ganador primero', true); return; }
+  try {
+    await apiFetch('/api/prode/bracket/vote', {
+      method: 'POST',
+      body: JSON.stringify({ match_id: currentModal.id, result: selectedVote })
+    });
+    // Actualizar estado local
+    const idx = matches.findIndex(m => m.id === currentModal.id);
+    if (idx !== -1) matches[idx].my_prediction = selectedVote;
+    showToast('✓ Voto guardado');
+    closeModal();
+    render();
+  } catch (e) {
+    showToast(e.message, true);
   }
-
-  saveToStorage();
-  closeModal();
-  render();
-  showToast('✓ Guardado');
 }
 
-function showToast(msg) {
+async function submitResult() {
+  if (!currentModal) return;
+  const h = document.getElementById('res-home').value;
+  const a = document.getElementById('res-away').value;
+  if (h === '' || a === '') { showToast('Completá ambos goles', true); return; }
+  if (Number(h) === Number(a)) { showToast('No puede haber empate en eliminatoria', true); return; }
+  try {
+    const updated = await apiFetch(`/api/prode/bracket/matches/${currentModal.id}/result`, {
+      method: 'PUT',
+      body: JSON.stringify({ home_score: Number(h), away_score: Number(a) })
+    });
+    const idx = matches.findIndex(m => m.id === currentModal.id);
+    if (idx !== -1) matches[idx] = { ...matches[idx], ...updated };
+    showToast('✓ Resultado guardado');
+    closeModal();
+    render();
+  } catch (e) {
+    showToast(e.message, true);
+  }
+}
+
+async function deleteResult() {
+  if (!currentModal) return;
+  if (!confirm('¿Borrar el resultado de este partido?')) return;
+  try {
+    const updated = await apiFetch(`/api/prode/bracket/matches/${currentModal.id}/result`, { method: 'DELETE' });
+    const idx = matches.findIndex(m => m.id === currentModal.id);
+    if (idx !== -1) matches[idx] = { ...matches[idx], ...updated };
+    showToast('✓ Resultado borrado');
+    closeModal();
+    render();
+  } catch (e) {
+    showToast(e.message, true);
+  }
+}
+
+function showToast(msg, error = false) {
   const t = document.getElementById('toast');
   t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2000);
+  t.className = 'toast show' + (error ? ' error' : '');
+  setTimeout(() => t.className = 'toast', 2500);
 }
 
-// close modal on overlay click
+// Close modal on overlay click / Escape
 document.getElementById('modal').addEventListener('click', e => {
   if (e.target === document.getElementById('modal')) closeModal();
 });
-
-// keyboard shortcut
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeModal();
-  if ((e.key === 'Enter') && document.getElementById('modal').classList.contains('open')) saveModal();
 });
 
-<image href="copa.png"
-       x="572"
-       y="428"
-       width="130"
-       height="130"
-       style="display:none">
-</image>
+// ── INIT ─────────────────────────────────────────────────────
+async function init() {
+  const user = getUser();
+  isAdmin = user && user.role === 'admin';
 
+  const ok = await loadMatches();
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('bsvg').style.display = 'block';
 
-render();
+  if (!ok) {
+    showToast('No se pudieron cargar los partidos', true);
+    return;
+  }
+  render();
+}
+
+init();
 </script>
 </body>
 </html>
