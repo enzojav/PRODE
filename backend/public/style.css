@@ -341,7 +341,7 @@ html, body {
 
 .content {
   flex: 1;
-  overflow: auto;
+  overflow: hidden !important;  /* si no funca cambiar * ; auto */
   padding: 10px;
   width: 100%;
   max-width: none;
@@ -2165,7 +2165,7 @@ tbody tr:hover td { background: var(--bg3); }
 #mundial-embed {
   width: 100%;
   height: calc(100vh - 80px);
-  overflow: auto;
+  overflow: hidden !important;
 }
 
 #mw-svg {
