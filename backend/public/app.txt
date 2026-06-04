@@ -1301,16 +1301,13 @@ function renderR16Bracket() {
 
       // resultado (admin inputs o badge)
       if (currentUser.role === 'admin') {
-        const fo = el('foreignObject', { x: x + CW - 34, y: oy - 12, width: 32, height: 24 }, svg);
+        const fo = el('foreignObject', { x: x + CW - 30, y: oy - 10, width: 28, height: 20 }, svg);
         const inp = document.createElement('input');
         inp.type = 'number'; inp.min = 0; inp.max = 20;
         inp.value = score !== null && score !== undefined ? score : '';
         inp.placeholder = '—';
-        inp.style.cssText = 'width:32px;height:24px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);border-radius:4px;color:' + (isW ? AMBER : '#fff') + ';font-size:12px;font-weight:800;text-align:center;padding:0;outline:none;box-sizing:border-box;';
-        const saveFn = e => setR16Result(m.id, side === '1' ? 'home' : 'away', e.target.value);
-        inp.addEventListener('blur', saveFn);
-        inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.target.blur(); } });
-        inp.addEventListener('click', e => e.stopPropagation());
+        inp.style.cssText = 'width:28px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:4px;color:' + (isW ? AMBER : 'rgba(255,255,255,.5)') + ';font-size:11px;font-weight:800;text-align:center;padding:0;outline:none;';
+        inp.addEventListener('change', e => setR16Result(m.id, side === '1' ? 'home' : 'away', e.target.value));
         fo.appendChild(inp);
       } else if (score !== null && score !== undefined) {
         // badge de resultado
