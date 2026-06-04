@@ -9,7 +9,7 @@
 </head>
 <body>
 
-<!-- ══ AUTH ══════════════════════════════════════════════════ -->
+
 <div id="auth-screen">
   <div class="auth-card">
     <div class="auth-brand">
@@ -23,7 +23,7 @@
       <button class="auth-tab"        id="tab-register" onclick="switchAuthTab('register')">Registrarse</button>
     </div>
 
-    <!-- LOGIN -->
+    
     <div id="auth-login">
       <div class="auth-field">
         <label>Usuario</label>
@@ -37,7 +37,7 @@
       <div class="auth-hint">¿Todavía no tenés cuenta? <span onclick="switchAuthTab('register')">Registrate acá</span></div>
     </div>
 
-    <!-- REGISTRO -->
+    
     <div id="auth-register" style="display:none">
       <div class="auth-field">
         <label>Nombre completo</label>
@@ -89,10 +89,10 @@
 </div>
      <div class="auth-error" id="auth-error"></div>
     <div class="auth-divider"></div>
-  </div><!-- /auth-card -->
-</div><!-- /auth-screen -->
+  </div>
+</div>
 
-<!-- ══ APP SHELL ══════════════════════════════════════════════ -->
+
 <div id="app-shell" style="display:none">
 
   <!-- LOADING -->
@@ -125,18 +125,18 @@
       <div class="sb-grp">Extra</div>
       <div class="ni" data-s="news">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="2" width="14" height="12" rx="1.5"/><path d="M1 6h14M5 9h3M5 12h6"/></svg>
-        Noticias
+        Noticias 🇦🇷
       </div>
       
       <div class="ni" data-s="prode">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M5.5 5l1.5 2-1.5 2.5h2l.5-.8.5.8H11L9.5 7l1.5-2H9L8 5.8 7 5z"/></svg>
-        Prode ⚽
+        Prode- Fase de grupos ⚽
       </div>
 
 
       <div class="ni" data-s="r16">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 2h5v5H2zM9 2h5v5H9zM4.5 7v2.5H8M11.5 7v2.5H8M8 9.5V14"/></svg>
-        16avos · Votar ⚽
+        Prode- ELiminación directa ⚽
       </div>
       
       <div class="sb-grp">Sistema</div>
@@ -159,7 +159,6 @@
     </div>
   </aside>
 
-  <!-- MAIN -->
   <div class="main">
     <header class="topbar">
   <button class="sb-toggle" onclick="toggleSidebar()" title="Menú">
@@ -175,7 +174,6 @@
 
     <div class="content">
 
-      <!-- ── DASHBOARD ── -->
       <section class="sec active" id="s-dashboard">
         <div class="sg">
           <div class="sc"><div class="sl">Miembros activos</div><div class="sv" id="d-members">—</div><div class="sd sup">en equipos</div></div>
@@ -189,7 +187,7 @@
         </div>
       </section>
 
-      <!-- ── SCORE BALANCE ── -->
+    
       <section class="sec" id="s-score">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px">
           <div>
@@ -204,7 +202,7 @@
         </div>
       </section>
 
-      <!-- ── CAPACITACIONES ── -->
+     
       <section class="sec" id="s-training">
         <div class="sg" style="margin-bottom:20px">
           <div class="sc"><div class="sl">Cursos disponibles</div><div class="sv" id="t-total">—</div></div>
@@ -283,8 +281,8 @@
             <div class="fifa-logo-wrap">
               <span class="fifa-trophy">⚽</span>
               <div>
-                <div class="fifa-title">16avos de Final · Mundial 2026</div>
-                <div class="fifa-subtitle">Votá el ganador de cada partido</div>
+                <div class="fifa-title">Fase de eliminación · Mundial 2026</div>
+                <div class="fifa-subtitle">Fase de eliminación directa, solo deberás adivinar quien pasa a la otra fase. <br></br><strong>Si adivinas se te asignaran 10 puntos</strong></div>
               </div>
             </div>
             <div class="fifa-pts-wrap">
