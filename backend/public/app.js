@@ -83,7 +83,7 @@ function calcMatchPoints(pred, match) {
 
   const realResult = goalsToResult(mH, mA);
 
-  if (pH !== null && pA !== null && !isNaN(pH) && !isNaN(pA) && pH === mH && pA === mA) return 10;
+  if (pH !== null && pA !== null && !isNaN(pH) && !isNaN(pA) && pH === mH && pA === mA) return 13;
 
   const predResult = pResult || goalsToResult(pH, pA);
   if (predResult && predResult === realResult) return 5;

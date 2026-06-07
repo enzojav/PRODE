@@ -24,7 +24,7 @@ function calcPoints(pred, match) {
   const pA = pred.away_score !== null && pred.away_score !== undefined ? Number(pred.away_score) : null;
   const realResult = goalsToResult(mH, mA);
   const predResult = pred.result || goalsToResult(pH, pA);
-  if (pH !== null && pA !== null && !isNaN(pH) && !isNaN(pA) && pH === mH && pA === mA) return 10;
+  if (pH !== null && pA !== null && !isNaN(pH) && !isNaN(pA) && pH === mH && pA === mA) return 13;
   if (predResult && predResult === realResult) return 5;
   return 0;
 }
