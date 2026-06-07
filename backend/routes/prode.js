@@ -25,7 +25,7 @@ function calcPoints(pred, match) {
   const realResult = goalsToResult(mH, mA);
   const predResult = pred.result || goalsToResult(pH, pA);
   if (pH !== null && pA !== null && !isNaN(pH) && !isNaN(pA) && pH === mH && pA === mA) return 13;
-  if (predResult && predResult === realResult) return 5;
+  if (predResult && predResult === realResult) return match.phase === 'R16' ? 10 : 5;
   return 0;
 }
 
@@ -290,7 +290,7 @@ router.post('/predictions', requireAuth, async (req, res) => {
 // ─── STANDINGS ────────────────────────────────────────────────
 router.get('/standings', requireAuth, async (req, res) => {
   try {
-    const matches = await db.query('SELECT * FROM prode_matches WHERE home_score IS NOT NULL');
+    const matches = await db.query("SELECT * FROM prode_matches WHERE home_score IS NOT NULL");
     const preds   = await db.query('SELECT * FROM prode_predictions');
     const users   = await db.query("SELECT username, display_name FROM users WHERE status = 'active' AND role != 'admin'");
 
