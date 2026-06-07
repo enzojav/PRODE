@@ -1045,7 +1045,9 @@ async function renderR16() {
     const p = calcR16Points(pred, m);
     if (p > 0) myPts += p;
   });
-  document.getElementById('r16-my-pts').textContent = myPts;
+  const standings = await api('GET', '/prode/standings');
+  const me = standings.find(s => s.username === currentUser.username);
+  document.getElementById('r16-my-pts').textContent = me ? me.pts : myPts;
 
   renderR16Bracket();
   await renderR16Standings();
@@ -1108,7 +1110,7 @@ async function renderR16Standings() {
 //    QF-R3 vs QF-R4          → SF-R2
 //
 //  SF-L vs SF-R  → FINAL (lado izq)
-//  SF-L2 vs SF-R2 → FINAL (lado der)  — luego ambas semis → Gran Final
+//  SF-L2 vs SF-R2 → FINfAL (lado der)  — luego ambas semis → Gran Final
 //
 //  SIMPLIFICADO para esta implementación:
 //  Mostramos los 16 partidos en 8 llaves de 2, con slots de avance.
