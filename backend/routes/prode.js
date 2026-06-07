@@ -301,7 +301,7 @@ router.get('/standings', requireAuth, async (req, res) => {
         if (!p) return;
         total++;
         const pts_match = calcPoints(p, m);
-        if (pts_match === 10) { pts += 10; exact++; }
+        if (pts_match === 13) { pts += 13; exact++; }
         else if (pts_match === 5) { pts += 5; winner++; }
       });
       return { username: u.username, displayName: u.display_name, pts, exact, ok: exact + winner, total };
