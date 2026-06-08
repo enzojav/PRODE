@@ -1060,7 +1060,7 @@ function calcR16Points(pred, match) {
   const realResult = goalsToResult(mH, mA);
   const predResult = pred.result || null;
   if (!predResult || !realResult) return 0;
-  return predResult === realResult ? 5 : 0;
+  return predResult === realResult ? 10 : 0;
 }
 
 async function renderR16Standings() {
@@ -1194,31 +1194,7 @@ function renderR16Bracket() {
   function trunc(s, max) {
     const str = (s || '?');
     return str.length > max ? str.slice(0, max-1) + '…' : str;
-
-  function applyRole() {
-  const isAdmin = currentUser.role === 'admin';
-
-  document.querySelectorAll('.ni[data-s]').forEach(el => {
-    const s = el.dataset.s;
-
-    if (
-      s === 'prode' ||
-      s === 'news' ||
-      s === 'mundial' ||
-      s === 'r16'
-    ) {
-      el.style.display = '';
-      return;
-    }
-
-    el.style.display = isAdmin ? '' : 'none';
-  });
-
-  document.querySelectorAll('.sb-grp').forEach(g => {
-    if (!isAdmin) g.style.display = 'none';
-  });
-
-}
+  }
 
   }
   function matchWinner(m) {
@@ -1642,7 +1618,7 @@ t.textContent = r.label;
 
   container.innerHTML = '';
   container.appendChild(svg);
-}
+
 
 // ── Predicción R16 ────────────────────────────────────────────
 async function setR16Pred(matchId, val) {
