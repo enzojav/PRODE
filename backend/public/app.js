@@ -678,7 +678,7 @@ function renderMatchCard(m) {
 function renderAdminProdePanel() {
   const panel = document.getElementById('admin-match-list');
   if (!panel) return;
-  const groupMatches = activeDate ? localMatches.filter(m => m.match_date === activeDate && m.phase !== 'R16') : localMatches.filter(m => m.phase !== 'R16');
+  const groupMatches = activeDate ? localMatches.filter(m => m.match_date === activeDate && m.phase !== 'R16' && m.phase !== 'QF' && m.phase !== 'SF' && m.phase !== 'F') : localMatches.filter(m => m.phase !== 'R16' && m.phase !== 'QF' && m.phase !== 'SF' && m.phase !== 'F');
   panel.innerHTML = `
     <p style="font-size:.75rem;color:var(--text3);margin-bottom:10px">
       Cargá resultados del día <strong>${activeDate || 'seleccionado'}</strong>.
