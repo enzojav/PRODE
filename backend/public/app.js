@@ -1356,7 +1356,7 @@ function renderR16Bracket() {
   }
 
   // ── Slot de avance (QF/SF) ────────────────────────────────────
-  function drawSlot(svg, teamA, teamB, x, y, label) {
+  function drawSlot(svg, teamA, teamB, x, y, label, matchId) {
   if (teamA || teamB) {
     el('rect', { x: x+1, y: y+2, width: SW, height: SH*2+1, rx: '6', fill: 'rgba(0,0,0,.35)' }, svg);
     el('rect', { x, y, width: SW, height: SH*2+1, rx: '6',
@@ -1391,9 +1391,21 @@ function renderR16Bracket() {
       lt.textContent = label;
     }
   }
+
+  // Badge admin ✎
+  if (currentUser.role === 'admin' && matchId) {
+    const bg = el('rect', { x: x+SW-22, y: y+2, width: 18, height: 16, rx: '4',
+      fill: 'rgba(108,172,228,.15)', stroke: 'rgba(108,172,228,.3)', 'stroke-width': '1',
+      style: 'cursor:pointer' }, svg);
+    const bt = el('text', { x: x+SW-13, y: y+13, 'font-size': '10', 'font-family': FONT,
+      fill: 'rgba(108,172,228,.8)', 'text-anchor': 'middle', style: 'cursor:pointer' }, svg);
+    bt.textContent = '✎';
+    bg.addEventListener('click', e => { e.stopPropagation(); openR16AdminModal(matchId); });
+    bt.addEventListener('click', e => { e.stopPropagation(); openR16AdminModal(matchId); });
+  }
+
   return { midY: y + SH, rightX: x + SW, leftX: x };
 }
-
   // ── Final central ─────────────────────────────────────────────
   function drawFinal(svg, x, y) {
     el('rect', { x: x+1, y: y+2, width: FW, height: FH, rx: '9', fill: 'rgba(0,0,0,.4)' }, svg);
