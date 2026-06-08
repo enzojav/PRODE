@@ -1196,7 +1196,7 @@ function renderR16Bracket() {
     return str.length > max ? str.slice(0, max-1) + '…' : str;
   }
 
-  }
+  
   function matchWinner(m) {
     if (!m) return null;
     const h = m.home_score, a = m.away_score;
@@ -1618,6 +1618,7 @@ t.textContent = r.label;
 
   container.innerHTML = '';
   container.appendChild(svg);
+}
 
 
 // ── Predicción R16 ────────────────────────────────────────────
