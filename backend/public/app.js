@@ -1404,6 +1404,18 @@ function renderR16Bracket() {
     bt.addEventListener('click', e => { e.stopPropagation(); openR16AdminModal(matchId); });
   }
 
+  // Badge admin ✎ — siempre al final
+  if (currentUser.role === 'admin' && matchId) {
+    const bg = el('rect', { x: x+SW-22, y: y+2, width: 18, height: 16, rx: '4',
+      fill: 'rgba(108,172,228,.15)', stroke: 'rgba(108,172,228,.3)', 'stroke-width': '1',
+      style: 'cursor:pointer' }, svg);
+    const bt = el('text', { x: x+SW-13, y: y+13, 'font-size': '10', 'font-family': FONT,
+      fill: 'rgba(108,172,228,.8)', 'text-anchor': 'middle', style: 'cursor:pointer' }, svg);
+    bt.textContent = '✎';
+    bg.addEventListener('click', e => { e.stopPropagation(); openR16AdminModal(matchId); });
+    bt.addEventListener('click', e => { e.stopPropagation(); openR16AdminModal(matchId); });
+  }
+
   return { midY: y + SH, rightX: x + SW, leftX: x };
 }
   // ── Final central ─────────────────────────────────────────────
