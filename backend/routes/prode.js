@@ -408,7 +408,7 @@ router.put('/bracket/matches/:id/result', requireAuth, requireAdmin, async (req,
     return res.status(400).json({ error: 'Faltan goles.' });
 
   const hN = Number(home_score), aN = Number(away_score);
-  if (isNaN(hN) || isNaN(aN) || hN < 0 || aN < 0 || hN === aN)
+  if (isNaN(hN) || isNaN(aN) || hN < 0 || aN < 0)
     return res.status(400).json({ error: 'Goles inválidos (no puede haber empate en eliminatoria).' });
 
   try {
