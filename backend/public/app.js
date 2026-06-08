@@ -1026,11 +1026,13 @@ function toast(msg, type = '') {
 // ══════════════════════════════════════════════════════════════
 let r16Matches = [];
 let r16Preds   = {};
+let elimMatches = [];
 
 async function renderR16() {
   if (!currentUser) return;
   try {
     r16Matches     = await api('GET', '/prode/matches/r16');
+    elimMatches    = await api('GET', '/prode/matches/elim');  // ← AGREGAR
     const predsArr = await api('GET', '/prode/predictions');
     r16Preds = {};
     predsArr.forEach(p => {
@@ -1645,7 +1647,7 @@ async function setR16Pred(matchId, val) {
 
 // ── Resultado admin R16 ───────────────────────────────────────
 async function setR16Result(matchId, side, value) {
-  const m = r16Matches.find(x => x.id === matchId);
+  const m = r16Matches.find(x => x.id === matchId) || elimMatches.find(x => x.id === matchId);
   if (!m) return;
   const v = value === '' ? null : Number(value);
   if (side === 'home') m.home_score = v;
