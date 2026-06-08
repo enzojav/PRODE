@@ -85,6 +85,13 @@ router.get('/matches/r16', requireAuth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: 'Error interno del servidor.' }); }
 });
 
+router.get('/matches/elim', requireAuth, async (req, res) => {
+  try {
+    const { rows } = await db.query("SELECT * FROM prode_matches WHERE phase IN ('QF','SF','F') ORDER BY id");
+    res.json(rows);
+  } catch (e) { res.status(500).json({ error: 'Error interno del servidor.' }); }
+});
+
 // ─── BRACKET AUTOMÁTICO ───────────────────────────────────────
 // Mapeo de los 16avos: qué slot corresponde a qué posición de grupo
 // Formato: { matchId: { home: 'posicion', away: 'posicion' } }
@@ -302,6 +309,7 @@ router.get('/standings', requireAuth, async (req, res) => {
         total++;
         const pts_match = calcPoints(p, m);
         if (pts_match === 13) { pts += 13; exact++; }
+        else if (pts_match === 10) { pts += 10; winner++; }
         else if (pts_match === 5) { pts += 5; winner++; }
       });
       return { username: u.username, displayName: u.display_name, pts, exact, ok: exact + winner, total };
