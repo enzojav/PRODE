@@ -1310,8 +1310,7 @@ function renderR16Bracket() {
           rx: side === '1' ? '6' : '0',
           fill: 'rgba(58,232,176,.07)' }, svg);
       }
-
-      // zona clickeable para votar
+      
       if (!played && !locked) {
         const zone = el('rect', {
           x, y: side === '1' ? y : y + CH/2,
@@ -1319,15 +1318,17 @@ function renderR16Bracket() {
           fill: 'transparent',
           rx: side === '1' ? '7' : '0',
         }, svg);
-        zone.style.cursor = 'pointer';
-        zone.addEventListener('click', () => setR16Pred(m.id, side));
+        if (currentUser.role !== 'admin') {
+          zone.style.cursor = 'pointer';
+          zone.addEventListener('click', () => setR16Pred(m.id, side));
+        }
       }
     });
 
     // pts bajo la card
     if (played && pts >= 0) {
-      const ptColor = pts >= 5 ? GREEN : 'rgba(255,80,80,.7)';
-      const ptTxt   = pts >= 5 ? '✓ +5 pts' : '✗ 0 pts';
+      const ptColor = pts >= 10 ? GREEN : 'rgba(255,80,80,.7)';
+      const ptTxt   = pts >= 10 ? '✓ +10 pts' : '✗ 0 pts';
       const pte = el('text', { x: x + CW/2, y: y + CH + 13,
         'font-size': '8', 'text-anchor': 'middle',
         fill: ptColor, 'font-family': FONT, 'font-weight': '700' }, svg);
