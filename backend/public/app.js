@@ -1418,7 +1418,7 @@ function renderR16Bracket() {
   return { midY: y + SH, rightX: x + SW, leftX: x };
 }
   // ── Final central ─────────────────────────────────────────────
-  function drawFinal(svg, x, y) {
+  function drawFinal(svg, x, y, wFinalHome, wFinalAway) {
     el('rect', { x: x+1, y: y+2, width: FW, height: FH, rx: '9', fill: 'rgba(0,0,0,.4)' }, svg);
     el('rect', { x, y, width: FW, height: FH, rx: '9',
       fill: '#0a1226',
@@ -1431,7 +1431,9 @@ function renderR16Bracket() {
     const vt = el('text', { x: x + FW/2, y: y + 40,
       'font-size': '12', 'text-anchor': 'middle',
       fill: 'rgba(255,255,255,.12)', 'font-family': FONT }, svg);
-    vt.textContent = '? vs ?';
+    vt.textContent = (wFinalHome && wFinalAway)
+  ? wFinalHome.flag + ' ' + wFinalHome.name + ' vs ' + wFinalAway.flag + ' ' + wFinalAway.name
+  : '? vs ?';
 
     // Badge admin ✎
     if (currentUser.role === 'admin') {
@@ -1619,7 +1621,12 @@ t.textContent = r.label;
 
     drawBracketConnector(svg, qfFromX, qfMidYs[0], qfMidYs[1], sfToX, sfMidY, LINE2, dir);
 
-drawSlot(svg, null, null, isLeft ? sfX : R_SF, sfSlotY, 'SF', 224 + cuadIdx);
+const sfMatchId = 224 + cuadIdx;
+const qfMatchA = elimMatches.find(x => x.id === 216 + bIdx);
+const qfMatchB = elimMatches.find(x => x.id === 216 + bIdx + 1);
+const wSFA = matchWinner(qfMatchA);
+const wSFB = matchWinner(qfMatchB);
+drawSlot(svg, wSFA, wSFB, isLeft ? sfX : R_SF, sfSlotY, 'SF', sfMatchId);
     // Guardar sfMidY para el conector a la final
     return sfMidY;
   }
@@ -1641,7 +1648,13 @@ drawSlot(svg, null, null, isLeft ? sfX : R_SF, sfSlotY, 'SF', 224 + cuadIdx);
   drawBracketConnector(svg, sfLfromX, sfL0, sfL1, L_FIN, finMidY, LINE3, 'left');
   drawBracketConnector(svg, sfRfromX, sfR0, sfR1, L_FIN + FW, finMidY, LINE3, 'right');
 
-  drawFinal(svg, L_FIN, finY);
+  const sf224 = elimMatches.find(x => x.id === 224);
+const sf225 = elimMatches.find(x => x.id === 225);
+const sf226 = elimMatches.find(x => x.id === 226);
+const sf227 = elimMatches.find(x => x.id === 227);
+const wFinalHome = matchWinner(sf224) || matchWinner(sf225);
+const wFinalAway = matchWinner(sf226) || matchWinner(sf227);
+drawFinal(svg, L_FIN, finY, wFinalHome, wFinalAway);
 
   // Copa
   const cupSize = 130;
