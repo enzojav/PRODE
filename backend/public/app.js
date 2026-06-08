@@ -1421,6 +1421,19 @@ function renderR16Bracket() {
       'font-size': '12', 'text-anchor': 'middle',
       fill: 'rgba(255,255,255,.12)', 'font-family': FONT }, svg);
     vt.textContent = '? vs ?';
+
+    // Badge admin ✎
+    if (currentUser.role === 'admin') {
+      const bg = el('rect', { x: x+FW-22, y: y+4, width: 18, height: 16, rx: '4',
+        fill: 'rgba(108,172,228,.15)', stroke: 'rgba(108,172,228,.3)', 'stroke-width': '1',
+        style: 'cursor:pointer' }, svg);
+      const bt = el('text', { x: x+FW-13, y: y+15, 'font-size': '10', 'font-family': FONT,
+        fill: 'rgba(108,172,228,.8)', 'text-anchor': 'middle', style: 'cursor:pointer' }, svg);
+      bt.textContent = '✎';
+      bg.addEventListener('click', e => { e.stopPropagation(); openR16AdminModal(228); });
+      bt.addEventListener('click', e => { e.stopPropagation(); openR16AdminModal(228); });
+    }
+
     return { midY: y + FH/2 };
   }
 
@@ -1581,7 +1594,7 @@ t.textContent = r.label;
       drawBracketConnector(svg, fromX, cA.midY, cB.midY, toX, pairMidY, LINE1, dir);
 
       // QF slot — muestra los dos ganadores enfrentados
-      const qfSlot = drawSlot(svg, wA, wB, isLeft ? qfX : R_QF, qfSlotY, 'Por definir');
+      const qfSlot = drawSlot(svg, wA, wB, isLeft ? qfX : R_QF, qfSlotY, 'Por definir', 216 + (bIdx + p));
 
       qfMidYs.push(qfSlot.midY);
     }
@@ -1595,8 +1608,7 @@ t.textContent = r.label;
 
     drawBracketConnector(svg, qfFromX, qfMidYs[0], qfMidYs[1], sfToX, sfMidY, LINE2, dir);
 
-    drawSlot(svg, null, null, isLeft ? sfX : R_SF, sfSlotY, 'SF');
-
+drawSlot(svg, null, null, isLeft ? sfX : R_SF, sfSlotY, 'SF', 224 + cuadIdx);
     // Guardar sfMidY para el conector a la final
     return sfMidY;
   }
