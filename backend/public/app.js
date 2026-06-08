@@ -508,8 +508,7 @@ async function renderProde() {
     if (currentUser.role === 'admin') renderAdminProdePanel();
   }
 
-  const groupMatches = localMatches.filter(m => m.phase !== 'R16');
-  const allDates = [...new Set(groupMatches.map(m => m.match_date))];
+const groupMatches = localMatches.filter(m => m.phase !== 'R16' && m.phase !== 'QF' && m.phase !== 'SF' && m.phase !== 'F');  const allDates = [...new Set(groupMatches.map(m => m.match_date))];
   allDates.sort((a, b) => parseDateToSort(a) - parseDateToSort(b));
   if (!activeDate || !allDates.includes(activeDate)) activeDate = allDates[0];
 
