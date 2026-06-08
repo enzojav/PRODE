@@ -1311,17 +1311,15 @@ function renderR16Bracket() {
           fill: 'rgba(58,232,176,.07)' }, svg);
       }
       
-      if (!played && !locked) {
+      if (!played && !locked && currentUser.role !== 'admin') {
         const zone = el('rect', {
           x, y: side === '1' ? y : y + CH/2,
           width: CW, height: CH/2,
           fill: 'transparent',
           rx: side === '1' ? '7' : '0',
         }, svg);
-        if (currentUser.role !== 'admin') {
-          zone.style.cursor = 'pointer';
-          zone.addEventListener('click', () => setR16Pred(m.id, side));
-        }
+        zone.style.cursor = 'pointer';
+        zone.addEventListener('click', () => setR16Pred(m.id, side));
       }
     });
 
