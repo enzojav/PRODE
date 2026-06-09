@@ -682,7 +682,7 @@ function renderAdminProdePanel() {
   panel.innerHTML = `
     <p style="font-size:.75rem;color:var(--text3);margin-bottom:10px">
       Cargá resultados del día <strong>${activeDate || 'seleccionado'}</strong>.
-      <span style="color:var(--accent);font-weight:600">🎯 Exacto = 10 pts · ✓ Ganador/Empate = 5 pts</span>
+      <span style="color:var(--accent);font-weight:600">🎯 Exacto = 18 pts · ✓ Ganador/Empate = 5 pts</span>
     </p>
     ${groupMatches.map(m => `
       <div class="admin-match-row">
