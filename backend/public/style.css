@@ -2180,3 +2180,32 @@ tbody tr:hover td { background: var(--bg3); }
   width: 100%;
   max-width: none;
 }
+@media (max-width: 768px) {
+  .sb {
+    position: fixed;
+    z-index: 50;
+    height: 100vh;
+    width: 240px;
+    transform: translateX(-100%);
+    transition: transform .25s ease;
+  }
+  .sb.sb-collapsed {
+    transform: translateX(-100%);
+  }
+  .sb:not(.sb-collapsed) {
+    transform: translateX(0);
+  }
+  #app-shell {
+    display: block;
+  }
+  .main {
+    width: 100%;
+  }
+  #r16-bracket {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .day-matches-grid {
+    grid-template-columns: 1fr;
+  }
+}
