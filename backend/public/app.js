@@ -1788,5 +1788,5 @@ function renderMundial() {
 }
 
 function toggleSidebar() {
-  document.querySelector('.sb').classList.toggle('sb-collapsed');
+  document.querySelector('.sb').classList.toggle('sb-open');
 }
