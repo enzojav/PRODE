@@ -551,6 +551,7 @@ const groupMatches = localMatches.filter(m => m.phase !== 'R16' && m.phase !== '
     </div>`;
 
   await renderStandings();
+  twemoji.parse(document.getElementById('matches-day'));
 }
 
 function calcMyPoints() {
@@ -682,7 +683,7 @@ function renderAdminProdePanel() {
   panel.innerHTML = `
     <p style="font-size:.75rem;color:var(--text3);margin-bottom:10px">
       Cargá resultados del día <strong>${activeDate || 'seleccionado'}</strong>.
-      <span style="color:var(--accent);font-weight:600">🎯 Exacto = 18 pts · ✓ Ganador/Empate = 5 pts</span>
+      <span style="color:var(--accent);font-weight:600">🎯 Exacto = 13 pts · ✓ Ganador/Empate = 5 pts</span>
     </p>
     ${groupMatches.map(m => `
       <div class="admin-match-row">
@@ -1653,6 +1654,7 @@ drawSlot(svg, null, null, isLeft ? sfX : R_SF, sfSlotY, 'SF', 224 + cuadIdx);
   }, svg);
 
   container.innerHTML = '';
+  twemoji.parse(container);
   container.appendChild(svg);
 }
 
