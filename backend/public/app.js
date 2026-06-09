@@ -1787,4 +1787,6 @@ function renderMundial() {
   navigateTo('r16');
 }
 
-toggleSidebar()
+function toggleSidebar() {
+  document.querySelector('.sb').classList.toggle('sb-collapsed');
+}
