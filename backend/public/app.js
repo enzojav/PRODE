@@ -582,7 +582,7 @@ async function renderStandings() {
             <div class="srpts">${s.pts} pts</div>
           </div>`;
         }).join('')
-      : '<div class="no-standings">Nadie cargó pronósticos todavía.</div>';
+      : '<div class="no-standings">Tus aciertos ⚽</div>';
   } catch { }
 }
 
