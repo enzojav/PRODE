@@ -48,7 +48,7 @@ function isMatchLocked(m) {
     const day     = parseInt(parts[dayIdx]);
     const month   = MONTH_MAP[parts[monIdx]];
     const [hh,mm] = (m.time || '00:00').split(':').map(Number);
-    const matchTime = new Date(Date.UTC(2026, month, day, hh + 3, mm, 0));
+    const matchTime = new Date(2026, month, day, hh, mm, 0);
     return new Date() >= new Date(matchTime.getTime() - 60 * 60 * 1000);
   } catch { return false; }
 }
