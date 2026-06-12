@@ -126,8 +126,6 @@ function switchAuthTab(tab) {
 
 
 async function doLogin() {
-  const audio = document.getElementById('login-audio');
-  audio?.play().catch(() => {});
   const username = document.getElementById('l-user').value.trim();
   const password = document.getElementById('l-pass').value;
   const errEl    = document.getElementById('auth-error');
@@ -180,6 +178,8 @@ function doLogout() {
 }
 
 function showIntro(callback) {
+  const audio = document.getElementById('login-audio');
+  audio?.play().catch(() => {});
   const intro = document.getElementById('intro-screen');
   const audio = document.getElementById('login-audio');
   intro.style.display = 'flex';
