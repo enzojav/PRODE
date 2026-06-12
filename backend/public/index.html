@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Calidad & Capacitación</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -436,9 +436,11 @@ box-sizing:border-box;
 <script>
 // Estrellas animadas en el login
 (function() {
-  const container = document.getElementById('auth-stars');
-  if (!container) return;
-  for (let i = 0; i < 40; i++) {
+  const container = document.createElement('div');
+  container.style.cssText = 'position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;';
+  document.body.appendChild(container);
+  
+  for (let i = 0; i < 60; i++) {
     const star = document.createElement('div');
     star.className = 'auth-star';
     star.style.cssText = `
@@ -446,9 +448,9 @@ box-sizing:border-box;
       top: ${Math.random() * 100}%;
       width: ${Math.random() * 3 + 1}px;
       height: ${Math.random() * 3 + 1}px;
-      animation-duration: ${Math.random() * 8 + 4}s;
-      animation-delay: ${Math.random() * 5}s;
-      opacity: ${Math.random() * .6 + .2};
+      animation-duration: ${Math.random() * 10 + 5}s;
+      animation-delay: ${Math.random() * 8}s;
+      opacity: ${Math.random() * .5 + .1};
     `;
     container.appendChild(star);
   }

@@ -2629,3 +2629,20 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* Fondo estrellado global */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: 
+    radial-gradient(ellipse at 20% 20%, rgba(116,172,223,.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(116,172,223,.04) 0%, transparent 50%);
+}
+
+#app-shell, #auth-screen {
+  position: relative;
+  z-index: 1;
+}
