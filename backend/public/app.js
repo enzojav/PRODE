@@ -1709,7 +1709,7 @@ async function setR16Result(matchId, side, value) {
 
 // ── Modal admin resultado R16 ────────────────────────────────
 function openR16AdminModal(matchId) {
-  const m = r16Matches.find(x => x.id === matchId);
+  const m = r16Matches.find(x => x.id === matchId) || elimMatches.find(x => x.id === matchId);
   if (!m) return;
 
   // Crear modal si no existe
