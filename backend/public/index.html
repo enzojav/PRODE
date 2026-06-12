@@ -291,77 +291,67 @@
         </div>
       </section>
 
-      <!-- ── MUNDIAL ── -->
-      <section class="sec" id="s-mundial">
-        <div id="mundial-embed"></div>
-      </section>
+    <!-- ── MUNDIAL ── -->
+<section class="sec" id="s-mundial">
+  <div id="mundial-embed"></div>
+</section>
 
-            <!-- ── 16AVOS VOTACIÓN ── -->
-      <section class="sec" id="s-r16">
-        <div class="fifa-hero" style="margin-bottom:20px">
-          <div class="fifa-hero-bg"></div>
-          <div class="fifa-hero-content">
-            <div class="fifa-logo-wrap">
-              <span class="fifa-trophy">⚽</span>
-              <div>
-                <div class="fifa-title">Fase de eliminación · Mundial 2026</div>
-                <div class="fifa-subtitle">Fase de eliminación directa, solo deberás adivinar quien pasa a la otra fase. <br></br><strong>Si adivinas se te asignaran 10 puntos</strong></div>
-              </div>
-            </div>
-            <div class="fifa-pts-wrap">
-              <div class="fifa-pts-val" id="r16-my-pts">0</div>
-              <div class="fifa-pts-lbl">MIS PUNTOS</div>
-            </div>
-          </div>
+<!-- ── 16AVOS VOTACIÓN ── -->
+<section class="sec" id="s-r16">
+  <div class="fifa-hero" style="margin-bottom:20px">
+    <div class="fifa-hero-bg"></div>
+    <div class="fifa-hero-content">
+      <div class="fifa-logo-wrap">
+        <span class="fifa-trophy">⚽</span>
+        <div>
+          <div class="fifa-title">Fase de eliminación · Mundial 2026</div>
+          <div class="fifa-subtitle">Fase de eliminación directa, solo deberás adivinar quien pasa a la otra fase.<br><strong>Si adivinas se te asignarán 10 puntos</strong></div>
         </div>
-        
-        <div id="r16-bracket"
-style="
-width:100%;
-max-width:100%;
-overflow:auto;
-margin-bottom:30px;
-background:#0a0e1a;
-border-radius:16px;
-border:1px solid rgba(255,255,255,.06);
-padding:26px;
-box-sizing:border-box;
-">
-</div>
+      </div>
+      <div class="fifa-pts-wrap">
+        <div class="fifa-pts-val" id="r16-my-pts">0</div>
+        <div class="fifa-pts-lbl">MIS PUNTOS</div>
+      </div>
+    </div>
+  </div>
 
-<div class="prode-stand" style="margin-top:24px;">
-  <div class="ps-title">🏆 Tabla de posiciones · 16avos</div>
-  <div id="r16-standings"></div>
-</div>
+  <div id="r16-bracket" style="width:100%;max-width:100%;overflow:auto;margin-bottom:30px;background:#0a0e1a;border-radius:16px;border:1px solid rgba(255,255,255,.06);padding:26px;box-sizing:border-box;"></div>
 
-      <!-- ── MIEMBROS ── -->
-      <section class="sec" id="s-members">
-        <div class="ttb">
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <div class="sw">
-              <span class="sico">
-                <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="6" r="4.5"/><path d="M10 10l2.5 2.5"/></svg>
-              </span>
-              <input type="text" id="msearch" placeholder="Buscar miembro…">
-            </div>
-            <select class="fsel" id="mteam"><option value="">Todos los equipos</option></select>
-          </div>
-          <span id="mcnt" style="font-size:.78rem;color:var(--text3)"></span>
-        </div>
-        <div class="card" style="padding:0;overflow:hidden">
-          <table>
-<thead>
-  <tr>
-    <th>Miembro</th>
-    <th>Usuario</th>
-    <th>Legajo</th>
-    <th>Estado</th>
-    <th>Acciones</th>
-  </tr>
-</thead>            <tbody id="members-tb"></tbody>
-          </table>
-        </div>
-      </section>
+  <div class="prode-stand" style="margin-top:24px;">
+    <div class="ps-title">🏆 Tabla de posiciones · 16avos</div>
+    <div id="r16-standings"></div>
+  </div>
+</section>
+
+<!-- ── MIEMBROS ── -->
+<section class="sec" id="s-members">
+  <div class="ttb">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <div class="sw">
+        <span class="sico">
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="6" r="4.5"/><path d="M10 10l2.5 2.5"/></svg>
+        </span>
+        <input type="text" id="msearch" placeholder="Buscar miembro…">
+      </div>
+      <select class="fsel" id="mteam"><option value="">Todos los equipos</option></select>
+    </div>
+    <span id="mcnt" style="font-size:.78rem;color:var(--text3)"></span>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <table>
+      <thead>
+        <tr>
+          <th>Miembro</th>
+          <th>Usuario</th>
+          <th>Legajo</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="members-tb"></tbody>
+    </table>
+  </div>
+</section>
 
     </div><!-- /content -->
   </div><!-- /main -->
