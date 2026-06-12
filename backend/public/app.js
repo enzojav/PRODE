@@ -197,6 +197,11 @@ function showIntro(callback) {
 }
 
 function launchConfetti() {
+  const banner = document.getElementById('arg-banner');
+banner.style.display = 'block';
+setTimeout(() => banner.style.opacity = '1', 50);
+setTimeout(() => banner.style.opacity = '0', 2000);
+setTimeout(() => banner.style.display = 'none', 2500);
   const colors = ['#6CACE4','#ffffff','#FFB81C','#4a90d9','#85bde8'];
   for (let i = 0; i < 150; i++) {
     const el = document.createElement('div');
@@ -224,6 +229,7 @@ function bootApp() {
     else navigateTo('prode');
   });
 }
+
 
 function applyRole() {
   const isAdmin = currentUser.role === 'admin';
@@ -589,7 +595,15 @@ async function renderStandings() {
   } catch { }
 }
 
-function setDate(d) { activeDate = d; renderProde(); }
+function setDate(d) {
+  activeDate = d;
+  const banner = document.getElementById('arg-banner');
+  banner.style.display = 'block';
+  setTimeout(() => banner.style.opacity = '1', 50);
+  setTimeout(() => banner.style.opacity = '0', 800);
+  setTimeout(() => banner.style.display = 'none', 1300);
+  renderProde();
+}
 
 // ── Tarjeta de partido ────────────────────────────────────────
 function renderMatchCard(m) {
