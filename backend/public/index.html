@@ -33,7 +33,6 @@
       <div class="auth-stars-row">★ ★ ★</div>
     </div>
 
-    <audio id="login-audio" src="arg.mp3" preload="auto"></audio>
 
     <div id="arg-banner" style="display:none;position:fixed;inset:0;z-index:9998;pointer-events:none;opacity:0;transition:opacity .5s;">
       <div style="position:absolute;inset:0;background:linear-gradient(180deg, #74ACDF 0%, #74ACDF 33%, #fff 33%, #fff 66%, #74ACDF 66%, #74ACDF 100%);opacity:.25;"></div>
@@ -44,6 +43,9 @@
       <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Iniciar sesión</button>
       <button class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">Registrarse</button>
     </div>
+    
+    <p id="auth-error" style="color:#f44336; min-height:1.2em; margin:8px 0 0; font-size:0.9em;"></p>
+
 
     <div id="auth-login">
       <div class="auth-field">
