@@ -2646,3 +2646,100 @@ body::before {
   position: relative;
   z-index: 1;
 }
+
+/* ── DEV SECTION ── */
+.auth-admin-hint {
+  margin-top: 16px;
+}
+
+.dev-label {
+  font-size: .62rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.3);
+  margin-bottom: 4px;
+}
+
+.dev-name {
+  font-size: .95rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: .02em;
+  background: linear-gradient(135deg, #74ACDF, #fff, #74ACDF);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: brand-shimmer 3s linear infinite;
+  margin-bottom: 10px;
+}
+
+/* Botones de contacto con colores reales */
+.auth-contact-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.1);
+  background: rgba(255,255,255,.05);
+  color: rgba(255,255,255,.5);
+  text-decoration: none;
+  transition: all .2s cubic-bezier(.34,1.4,.64,1);
+}
+
+.auth-contact-btn:active {
+  transform: scale(.88);
+}
+
+/* WhatsApp — verde */
+.auth-contact-btn[title="WhatsApp"] {
+  color: #25d366;
+  border-color: rgba(37,211,102,.2);
+  background: rgba(37,211,102,.06);
+}
+.auth-contact-btn[title="WhatsApp"]:hover {
+  background: rgba(37,211,102,.18);
+  border-color: rgba(37,211,102,.5);
+  box-shadow: 0 0 16px rgba(37,211,102,.3);
+  transform: translateY(-3px) scale(1.08);
+}
+
+/* Instagram — rosa/naranja */
+.auth-contact-btn[title="Instagram"] {
+  color: #e1306c;
+  border-color: rgba(225,48,108,.2);
+  background: rgba(225,48,108,.06);
+}
+.auth-contact-btn[title="Instagram"]:hover {
+  background: rgba(225,48,108,.18);
+  border-color: rgba(225,48,108,.5);
+  box-shadow: 0 0 16px rgba(225,48,108,.3);
+  transform: translateY(-3px) scale(1.08);
+}
+
+/* Email — celeste */
+.auth-contact-btn[title="Email"] {
+  color: #74ACDF;
+  border-color: rgba(116,172,223,.2);
+  background: rgba(116,172,223,.06);
+}
+.auth-contact-btn[title="Email"]:hover {
+  background: rgba(116,172,223,.18);
+  border-color: rgba(116,172,223,.5);
+  box-shadow: 0 0 16px rgba(116,172,223,.3);
+  transform: translateY(-3px) scale(1.08);
+}
+
+/* LinkedIn — azul */
+.auth-contact-btn[title="LinkedIn"] {
+  color: #0a66c2;
+  border-color: rgba(10,102,194,.2);
+  background: rgba(10,102,194,.06);
+}
+.auth-contact-btn[title="LinkedIn"]:hover {
+  background: rgba(10,102,194,.25);
+  border-color: rgba(10,102,194,.5);
+  box-shadow: 0 0 16px rgba(10,102,194,.3);
+  transform: translateY(-3px) scale(1.08);
+}
