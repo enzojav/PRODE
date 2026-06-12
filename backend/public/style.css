@@ -2661,9 +2661,9 @@ body::before {
 }
 
 .dev-name {
-  font-size: .95rem;
+  font-size: .75rem;
   font-weight: 700;
-  color: #fff;
+  color: #00063c;
   letter-spacing: .02em;
   background: linear-gradient(135deg, #74ACDF, #fff, #74ACDF);
   background-size: 200% 100%;
