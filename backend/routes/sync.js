@@ -1,84 +1,78 @@
-// ============================================================
-//  routes/sync.js
-// ============================================================
-
 const express = require('express');
 const db      = require('../config/db');
-  const { requireAuth, requireAdmin } = require('../middleware/auth');
+const { requireAuth, requireAdmin } = require('../middleware/auth');
 
 const router   = express.Router();
-const API_HOST = 'v3.football.api-sports.io';
-const LEAGUE   = 1;
-const SEASON   = 2026;
+const API_HOST = 'api.football-data.org';
+const COMPETITION = 'WC';
 
 let lastSync = null;
 
-// Mapa de nombres en inglés (API) → español (base de datos)
 const TEAM_MAP = {
-  'Argentina':              'Argentina',
-  'Algeria':                'Argelia',
-  'Austria':                'Austria',
-  'Jordan':                 'Jordania',
-  'Portugal':               'Portugal',
-  'Uzbekistan':             'Uzbekistán',
-  'Colombia':               'Colombia',
-  'DR Congo':               'Rep. D. Congo',
-  'Morocco':                'Marruecos',
-  'Brazil':                 'Brasil',
-  'France':                 'Francia',
-  'Germany':                'Alemania',
-  'Spain':                  'España',
-  'England':                'Inglaterra',
-  'Netherlands':            'Países Bajos',
-  'Belgium':                'Bélgica',
-  'Croatia':                'Croacia',
-  'Serbia':                 'Serbia',
-  'Denmark':                'Dinamarca',
-  'Switzerland':            'Suiza',
-  'Poland':                 'Polonia',
-  'Japan':                  'Japón',
-  'South Korea':            'Corea del Sur',
-  'Australia':              'Australia',
-  'Mexico':                 'México',
-  'United States':          'Estados Unidos',
-  'Canada':                 'Canadá',
-  'Ecuador':                'Ecuador',
-  'Uruguay':                'Uruguay',
-  'Chile':                  'Chile',
-  'Paraguay':               'Paraguay',
-  'Venezuela':              'Venezuela',
-  'Bolivia':                'Bolivia',
-  'Peru':                   'Perú',
-  'Costa Rica':             'Costa Rica',
-  'Honduras':               'Honduras',
-  'Panama':                 'Panamá',
-  'Jamaica':                'Jamaica',
-  'Senegal':                'Senegal',
-  'Cameroon':               'Camerún',
-  'Ghana':                  'Ghana',
-  'Nigeria':                'Nigeria',
-  'Egypt':                  'Egipto',
-  'Tunisia':                'Túnez',
-  'South Africa':           'Sudáfrica',
-  'Ivory Coast':            "Costa de Marfil",
-  'Mali':                   'Mali',
-  'Saudi Arabia':           'Arabia Saudita',
-  'Iran':                   'Irán',
-  'Qatar':                  'Qatar',
-  'Iraq':                   'Irak',
-  'Turkey':                 'Turquía',
-  'Ukraine':                'Ucrania',
-  'Czech Republic':         'República Checa',
-  'Slovakia':               'Eslovaquia',
-  'Slovenia':               'Eslovenia',
-  'Hungary':                'Hungría',
-  'Romania':                'Rumanía',
-  'Scotland':               'Escocia',
-  'Wales':                  'Gales',
-  'New Zealand':            'Nueva Zelanda',
-  'Indonesia':              'Indonesia',
-  'Thailand':               'Tailandia',
-  'China':                  'China',
+  'Mexico':              'México',
+  'South Africa':        'Sudáfrica',
+  'Argentina':           'Argentina',
+  'Algeria':             'Argelia',
+  'Austria':             'Austria',
+  'Jordan':              'Jordania',
+  'Portugal':            'Portugal',
+  'Uzbekistan':          'Uzbekistán',
+  'Colombia':            'Colombia',
+  'DR Congo':            'Rep. D. Congo',
+  'Morocco':             'Marruecos',
+  'Brazil':              'Brasil',
+  'France':              'Francia',
+  'Germany':             'Alemania',
+  'Spain':               'España',
+  'England':             'Inglaterra',
+  'Netherlands':         'Países Bajos',
+  'Belgium':             'Bélgica',
+  'Croatia':             'Croacia',
+  'Serbia':              'Serbia',
+  'Denmark':             'Dinamarca',
+  'Switzerland':         'Suiza',
+  'Poland':              'Polonia',
+  'Japan':               'Japón',
+  'South Korea':         'Corea del Sur',
+  'Australia':           'Australia',
+  'United States':       'Estados Unidos',
+  'Canada':              'Canadá',
+  'Ecuador':             'Ecuador',
+  'Uruguay':             'Uruguay',
+  'Chile':               'Chile',
+  'Paraguay':            'Paraguay',
+  'Venezuela':           'Venezuela',
+  'Bolivia':             'Bolivia',
+  'Peru':                'Perú',
+  'Costa Rica':          'Costa Rica',
+  'Honduras':            'Honduras',
+  'Panama':              'Panamá',
+  'Jamaica':             'Jamaica',
+  'Senegal':             'Senegal',
+  'Cameroon':            'Camerún',
+  'Ghana':               'Ghana',
+  'Nigeria':             'Nigeria',
+  'Egypt':               'Egipto',
+  'Tunisia':             'Túnez',
+  'Ivory Coast':         'Costa de Marfil',
+  'Mali':                'Mali',
+  'Saudi Arabia':        'Arabia Saudita',
+  'Iran':                'Irán',
+  'Qatar':               'Qatar',
+  'Iraq':                'Irak',
+  'Turkey':              'Turquía',
+  'Ukraine':             'Ucrania',
+  'Czech Republic':      'República Checa',
+  'Slovakia':            'Eslovaquia',
+  'Slovenia':            'Eslovenia',
+  'Hungary':             'Hungría',
+  'Romania':             'Rumanía',
+  'Scotland':            'Escocia',
+  'Wales':               'Gales',
+  'New Zealand':         'Nueva Zelanda',
+  'Indonesia':           'Indonesia',
+  'Thailand':            'Tailandia',
+  'China':               'China',
 };
 
 function translateTeam(nameEn) {
@@ -89,14 +83,12 @@ async function apiFetch(endpoint) {
   const key = process.env.FOOTBALL_API_KEY;
   if (!key) throw new Error('FOOTBALL_API_KEY no configurada en .env');
 
-  const res = await fetch(`https://${API_HOST}/${endpoint}`, {
-    headers: { 'x-apisports-key': key },
+  const res = await fetch(`https://${API_HOST}/v4/${endpoint}`, {
+    headers: { 'X-Auth-Token': key },
   });
-  if (!res.ok) throw new Error(`API-Sports error ${res.status}`);
+  if (!res.ok) throw new Error(`football-data.org error ${res.status}`);
   const data = await res.json();
-  if (data.errors && Object.keys(data.errors).length)
-    throw new Error(JSON.stringify(data.errors));
-  return data.response;
+  return data.matches;
 }
 
 async function doSync() {
@@ -105,29 +97,29 @@ async function doSync() {
 
   let totalUpdated = 0;
 
-  for (const dateStr of [yesterday, today]) {
-    const fixtures = await apiFetch(
-      `fixtures?league=${LEAGUE}&season=${SEASON}&date=${dateStr}`
+  const matches = await apiFetch(
+    `competitions/${COMPETITION}/matches?dateFrom=${yesterday}&dateTo=${today}`
+  );
+
+  for (const f of matches) {
+    if (f.status !== 'FINISHED') continue;
+
+    const gH = f.score.fullTime.home;
+    const gA = f.score.fullTime.away;
+    if (gH === null || gA === null) continue;
+
+    const result   = gH > gA ? '1' : gH < gA ? '2' : 'x';
+    const homeTeam = translateTeam(f.homeTeam.name);
+    const awayTeam = translateTeam(f.awayTeam.name);
+
+    const { rowCount } = await db.query(
+      `UPDATE prode_matches
+       SET goals_home = $1, goals_away = $2, result = $3
+       WHERE home_team ILIKE $4 AND away_team ILIKE $5`,
+      [gH, gA, result, homeTeam, awayTeam]
     );
 
-    for (const f of fixtures) {
-      const gH = f.goals.home;
-      const gA = f.goals.away;
-      if (gH === null || gA === null) continue;
-
-      const result   = gH > gA ? '1' : gH < gA ? '2' : 'x';
-      const homeTeam = translateTeam(f.teams.home.name);
-      const awayTeam = translateTeam(f.teams.away.name);
-
-      const { rowCount } = await db.query(
-        `UPDATE prode_matches
-         SET goals_home = $1, goals_away = $2, result = $3
-         WHERE home_team ILIKE $4 AND away_team ILIKE $5`,
-        [gH, gA, result, homeTeam, awayTeam]
-      );
-
-      if (rowCount) totalUpdated++;
-    }
+    if (rowCount) totalUpdated++;
   }
 
   if (totalUpdated > 0) await recalcAllPoints();
@@ -164,7 +156,6 @@ async function recalcAllPoints() {
   }
 }
 
-// POST /api/sync/results — solo admin
 router.post('/results', requireAuth, requireAdmin, async (req, res) => {
   if (lastSync) {
     const secsAgo = (Date.now() - new Date(lastSync).getTime()) / 1000;
@@ -185,7 +176,6 @@ router.post('/results', requireAuth, requireAdmin, async (req, res) => {
   }
 });
 
-// GET /api/sync/status
 router.get('/status', requireAuth, requireAdmin, async (req, res) => {
   try {
     const { rows: r1 } = await db.query(`SELECT COUNT(*) as c FROM prode_matches`);
@@ -196,14 +186,8 @@ router.get('/status', requireAuth, requireAdmin, async (req, res) => {
   }
 });
 
-
-//SI FUNCA SACAR
-
-
-// POST /api/sync/test — simular resultados (solo dev/admin)
 router.post('/test', requireAuth, requireAdmin, async (req, res) => {
   try {
-    // Traer los primeros 3 partidos sin resultado
     const { rows: matches } = await db.query(
       `SELECT id FROM prode_matches WHERE result IS NULL OR result = '' LIMIT 3`
     );
@@ -215,7 +199,6 @@ router.post('/test', requireAuth, requireAdmin, async (req, res) => {
       const gH = Math.floor(Math.random() * 4);
       const gA = Math.floor(Math.random() * 4);
       const result = gH > gA ? '1' : gH < gA ? '2' : 'x';
-
       await db.query(
         `UPDATE prode_matches SET goals_home = $1, goals_away = $2, result = $3 WHERE id = $4`,
         [gH, gA, result, match.id]
@@ -228,8 +211,5 @@ router.post('/test', requireAuth, requireAdmin, async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
-
-
-//SI FUNCA SACAR
 
 module.exports = router;

@@ -1606,7 +1606,11 @@ t.textContent = r.label;
       drawBracketConnector(svg, fromX, cA.midY, cB.midY, toX, pairMidY, LINE1, dir);
 
       // QF slot — muestra los dos ganadores enfrentados
-      const qfSlot = drawSlot(svg, wA, wB, isLeft ? qfX : R_QF, qfSlotY, 'Por definir', 216 + (bIdx + p));
+      const qfMatchId = 216 + (bIdx + p);
+      const qfMatch = elimMatches.find(m => m.id === qfMatchId);
+      const qfTeamA = wA || (qfMatch?.home && qfMatch.home !== 'Por definir' ? { name: qfMatch.home, flag: qfMatch.home_flag || '🏳️' } : null);
+      const qfTeamB = wB || (qfMatch?.away && qfMatch.away !== 'Por definir' ? { name: qfMatch.away, flag: qfMatch.away_flag || '🏳️' } : null);
+      const qfSlot = drawSlot(svg, qfTeamA, qfTeamB, isLeft ? qfX : R_QF, qfSlotY, 'Por definir', qfMatchId);
 
       qfMidYs.push(qfSlot.midY);
     }
@@ -1620,7 +1624,11 @@ t.textContent = r.label;
 
     drawBracketConnector(svg, qfFromX, qfMidYs[0], qfMidYs[1], sfToX, sfMidY, LINE2, dir);
 
-drawSlot(svg, null, null, isLeft ? sfX : R_SF, sfSlotY, 'SF', 224 + cuadIdx);
+const sfMatchId = 224 + cuadIdx;
+const sfMatch = elimMatches.find(m => m.id === sfMatchId);
+const sfTeamA = sfMatch?.home && sfMatch.home !== 'Por definir' ? { name: sfMatch.home, flag: sfMatch.home_flag||'🏳️' } : null;
+const sfTeamB = sfMatch?.away && sfMatch.away !== 'Por definir' ? { name: sfMatch.away, flag: sfMatch.away_flag||'🏳️' } : null;
+drawSlot(svg, sfTeamA, sfTeamB, isLeft ? sfX : R_SF, sfSlotY, 'SF', sfMatchId);
     // Guardar sfMidY para el conector a la final
     return sfMidY;
   }
