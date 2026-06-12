@@ -177,6 +177,22 @@ function doLogout() {
   document.getElementById('auth-error').textContent = '';
 }
 
+function showIntro(callback) {
+  const intro = document.getElementById('intro-screen');
+  const audio = document.getElementById('login-audio');
+  intro.style.display = 'flex';
+  audio?.play().catch(() => {});
+  setTimeout(() => {
+    intro.style.opacity = '0';
+    intro.style.transition = 'opacity .5s';
+    setTimeout(() => {
+      intro.style.display = 'none';
+      intro.style.opacity = '';
+      intro.style.transition = '';
+      callback();
+    }, 500);
+  }, 2500);
+}
 
 function launchConfetti() {
   const colors = ['#6CACE4','#ffffff','#FFB81C','#4a90d9','#85bde8'];
