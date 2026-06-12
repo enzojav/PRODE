@@ -179,18 +179,25 @@ function doLogout() {
 
 function showIntro(callback) {
   const intro = document.getElementById('intro-screen');
-  const audio = document.getElementById('login-audio');
+
+  if (!intro) {
+    callback();
+    return;
+  }
+
   intro.style.display = 'flex';
-  audio?.play().catch(() => {});
+
   setTimeout(() => {
     intro.style.opacity = '0';
     intro.style.transition = 'opacity .5s';
+
     setTimeout(() => {
       intro.style.display = 'none';
       intro.style.opacity = '';
       intro.style.transition = '';
       callback();
     }, 500);
+
   }, 2500);
 }
 
