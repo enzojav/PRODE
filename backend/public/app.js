@@ -1775,9 +1775,6 @@ function openR16AdminModal(matchId) {
   document.getElementById('r16-inp-home').focus();
 }
 
-modal.classList.add('active');
-modal.classList.remove('active');
-
 function closeR16AdminModal() {
   const modal = document.getElementById('r16-admin-modal');
   if (modal) modal.style.display = 'none';
