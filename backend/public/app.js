@@ -48,7 +48,7 @@ function isMatchLocked(m) {
     const day     = parseInt(parts[dayIdx]);
     const month   = MONTH_MAP[parts[monIdx]];
     const [hh,mm] = (m.time || '00:00').split(':').map(Number);
-    const matchTime = new Date(Date.UTC(2026, month, day, hh + 3, mm, 0));
+    const matchTime = new Date(2026, month, day, hh, mm, 0);
     return new Date() >= new Date(matchTime.getTime() - 60 * 60 * 1000);
   } catch { return false; }
 }
@@ -582,7 +582,7 @@ async function renderStandings() {
             <div class="srpts">${s.pts} pts</div>
           </div>`;
         }).join('')
-      : '<div class="no-standings">Nadie cargó pronósticos todavía.</div>';
+      : '<div class="no-standings">Tus aciertos ⚽</div>';
   } catch { }
 }
 
@@ -591,7 +591,7 @@ function setDate(d) { activeDate = d; renderProde(); }
 // ── Tarjeta de partido ────────────────────────────────────────
 function renderMatchCard(m) {
   const pred   = localPreds[m.id] || {};
-  const locked = false //isMatchLocked(m); activar el 11
+  const locked = isMatchLocked(m);
   const mH = m.home_score !== null && m.home_score !== undefined ? Number(m.home_score) : null;
   const mA = m.away_score !== null && m.away_score !== undefined ? Number(m.away_score) : null;
   const played = mH !== null && mA !== null;
@@ -1228,7 +1228,7 @@ function renderR16Bracket() {
     }
 
     const pred    = r16Preds[m.id] || {};
-    const locked  = false //isMatchLocked(m);
+    const locked  = isMatchLocked(m);
     const mH      = m.home_score !== null && m.home_score !== undefined ? Number(m.home_score) : null;
     const mA      = m.away_score !== null && m.away_score !== undefined ? Number(m.away_score) : null;
     const played  = mH !== null && mA !== null;
