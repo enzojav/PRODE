@@ -221,6 +221,7 @@ function launchConfetti() {
 
 function bootApp() {
   showIntro(() => {
+    document.getElementById('login-audio')?.play().catch(() => {});
     showApp();
     applyRole();
     setupNav();
