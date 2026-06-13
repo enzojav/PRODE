@@ -126,7 +126,6 @@ function switchAuthTab(tab) {
 
 
 async function doLogin() {
-  document.getElementById('login-audio')?.play().catch(() => {});
   const username = document.getElementById('l-user').value.trim();
   const password = document.getElementById('l-pass').value;
   const errEl    = document.getElementById('auth-error');
