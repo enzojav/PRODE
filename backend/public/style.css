@@ -2757,7 +2757,7 @@ body::before {
   opacity: 0;
 
   /* DURACIÓN EN PANTALLA */
-  animation: showFlag 10s forwards;
+  animation: showFlag 15s forwards;
 }
 
 
