@@ -2743,3 +2743,65 @@ body::before {
   box-shadow: 0 0 16px rgba(10,102,194,.3);
   transform: translateY(-3px) scale(1.08);
 }
+
+body {
+  margin: 0;
+  overflow: hidden;
+}
+
+.flag-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.35; /* transparencia */
+  overflow: hidden;
+}
+
+.flag {
+  position: absolute;
+  inset: -5%;
+  width: 110%;
+  height: 110%;
+
+  background:
+    linear-gradient(
+      to bottom,
+      #74acdf 0%,
+      #74acdf 33%,
+      white 33%,
+      white 66%,
+      #74acdf 66%
+    );
+
+  filter: blur(0.5px);
+
+  animation: wave 4s ease-in-out infinite;
+  transform-origin: center;
+}
+
+
+@keyframes wave {
+
+  0% {
+    transform:
+      perspective(900px)
+      rotateY(-4deg)
+      translateX(-2%);
+  }
+
+  50% {
+    transform:
+      perspective(900px)
+      rotateY(4deg)
+      translateX(2%);
+  }
+
+  100% {
+    transform:
+      perspective(900px)
+      rotateY(-4deg)
+      translateX(-2%);
+  }
+
+}
