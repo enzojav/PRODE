@@ -2744,4 +2744,4 @@ body::before {
   transform: translateY(-3px) scale(1.08);
 }
 
-.rk4 { background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.2); color: #ffffff; }
+.rk4 { background: rgba(255,255,255,.15); color: #ffffff; }
