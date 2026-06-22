@@ -589,7 +589,7 @@ async function renderStandings() {
               ${isMe ? `<strong>${s.displayName}</strong> <span class="me-tag">← vos</span>` : s.displayName}
               <div class="srdet">${s.exact || s.ok || 0}/${s.total || s.tot || 0} aciertos</div>
             </div>
-            <div class="srpts" style="color:${i===0||i===1||i===2?'var(--amber)':i<10?'#ffffff':'rgba(255,255,255,.4)'}">${s.pts} pts</div>
+            <div class="srpts" style="color:${i===0||i===1||i===2?'var(--amber)':i<10?'#ffffff':'rgba(255,255,255,.4)'}; ${i>=3&&i<10?'background:rgba(255,255,255,.15);padding:2px 8px;border-radius:6px;':''}">
           </div>`;
         }).join('')
       : '<div class="no-standings">Tus aciertos ⚽</div>';
