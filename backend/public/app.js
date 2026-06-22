@@ -581,7 +581,7 @@ async function renderStandings() {
     const sorted    = [...standings].sort((a,b) => b.pts - a.pts);
     document.getElementById('standings').innerHTML = sorted.length
       ? sorted.map((s,i) => {
-          const pkc  = i===0?'rk1':i===1?'rk2':i===2?'rk3':'rkn';
+          const pkc  = i===0?'rk1':i===1?'rk2':i===2?'rk3':i<10?'rk4':'rkn';
           const isMe = s.username === currentUser.username;
           return `<div class="sr">
             <div class="srp ${pkc}">${i+1}</div>
