@@ -2803,3 +2803,8 @@ body::before {
   animation: abducted 16s ease-in-out 3 forwards;
   animation-delay: 5s;
 }
+
+#standings {
+  display: flex;
+  flex-direction: column;
+}
