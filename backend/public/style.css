@@ -2796,10 +2796,10 @@ body::before {
 .ovni-victim {
   position: fixed;
   top: calc(10vh + 330px);
-  left: calc(50vw - 20px);
+  left: calc(46vw - 20px);
   font-size: 2.5rem;
   pointer-events: none;
   z-index: 9997;
   animation: abducted 16s ease-in-out 3 forwards;
-  animation-delay: 3s;
+  animation-delay: 5s;
 }
