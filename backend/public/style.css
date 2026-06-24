@@ -2769,7 +2769,7 @@ body::before {
   position: fixed;
   top: 12vh;
   left: 0;
-  width: 500x;
+  width: 260px;
   pointer-events: none;
   z-index: 9999;
   animation: ovni-fly 16s ease-in-out 3 forwards;
@@ -2782,7 +2782,7 @@ body::before {
   top: calc(12vh + 90px);
   left: calc(35vw + 60px);
   width: 100px;
-  height: 300px;
+  height: 220px;
   background: linear-gradient(180deg, rgba(170,255,238,0.5) 0%, rgba(170,255,238,0) 100%);
   clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
   pointer-events: none;
@@ -2795,8 +2795,8 @@ body::before {
 
 .ovni-victim {
   position: fixed;
-  top: calc(12vh + 350px);
-  left: calc(35vw + 150px);
+  top: calc(12vh + 290px);
+  left: calc(35vw + 70px);
   font-size: 2rem;
   pointer-events: none;
   z-index: 9997;
