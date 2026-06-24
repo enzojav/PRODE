@@ -2743,5 +2743,63 @@ body::before {
   box-shadow: 0 0 16px rgba(10,102,194,.3);
   transform: translateY(-3px) scale(1.08);
 }
+@keyframes ovni-fly {
+  0%   { transform: translateX(-400px) translateY(0px); opacity: 0; }
+  8%   { transform: translateX(30vw) translateY(0px); opacity: 1; }
+  35%  { transform: translateX(35vw) translateY(0px); opacity: 1; }
+  65%  { transform: translateX(35vw) translateY(0px); opacity: 1; }
+  92%  { transform: translateX(110vw) translateY(-60px); opacity: 1; }
+  100% { transform: translateX(110vw) translateY(-60px); opacity: 0; }
+}
 
-.rk4 { background: rgba(255,255,255,.15); color: #ffffff; }
+@keyframes beam-appear {
+  0%,25%  { opacity: 0; transform: scaleY(0); }
+  35%     { opacity: 1; transform: scaleY(1); }
+  60%     { opacity: 1; transform: scaleY(1); }
+  70%,100%{ opacity: 0; transform: scaleY(0); }
+}
+
+@keyframes abducted {
+  0%,30%  { transform: translateY(0px); opacity: 1; }
+  60%     { transform: translateY(-180px); opacity: 0; }
+  100%    { transform: translateY(-180px); opacity: 0; }
+}
+
+.ovni-float {
+  position: fixed;
+  top: 12vh;
+  left: 0;
+  width: 260px;
+  pointer-events: none;
+  z-index: 9999;
+  animation: ovni-fly 16s ease-in-out infinite;
+  animation-delay: 3s;
+  opacity: 0;
+}
+
+.ovni-beam {
+  position: fixed;
+  top: calc(12vh + 90px);
+  left: calc(35vw + 60px);
+  width: 100px;
+  height: 220px;
+  background: linear-gradient(180deg, rgba(170,255,238,0.5) 0%, rgba(170,255,238,0) 100%);
+  clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
+  pointer-events: none;
+  z-index: 9998;
+  opacity: 0;
+  transform-origin: top center;
+  animation: beam-appear 16s ease-in-out infinite;
+  animation-delay: 3s;
+}
+
+.ovni-victim {
+  position: fixed;
+  top: calc(12vh + 290px);
+  left: calc(35vw + 70px);
+  font-size: 2rem;
+  pointer-events: none;
+  z-index: 9997;
+  animation: abducted 16s ease-in-out infinite;
+  animation-delay: 3s;
+}
