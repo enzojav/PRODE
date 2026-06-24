@@ -2744,34 +2744,12 @@ body::before {
   transform: translateY(-3px) scale(1.08);
 }
 @keyframes ovni-fly {
-  0%   { transform: translateX(-400px) translateY(0px); opacity: 0; }
-  8%   { transform: translateX(30vw) translateY(0px); opacity: 1; }
-  35%  { transform: translateX(35vw) translateY(0px); opacity: 1; }
-  65%  { transform: translateX(35vw) translateY(0px); opacity: 1; }
-  92%  { transform: translateX(110vw) translateY(-60px); opacity: 1; }
-  100% { transform: translateX(110vw) translateY(-60px); opacity: 0; }
-}
-
-@keyframes beam-appear {
-  0%,25%  { opacity: 0; transform: scaleY(0); }
-  35%     { opacity: 1; transform: scaleY(1); }
-  60%     { opacity: 1; transform: scaleY(1); }
-  70%,100%{ opacity: 0; transform: scaleY(0); }
-}
-
-@keyframes abducted {
-  0%,30%  { transform: translateY(0px); opacity: 1; }
-  60%     { transform: translateY(-180px); opacity: 0; }
-  100%    { transform: translateY(-180px); opacity: 0; }
-}
-
-@keyframes ovni-fly {
-  0%   { transform: translateX(-400px) translateY(0px); opacity: 0; }
-  8%   { transform: translateX(30vw) translateY(0px); opacity: 1; }
-  35%  { transform: translateX(35vw) translateY(0px); opacity: 1; }
-  65%  { transform: translateX(35vw) translateY(0px); opacity: 1; }
-  92%  { transform: translateX(110vw) translateY(-60px); opacity: 1; }
-  100% { transform: translateX(110vw) translateY(-60px); opacity: 0; }
+  0%   { left: -500px; opacity: 0; }
+  8%   { left: calc(50vw - 220px); opacity: 1; }
+  35%  { left: calc(50vw - 220px); opacity: 1; }
+  65%  { left: calc(50vw - 220px); opacity: 1; }
+  92%  { left: 110vw; opacity: 1; }
+  100% { left: 110vw; opacity: 0; }
 }
 
 @keyframes beam-appear {
@@ -2789,22 +2767,22 @@ body::before {
 
 .ovni-float {
   position: fixed;
-  top: 12vh;
-  left: 0;
-  width: 260px;
+  top: 10vh;
+  left: -500px;
+  width: 440px;
   pointer-events: none;
   z-index: 9999;
+  opacity: 0;
   animation: ovni-fly 16s ease-in-out 3 forwards;
   animation-delay: 3s;
-  opacity: 0;
 }
 
 .ovni-beam {
   position: fixed;
-  top: calc(12vh + 90px);
-  left: calc(35vw + 60px);
-  width: 100px;
-  height: 220px;
+  top: calc(10vh + 110px);
+  left: calc(50vw - 60px);
+  width: 120px;
+  height: 240px;
   background: linear-gradient(180deg, rgba(170,255,238,0.5) 0%, rgba(170,255,238,0) 100%);
   clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
   pointer-events: none;
@@ -2817,11 +2795,11 @@ body::before {
 
 .ovni-victim {
   position: fixed;
-  top: calc(12vh + 290px);
-  left: calc(35vw + 70px);
-  font-size: 2rem;
+  top: calc(10vh + 330px);
+  left: calc(45vw - 20px);
+  font-size: 2.5rem;
   pointer-events: none;
   z-index: 9997;
   animation: abducted 16s ease-in-out 3 forwards;
-  animation-delay: 5s;
+  animation-delay: 3s;
 }
