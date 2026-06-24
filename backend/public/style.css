@@ -2772,7 +2772,7 @@ body::before {
   width: 260px;
   pointer-events: none;
   z-index: 9999;
-  animation: ovni-fly 16s ease-in-out infinite;
+  animation: ovni-fly 16s ease-in-out 3 forwards;
   animation-delay: 3s;
   opacity: 0;
 }
@@ -2789,7 +2789,7 @@ body::before {
   z-index: 9998;
   opacity: 0;
   transform-origin: top center;
-  animation: beam-appear 16s ease-in-out infinite;
+  animation: beam-appear 16s ease-in-out 3 forwards;
   animation-delay: 3s;
 }
 
@@ -2800,6 +2800,6 @@ body::before {
   font-size: 2rem;
   pointer-events: none;
   z-index: 9997;
-  animation: abducted 16s ease-in-out infinite;
+  animation: abducted 16s ease-in-out 3 forwards;
   animation-delay: 3s;
 }
