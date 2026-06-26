@@ -1364,20 +1364,35 @@ function renderR16Bracket() {
 
   // ── Slot de avance (QF/SF) ────────────────────────────────────
   function drawSlot(svg, teamA, teamB, x, y, label, matchId) {
+  const pred    = r16Preds[matchId] || {};
+  const predRes = pred.result || null;
+  const locked  = elimMatches.find(m => m.id === matchId) ? isMatchLocked(elimMatches.find(m => m.id === matchId)) : false;
+
   if (teamA || teamB) {
     el('rect', { x: x+1, y: y+2, width: SW, height: SH*2+1, rx: '6', fill: 'rgba(0,0,0,.35)' }, svg);
     el('rect', { x, y, width: SW, height: SH*2+1, rx: '6',
       fill: '#0d1b38', stroke: 'rgba(255,184,28,.45)', 'stroke-width': '1' }, svg);
     el('line', { x1: x+1, y1: y+SH, x2: x+SW-1, y2: y+SH,
       stroke: 'rgba(255,255,255,.05)', 'stroke-width': '1' }, svg);
+
     [teamA, teamB].forEach((team, i) => {
-      const oy = y + SH/2 + i*SH;
+      const oy   = y + SH/2 + i*SH;
+      const side = i === 0 ? '1' : '2';
+
+      // highlight si está votado
+      if (predRes === side) {
+        el('rect', { x: x+1, y: y + i*SH + 1, width: SW-2, height: SH-1,
+          rx: i === 0 ? '5' : '0', fill: 'rgba(58,232,176,.12)' }, svg);
+      }
+
       if (team) {
-        el('rect', { x, y: y + i*SH, width: 3, height: SH, rx: '2', fill: 'rgba(255,184,28,.7)' }, svg);
+        el('rect', { x, y: y + i*SH, width: 3, height: SH, rx: '2',
+          fill: predRes === side ? 'rgba(58,232,176,.8)' : 'rgba(255,184,28,.7)' }, svg);
         const ft = el('text', { x: x+10, y: oy+4, 'font-size': '12', 'font-family': FONT }, svg);
         ft.textContent = team.flag || '🏳️';
         const nt = el('text', { x: x+28, y: oy+5,
-          'font-size': '10', 'font-family': FONT, 'font-weight': '700', fill: AMBER }, svg);
+          'font-size': '10', 'font-family': FONT, 'font-weight': '700',
+          fill: predRes === side ? '#3ae8b0' : AMBER }, svg);
         nt.textContent = trunc(team.name, 11);
       } else {
         const lt = el('text', { x: x+SW/2, y: oy+5,
@@ -1386,6 +1401,18 @@ function renderR16Bracket() {
         lt.textContent = '?';
       }
     });
+
+    // zonas clickeables para jugadores
+    if (matchId && currentUser.role !== 'admin' && !locked) {
+      ['1','2'].forEach((side, i) => {
+        const zone = el('rect', {
+          x, y: y + i*SH, width: SW, height: SH, fill: 'transparent',
+        }, svg);
+        zone.style.cursor = 'pointer';
+        zone.addEventListener('click', () => setR16Pred(matchId, side));
+      });
+    }
+
   } else {
     el('rect', { x, y, width: SW, height: SH*2+1, rx: '6',
       fill: 'rgba(255,255,255,.02)',
@@ -1399,7 +1426,7 @@ function renderR16Bracket() {
     }
   }
 
-  // Badge admin ✎
+  // Badge admin ✎ — una sola vez, al final
   if (currentUser.role === 'admin' && matchId) {
     const bg = el('rect', { x: x+SW-22, y: y+2, width: 18, height: 16, rx: '4',
       fill: 'rgba(108,172,228,.15)', stroke: 'rgba(108,172,228,.3)', 'stroke-width': '1',
@@ -1409,37 +1436,6 @@ function renderR16Bracket() {
     bt.textContent = '✎';
     bg.addEventListener('click', e => { e.stopPropagation(); openR16AdminModal(matchId); });
     bt.addEventListener('click', e => { e.stopPropagation(); openR16AdminModal(matchId); });
-  }
-
-  // Badge admin ✎ — siempre al final
-  if (currentUser.role === 'admin' && matchId) {
-    const bg = el('rect', { x: x+SW-22, y: y+2, width: 18, height: 16, rx: '4',
-      fill: 'rgba(108,172,228,.15)', stroke: 'rgba(108,172,228,.3)', 'stroke-width': '1',
-      style: 'cursor:pointer' }, svg);
-    const bt = el('text', { x: x+SW-13, y: y+13, 'font-size': '10', 'font-family': FONT,
-      fill: 'rgba(108,172,228,.8)', 'text-anchor': 'middle', style: 'cursor:pointer' }, svg);
-    bt.textContent = '✎';
-    bg.addEventListener('click', e => { e.stopPropagation(); openR16AdminModal(matchId); });
-    bt.addEventListener('click', e => { e.stopPropagation(); openR16AdminModal(matchId); });
-  }
-   if (matchId && currentUser.role !== 'admin' && (teamA || teamB)) {
-    // zona para votar teamA (arriba)
-    const zoneA = el('rect', {
-      x, y,
-      width: SW, height: SH,
-      fill: 'transparent',
-    }, svg);
-    zoneA.style.cursor = 'pointer';
-    zoneA.addEventListener('click', () => setR16Pred(matchId, '1'));
-
-    // zona para votar teamB (abajo)
-    const zoneB = el('rect', {
-      x, y: y + SH,
-      width: SW, height: SH,
-      fill: 'transparent',
-    }, svg);
-    zoneB.style.cursor = 'pointer';
-    zoneB.addEventListener('click', () => setR16Pred(matchId, '2'));
   }
 
   return { midY: y + SH, rightX: x + SW, leftX: x };
