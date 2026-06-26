@@ -2744,3 +2744,13 @@ body::before {
   transform: translateY(-3px) scale(1.08);
 }
 .rk4 { background: #ffffff; color: #000000; }
+
+#r16-bracket {
+  overflow-x: auto;
+  width: 100%;
+}
+
+#s-r16 .content,
+#s-r16 {
+  overflow-x: auto;
+}
