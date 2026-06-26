@@ -1689,28 +1689,7 @@ drawSlot(svg, sfTeamA, sfTeamB, isLeft ? sfX : R_SF, sfSlotY, 'SF', sfMatchId);
 }
 
 
-// ── Predicción R16 ────────────────────────────────────────────
-async function setR16Pred(matchId, val) {
-  const match = r16Matches.find(m => m.id === matchId);
-  if (!match) return;
-  if (isMatchLocked(match)) { toast('Este partido ya está cerrado para pronósticos', 'e'); return; }
-  try {
-    const saved = await api('POST', '/prode/predictions', {
-      match_id: matchId, result: val, home_score: null, away_score: null,
-    });
-    r16Preds[matchId] = saved;
-    renderR16Bracket();
-    // actualizar puntos
-    let myPts = 0;
-    r16Matches.forEach(m => {
-      const pred = r16Preds[m.id];
-      if (!pred) return;
-      const p = calcR16Points(pred, m);
-      if (p > 0) myPts += p;
-    });
-    document.getElementById('r16-my-pts').textContent = myPts;
-  } catch(e) { toast(e.message, 'e'); }
-}
+// ── Predicción R16 ───────────────────────────────────────────
 
 // ── Resultado admin R16 ───────────────────────────────────────
 async function setR16Result(matchId, side, value) {
