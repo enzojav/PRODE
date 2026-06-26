@@ -267,6 +267,9 @@ const SECTION_TITLES = { dashboard:'Dashboard', r16:'16avos ⚽', score:'Score B
 const ADD_ACTIONS    = { news: () => openNewsModal(), members: () => openMemberModal() };
 
 function navigateTo(sec) {
+  if (sec !== 'r16') {
+    document.querySelector('.sb').classList.remove('sb-collapsed');
+  }
   document.querySelectorAll('.ni').forEach(n => n.classList.toggle('active', n.dataset.s === sec));
   document.querySelectorAll('.sec').forEach(x => x.classList.remove('active'));
   document.getElementById('s-' + sec)?.classList.add('active');
@@ -1037,6 +1040,8 @@ let elimMatches = [];
 
 async function renderR16() {
   if (!currentUser) return;
+  document.querySelector('.sb').classList.add('sb-collapsed'); // ← agregar esto
+
   try {
     r16Matches     = await api('GET', '/prode/matches/r16');
     elimMatches    = await api('GET', '/prode/matches/elim');  // ← AGREGAR
