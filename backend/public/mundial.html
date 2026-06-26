@@ -65,7 +65,7 @@
     .stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; color: var(--amber); letter-spacing: .04em; }
     .stat-lbl { font-size: .6rem; color: var(--text3); text-transform: uppercase; letter-spacing: .1em; margin-top: 1px; }
 
-    .bracket-container { padding: 20px 16px; overflow-x: auto; }
+    .bracket-container { padding: 20px 16px; overflow-x: auto; -webkit-overflow-scrolling: touch; cursor: grab; }
     .bracket-svg { display: block; }
 
     .team-box { cursor: pointer; }
@@ -494,6 +494,7 @@ function render() {
   svg.setAttribute('width', svgW);
   svg.setAttribute('height', totalH);
   svg.setAttribute('viewBox', `0 0 ${svgW} ${totalH}`);
+  svg.style.minWidth = svgW + 'px';
 
   const rowH = (totalH - 40) / ROWS;
   function getMatchY(idx) { return 20 + idx * rowH + rowH/2 - H; }
