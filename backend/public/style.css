@@ -2754,3 +2754,14 @@ body::before {
 #s-r16 {
   overflow-x: auto;
 }
+
+body {
+  overflow-x: auto;  /* ← cambiá de lo que sea a auto */
+}
+
+.bracket-container {
+  padding: 20px 16px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+}
