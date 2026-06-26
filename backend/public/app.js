@@ -1623,9 +1623,6 @@ t.textContent = r.label;
       // connectors de las cards al QF slot
       drawBracketConnector(svg, fromX, cA.midY, cB.midY, toX, pairMidY, LINE1, dir);
 
-      // QF slot — muestra los dos ganadores enfrentados
-    // connectors de las cards al QF slot
-      drawBracketConnector(svg, fromX, cA.midY, cB.midY, toX, pairMidY, LINE1, dir);
 
       // QF slot — muestra los dos ganadores enfrentados
       const qfMatchId = 216 + (bIdx + p);
@@ -1636,8 +1633,6 @@ t.textContent = r.label;
 
       qfMidYs.push(qfSlot.midY);
     }
-
-    // SF connector: junta los 2 QF slots en el SF slot
     const sfMidY = (qfMidYs[0] + qfMidYs[1]) / 2;
     const sfSlotY = sfMidY - SH/2;
 
@@ -1646,20 +1641,19 @@ t.textContent = r.label;
 
     drawBracketConnector(svg, qfFromX, qfMidYs[0], qfMidYs[1], sfToX, sfMidY, LINE2, dir);
 
-const sfMatchId = 224 + cuadIdx;
-const sfMatch = elimMatches.find(m => m.id === sfMatchId);
-const sfTeamA = sfMatch?.home && sfMatch.home !== 'Por definir' ? { name: sfMatch.home, flag: sfMatch.home_flag||'🏳️' } : null;
-const sfTeamB = sfMatch?.away && sfMatch.away !== 'Por definir' ? { name: sfMatch.away, flag: sfMatch.away_flag||'🏳️' } : null;
-drawSlot(svg, sfTeamA, sfTeamB, isLeft ? sfX : R_SF, sfSlotY, 'SF', sfMatchId);
-    // Guardar sfMidY para el conector a la final
+    const sfMatchId = 224 + cuadIdx;
+    const sfMatch = elimMatches.find(m => m.id === sfMatchId);
+    const sfTeamA = sfMatch?.home && sfMatch.home !== 'Por definir' ? { name: sfMatch.home, flag: sfMatch.home_flag||'🏳️' } : null;
+    const sfTeamB = sfMatch?.away && sfMatch.away !== 'Por definir' ? { name: sfMatch.away, flag: sfMatch.away_flag||'🏳️' } : null;
+    drawSlot(svg, sfTeamA, sfTeamB, isLeft ? sfX : R_SF, sfSlotY, 'SF', sfMatchId);
     return sfMidY;
   }
 
   // Dibujar los 4 cuadrantes
   const sfL0 = drawQuadrant(0, 'left',  0); // llaves 0,1
   const sfL1 = drawQuadrant(1, 'left',  2); // llaves 2,3
-  const sfR0 = drawQuadrant(0, 'right', 4); // llaves 4,5
-  const sfR1 = drawQuadrant(1, 'right', 6); // llaves 6,7
+  const sfR0 = drawQuadrant(2, 'right', 4);
+  const sfR1 = drawQuadrant(3, 'right', 6);
 
   // ── Final ─────────────────────────────────────────────────────
   const finMidY = (sfL0 + sfL1) / 2;
