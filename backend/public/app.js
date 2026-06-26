@@ -1,7 +1,6 @@
 // ============================================================
 //  APP.JS — Conectado al backend real (JWT + PostgreSQL)
 //  Roles: "admin" (acceso total) | "player" (solo Prode)
-//  PUNTOS: exacto (goles) = 10pts · resultado (1/x/2) = 5pts
 // ============================================================
 
 const AVATAR_COLORS = ['#6CACE4','#FFB81C','#85bde8','#002470','#3ae8d0','#ff8c42','#a8d8ea','#43e8b0'];
@@ -752,20 +751,18 @@ async function clearMatchResult(matchId) {
 }
 
 // ── Predicciones ──────────────────────────────────────────────
-async function setPred(matchId, val) {
-  const match = localMatches.find(m => m.id === matchId);
+async function setR16Pred(matchId, val) {
+  const match = r16Matches.find(m => m.id === matchId) 
+             || elimMatches.find(m => m.id === matchId);  //
   if (!match) return;
-
-  const existing = localPreds[matchId] || {};
-  const pH = existing.home_score !== null && existing.home_score !== undefined ? Number(existing.home_score) : null;
-  const pA = existing.away_score !== null && existing.away_score !== undefined ? Number(existing.away_score) : null;
-
-  const currentGoalResult = goalsToResult(pH, pA);
-  let newHome = pH;
-  let newAway = pA;
-  if (currentGoalResult !== val) { newHome = null; newAway = null; }
-
-  await savePrediction(matchId, val, newHome, newAway);
+  if (isMatchLocked(match)) { toast('Este partido ya está cerrado para pronósticos', 'e'); return; }
+  try {
+    const saved = await api('POST', '/prode/predictions', {
+      match_id: matchId, result: val, home_score: null, away_score: null,
+    });
+    r16Preds[matchId] = saved;
+    renderR16Bracket();
+  } catch(e) { toast(e.message, 'e'); }
 }
 
 async function setPredGoals(matchId, side, value) {
@@ -1046,7 +1043,10 @@ async function renderR16() {
     const predsArr = await api('GET', '/prode/predictions');
     r16Preds = {};
     predsArr.forEach(p => {
-      if (r16Matches.find(m => m.id === p.match_id)) r16Preds[p.match_id] = p;
+      if (r16Matches.find(m => m.id === p.match_id)
+       || elimMatches.find(m => m.id === p.match_id)) {
+        r16Preds[p.match_id] = p;
+      }
     });
   } catch(e) { console.error('Error cargando R16:', e); return; }
 
@@ -1425,6 +1425,29 @@ function renderR16Bracket() {
     bg.addEventListener('click', e => { e.stopPropagation(); openR16AdminModal(matchId); });
     bt.addEventListener('click', e => { e.stopPropagation(); openR16AdminModal(matchId); });
   }
+   if (matchId && currentUser.role !== 'admin' && (teamA || teamB)) {
+    // zona para votar teamA (arriba)
+    const zoneA = el('rect', {
+      x, y,
+      width: SW, height: SH,
+      fill: 'transparent',
+    }, svg);
+    zoneA.style.cursor = 'pointer';
+    zoneA.addEventListener('click', () => setR16Pred(matchId, '1'));
+
+    // zona para votar teamB (abajo)
+    const zoneB = el('rect', {
+      x, y: y + SH,
+      width: SW, height: SH,
+      fill: 'transparent',
+    }, svg);
+    zoneB.style.cursor = 'pointer';
+    zoneB.addEventListener('click', () => setR16Pred(matchId, '2'));
+  }
+
+  return { midY: y + SH, rightX: x + SW, leftX: x };
+}
+
 
   return { midY: y + SH, rightX: x + SW, leftX: x };
 }
@@ -1674,7 +1697,7 @@ drawSlot(svg, sfTeamA, sfTeamB, isLeft ? sfX : R_SF, sfSlotY, 'SF', sfMatchId);
   container.innerHTML = '';
   twemoji.parse(container);
   container.appendChild(svg);
-}
+
 
 
 // ── Predicción R16 ────────────────────────────────────────────

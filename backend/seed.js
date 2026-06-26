@@ -104,7 +104,7 @@ const DB_MATCHES = [
 async function seed() {
   console.log('🌱 Iniciando seed de partidos...');
 
-  // Limpiar tabla primero (opcional, evita duplicados)
+  // Limpiar tabla primero (evita duplicados)
   await pool.query('DELETE FROM prode_predictions');
   await pool.query('DELETE FROM prode_matches');
   console.log('🗑️  Tabla limpiada');
