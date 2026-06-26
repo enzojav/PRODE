@@ -1043,10 +1043,7 @@ async function renderR16() {
     const predsArr = await api('GET', '/prode/predictions');
     r16Preds = {};
     predsArr.forEach(p => {
-      if (r16Matches.find(m => m.id === p.match_id)
-       || elimMatches.find(m => m.id === p.match_id)) {
-        r16Preds[p.match_id] = p;
-      }
+      if (r16Matches.find(m => m.id === p.match_id)) r16Preds[p.match_id] = p;
     });
   } catch(e) { console.error('Error cargando R16:', e); return; }
 
@@ -1447,10 +1444,6 @@ function renderR16Bracket() {
 
   return { midY: y + SH, rightX: x + SW, leftX: x };
 }
-
-
-  return { midY: y + SH, rightX: x + SW, leftX: x };
-}
   // ── Final central ─────────────────────────────────────────────
   function drawFinal(svg, x, y) {
     el('rect', { x: x+1, y: y+2, width: FW, height: FH, rx: '9', fill: 'rgba(0,0,0,.4)' }, svg);
@@ -1697,7 +1690,7 @@ drawSlot(svg, sfTeamA, sfTeamB, isLeft ? sfX : R_SF, sfSlotY, 'SF', sfMatchId);
   container.innerHTML = '';
   twemoji.parse(container);
   container.appendChild(svg);
-
+}
 
 
 // ── Predicción R16 ────────────────────────────────────────────
