@@ -76,17 +76,17 @@ function calcMatchPoints(pred, match) {
   const mA = match.away_score !== null && match.away_score !== undefined ? Number(match.away_score) : null;
   if (mH === null || mA === null || isNaN(mH) || isNaN(mA)) return -1;
 
-  const pResult = pred.result || null;
+  const phase = match.phase || 'group';
+  const isElim = phase === 'R16' || phase === 'QF' || phase === 'SF' || phase === 'F';
+  const realResult = goalsToResult(mH, mA);
   const pH = pred.home_score !== null && pred.home_score !== undefined ? Number(pred.home_score) : null;
   const pA = pred.away_score !== null && pred.away_score !== undefined ? Number(pred.away_score) : null;
+  const predResult = pred.result || goalsToResult(pH, pA);
 
-  const realResult = goalsToResult(mH, mA);
+  if (isElim) return predResult && predResult === realResult ? 10 : 0;
 
   if (pH !== null && pA !== null && !isNaN(pH) && !isNaN(pA) && pH === mH && pA === mA) return 13;
-
-  const predResult = pResult || goalsToResult(pH, pA);
   if (predResult && predResult === realResult) return 5;
-
   return 0;
 }
 

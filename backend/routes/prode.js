@@ -20,12 +20,18 @@ function calcPoints(pred, match) {
   const mH = match.home_score !== null ? Number(match.home_score) : null;
   const mA = match.away_score !== null ? Number(match.away_score) : null;
   if (mH === null || mA === null) return 0;
+
+  const phase = match.phase || 'group';
+  const isElim = phase === 'R16' || phase === 'QF' || phase === 'SF' || phase === 'F';
+  const realResult = goalsToResult(mH, mA);
   const pH = pred.home_score !== null && pred.home_score !== undefined ? Number(pred.home_score) : null;
   const pA = pred.away_score !== null && pred.away_score !== undefined ? Number(pred.away_score) : null;
-  const realResult = goalsToResult(mH, mA);
   const predResult = pred.result || goalsToResult(pH, pA);
+
+  if (isElim) return predResult && predResult === realResult ? 10 : 0;
+
   if (pH !== null && pA !== null && !isNaN(pH) && !isNaN(pA) && pH === mH && pA === mA) return 13;
-  if (predResult && predResult === realResult) return match.phase === 'R16' ? 10 : 5;
+  if (predResult && predResult === realResult) return 5;
   return 0;
 }
 
