@@ -1589,89 +1589,92 @@ t.textContent = r.label;
   // cuadIdx: 0..3
   // dir: 'left' | 'right'
   // bIdx: índice de inicio en BRACKET[]
-  function drawQuadrant(cuadIdx, dir, bIdx) {
-    const isLeft  = dir === 'left';
-    const cardX   = isLeft ? L_CARD : R_CARD;
-    const qfX     = isLeft ? L_QF   : R_QF;
-    const sfX     = isLeft ? L_SF   : R_SF;
-    const cuadTopY = TOP + cuadIdx * (GROUP_H + GAP_P);
+ function drawQuadrant(cuadIdx, dir, bIdx) {
+  const isLeft   = dir === 'left';
+  const cardX    = isLeft ? L_CARD : R_CARD;
+  const cuadTopY = TOP + cuadIdx * (GROUP_H + GAP_P);
+  const qfMidYs  = [];
 
-    const qfMidYs = []; // midY de los 2 QF slots de este cuadrante
+  for (let p = 0; p < 2; p++) {
+    const matchA = BRACKET[bIdx + p]?.pair[0];
+    const matchB = BRACKET[bIdx + p]?.pair[1];
 
-    for (let p = 0; p < 2; p++) {
-      const matchA = BRACKET[bIdx + p]?.pair[0];
-      const matchB = BRACKET[bIdx + p]?.pair[1];
+    const yA = cuadTopY + p * (PAIR_H + GAP_P / 2);
+    const yB = yA + CH + GAP_V;
 
-      const yA = cuadTopY + p * (PAIR_H + GAP_P/2);
-      const yB = yA + CH + GAP_V;
+    const cA = drawMatchCard(svg, matchA, cardX, yA);
+    const cB = drawMatchCard(svg, matchB, cardX, yB);
 
-      const cA = drawMatchCard(svg, matchA, cardX, yA);
-      const cB = drawMatchCard(svg, matchB, cardX, yB);
+    const pairMidY = (cA.midY + cB.midY) / 2;
+    const qfSlotY  = pairMidY - SH;
 
-      const pairMidY = (cA.midY + cB.midY) / 2;
+    // Conector: cards → QF
+    // Izquierda: sale del borde derecho de la card, llega al borde izquierdo del slot QF
+    // Derecha:   sale del borde izquierdo de la card, llega al borde derecho del slot QF
+    const cardEdge = isLeft ? cA.rightX      : cA.leftX;
+    const qfEdge   = isLeft ? L_QF           : R_QF + SW;
 
-      // ganador de cada partido para el slot QF
-      const wA = matchWinner(matchA);
-      const wB = matchWinner(matchB);
+    drawBracketConnector(svg, cardEdge, cA.midY, cB.midY, qfEdge, pairMidY, LINE1, dir);
 
-      // QF slot: muestra el ganador del match superior si lo hay,
-      // o el del inferior, para representar quién avanza de cada partido.
-      // En realidad QF enfrenta al ganador de matchA con el de matchB,
-      // pero como el QF no tiene fila en la BD, mostramos ambos ganadores
-      // en el slot stacked (o vacío si ninguno ganó).
-      // Simplificado: slot muestra wA encima, wB abajo
-      const qfSlotY = pairMidY - SH/2;
-      const fromX   = isLeft ? cA.rightX : cA.leftX;
-      const toX     = isLeft ? qfX       : qfX + SW;
+    // Slot QF
+    const wA = matchWinner(matchA);
+    const wB = matchWinner(matchB);
+    const qfMatchId = 216 + (bIdx + p);
+    const qfMatch   = elimMatches.find(m => m.id === qfMatchId);
+    const qfTeamA   = wA || (qfMatch?.home && qfMatch.home !== 'Por definir'
+      ? { name: qfMatch.home, flag: qfMatch.home_flag || '🏳️' } : null);
+    const qfTeamB   = wB || (qfMatch?.away && qfMatch.away !== 'Por definir'
+      ? { name: qfMatch.away, flag: qfMatch.away_flag || '🏳️' } : null);
 
-      // connectors de las cards al QF slot
-      // connectors de las cards al QF slot
-      drawBracketConnector(svg, fromX, cA.midY, cB.midY, toX, pairMidY, LINE1, dir);
+    // Slot siempre se dibuja en L_QF (izq) o R_QF (der)
+    const qfSlot = drawSlot(svg, qfTeamA, qfTeamB,
+      isLeft ? L_QF : R_QF, qfSlotY, 'Por definir', qfMatchId);
 
-
-      // QF slot — muestra los dos ganadores enfrentados
-      const qfMatchId = 216 + (bIdx + p);
-      const qfMatch = elimMatches.find(m => m.id === qfMatchId);
-      const qfTeamA = wA || (qfMatch?.home && qfMatch.home !== 'Por definir' ? { name: qfMatch.home, flag: qfMatch.home_flag || '🏳️' } : null);
-      const qfTeamB = wB || (qfMatch?.away && qfMatch.away !== 'Por definir' ? { name: qfMatch.away, flag: qfMatch.away_flag || '🏳️' } : null);
-      const qfSlot = drawSlot(svg, qfTeamA, qfTeamB, isLeft ? qfX : R_QF, qfSlotY, 'Por definir', qfMatchId);
-
-      qfMidYs.push(qfSlot.midY);
-    }
-    const sfMidY = (qfMidYs[0] + qfMidYs[1]) / 2;
-    const sfSlotY = sfMidY - SH/2;
-
-    const qfFromX = isLeft ? qfX + SW : R_QF;
-    const sfToX   = isLeft ? sfX      : R_SF + SW;
-
-    drawBracketConnector(svg, qfFromX, qfMidYs[0], qfMidYs[1], sfToX, sfMidY, LINE2, dir);
-
-    const sfMatchId = 224 + cuadIdx;
-    const sfMatch = elimMatches.find(m => m.id === sfMatchId);
-    const sfTeamA = sfMatch?.home && sfMatch.home !== 'Por definir' ? { name: sfMatch.home, flag: sfMatch.home_flag||'🏳️' } : null;
-    const sfTeamB = sfMatch?.away && sfMatch.away !== 'Por definir' ? { name: sfMatch.away, flag: sfMatch.away_flag||'🏳️' } : null;
-    drawSlot(svg, sfTeamA, sfTeamB, isLeft ? sfX : R_SF, sfSlotY, 'SF', sfMatchId);
-    return sfMidY;
+    qfMidYs.push(qfSlot.midY);
   }
 
-  // Dibujar los 4 cuadrantes
-  const sfL0 = drawQuadrant(0, 'left',  0); // llaves 0,1
-  const sfL1 = drawQuadrant(1, 'left',  2); // llaves 2,3
-  const sfR0 = drawQuadrant(2, 'right', 4);
-  const sfR1 = drawQuadrant(3, 'right', 6);
+  // Conector: QF → SF
+  // Izquierda: sale del borde derecho del QF, llega al borde izquierdo del SF
+  // Derecha:   sale del borde izquierdo del QF, llega al borde derecho del SF
+  const sfMidY  = (qfMidYs[0] + qfMidYs[1]) / 2;
+  const sfSlotY = sfMidY - SH;
 
-  // ── Final ─────────────────────────────────────────────────────
-  const finMidY = (sfL0 + sfL1) / 2;
-  const finY    = finMidY - FH/2;
+  const qfEdgeSF = isLeft ? L_QF + SW : R_QF;
+  const sfEdge   = isLeft ? L_SF      : R_SF + SW;
 
-  // Connectors semis → final
-  const sfLfromX = L_SF + SW;
-  const sfRfromX = R_SF;
+  drawBracketConnector(svg, qfEdgeSF, qfMidYs[0], qfMidYs[1], sfEdge, sfMidY, LINE2, dir);
 
-  drawBracketConnector(svg, sfLfromX, sfL0, sfL1, L_FIN, finMidY, LINE3, 'left');
-  drawBracketConnector(svg, sfRfromX, sfR0, sfR1, L_FIN + FW, finMidY, LINE3, 'right');
+  // Slot SF
+  const sfMatchId = 224 + cuadIdx;
+  const sfMatch   = elimMatches.find(m => m.id === sfMatchId);
+  const sfTeamA   = sfMatch?.home && sfMatch.home !== 'Por definir'
+    ? { name: sfMatch.home, flag: sfMatch.home_flag || '🏳️' } : null;
+  const sfTeamB   = sfMatch?.away && sfMatch.away !== 'Por definir'
+    ? { name: sfMatch.away, flag: sfMatch.away_flag || '🏳️' } : null;
 
-  drawFinal(svg, L_FIN, finY);
+  drawSlot(svg, sfTeamA, sfTeamB,
+    isLeft ? L_SF : R_SF, sfSlotY, 'SF', sfMatchId);
+
+  return sfMidY;
+}
+
+// ── Dibujar los 4 cuadrantes ──────────────────────────────────
+const sfL0 = drawQuadrant(0, 'left',  0);
+const sfL1 = drawQuadrant(1, 'left',  2);
+const sfR0 = drawQuadrant(2, 'right', 4);
+const sfR1 = drawQuadrant(3, 'right', 6);
+
+// ── Final ─────────────────────────────────────────────────────
+const finMidY = (sfL0 + sfL1) / 2;
+const finY    = finMidY - FH / 2;
+
+// Conector SF izquierda → Final (sale del borde derecho del SF izq)
+drawBracketConnector(svg, L_SF + SW, sfL0, sfL1, L_FIN, finMidY, LINE3, 'left');
+
+// Conector SF derecha → Final (sale del borde izquierdo del SF der, llega al borde derecho del Final)
+drawBracketConnector(svg, R_SF, sfR0, sfR1, L_FIN + FW, finMidY, LINE3, 'right');
+
+drawFinal(svg, L_FIN, finY);
 
   // Copa
   const cupSize = 130;
