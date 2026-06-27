@@ -1337,7 +1337,7 @@ function renderR16Bracket() {
     if (m.match_date) {
       const subY = y + CH + (played && pts >= 0 ? 24 : 13);
       const dt = el('text', { x: x+CW/2, y: subY, 'font-size': '7',
-        'text-anchor': 'middle', fill: 'rgba(255,255,255,.16)', 'font-family': FONT }, svg);
+        'text-anchor': 'middle', fill: 'rgba(255, 255, 255, 0.87)', 'font-family': FONT }, svg);
       dt.textContent = m.match_date + (m.time ? ' · ' + m.time + 'hs' : '');
     }
 
