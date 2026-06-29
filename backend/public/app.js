@@ -1068,13 +1068,7 @@ async function renderR16() {
 }
 
 function calcR16Points(pred, match) {
-  const mH = match.home_score !== null && match.home_score !== undefined ? Number(match.home_score) : null;
-  const mA = match.away_score !== null && match.away_score !== undefined ? Number(match.away_score) : null;
-  if (mH === null || mA === null) return -1;
-  const realResult = goalsToResult(mH, mA);
-  const predResult = pred.result || null;
-  if (!predResult || !realResult) return 0;
-  return predResult === realResult ? 10 : 0;
+  return calcMatchPoints(pred, match);
 }
 
 async function renderR16Standings() {
