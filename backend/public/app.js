@@ -1123,66 +1123,92 @@ async function renderR16Standings() {
 //  Los ganadores de cada llave avanzan al slot siguiente.
 // ══════════════════════════════════════════════════════════════
 
+// ══════════════════════════════════════════════════════════════
+//  renderR16Bracket — 5 columnas
+//  R16 (200-215) → Octavos (216-223) → Cuartos (224-227) → Semis (228-229) → Final (230)
+//
+//  MAPEO DE BRACKET:
+//  Lado izquierdo:
+//    R16-200 + R16-201 → Oct-216   (ganador 200 = home, ganador 201 = away)
+//    R16-202 + R16-203 → Oct-217
+//    R16-204 + R16-205 → Oct-218
+//    R16-206 + R16-207 → Oct-219
+//    Oct-216 + Oct-217 → QF-224
+//    Oct-218 + Oct-219 → QF-225
+//    QF-224 + QF-225   → SF-228
+//
+//  Lado derecho (espejo):
+//    R16-208 + R16-209 → Oct-220
+//    R16-210 + R16-211 → Oct-221
+//    R16-212 + R16-213 → Oct-222
+//    R16-214 + R16-215 → Oct-223
+//    Oct-220 + Oct-221 → QF-226
+//    Oct-222 + Oct-223 → QF-227
+//    QF-226 + QF-227   → SF-229
+//
+//  SF-228 + SF-229 → Final-230
+// ══════════════════════════════════════════════════════════════
+
 function renderR16Bracket() {
   const container = document.getElementById('r16-bracket');
   if (!container) return;
 
   const AMBER  = '#FFB81C';
   const GREEN  = '#3ae8b0';
-  const LINE1  = 'rgba(108,172,228,.25)';
-  const LINE2  = 'rgba(108,172,228,.15)';
-  const LINE3  = 'rgba(108,172,228,.08)';
+  const LINE1  = 'rgba(108,172,228,.3)';
+  const LINE2  = 'rgba(108,172,228,.2)';
+  const LINE3  = 'rgba(108,172,228,.12)';
+  const LINE4  = 'rgba(108,172,228,.07)';
   const FONT   = "'Inter', system-ui, sans-serif";
 
-  // ── Dimensiones fijas ─────────────────────────────────────────
-  const CW = 190, CH = 58;   // card
-  const SW = 130, SH = 64;   // slot (QF/SF) — altura total = 2 filas
-  const FW = 150, FH = 56;   // final
-  const GAP_V  = 18;          // gap vertical entre las 2 cards de un par
-  const GAP_P  = 60;          // gap vertical entre pares dentro de un cuadrante
-  const GAP_Q  = 80;          // gap vertical entre cuadrantes (superior e inferior)
-  const CONN   = 24;          // espacio horizontal del conector
-  const TOP    = 50;          // margen superior
+  // ── Dimensiones ───────────────────────────────────────────────
+  const CW   = 175;   // card width
+  const CH   = 54;    // card height
+  const SW   = 120;   // slot width
+  const SH   = 28;    // slot row height (slot total = SH*2)
+  const FW   = 140;   // final width
+  const FH   = 52;    // final height
+  const GAP  = 14;    // gap vertical entre las 2 cards de un par
+  const CONN = 20;    // espacio horizontal del conector
+  const TOP  = 46;    // margen superior
 
-  // ── Columnas (de izq a der) ───────────────────────────────────
-  const C_R16L  = 12;
-  const C_R8L   = C_R16L + CW + CONN;          // 8avos izq
-  const C_QFL   = C_R8L  + SW + CONN;          // cuartos izq
-  const C_SFL   = C_QFL  + SW + CONN;          // semis izq
-  const C_FIN   = C_SFL  + SW + CONN;          // final
-  const C_SFR   = C_FIN  + FW + CONN;          // semis der
-  const C_QFR   = C_SFR  + SW + CONN;          // cuartos der
-  const C_R8R   = C_QFR  + SW + CONN;          // 8avos der
-  const C_R16R  = C_R8R  + SW + CONN;          // cards der
-  const SVG_W   = C_R16R + CW + 12;
+  // Altura de un par de R16 (2 cards + gap)
+  const PAIR_H = CH * 2 + GAP;
+  // Altura de un grupo de 2 pares (= lo que ocupa un slot de Octavos)
+  const GRP_H  = PAIR_H * 2 + 50;
+  // Altura total SVG: 2 grupos por lado + márgenes
+  const SVG_H  = TOP + GRP_H * 2 + 60 + 150; // +150 para copa
 
-  // ── Altura total ──────────────────────────────────────────────
-  // 4 pares de cards por lado, 2 cuadrantes
-  // Cuadrante = 2 pares; par = 2 cards + GAP_V
-  const PAIR_H  = CH * 2 + GAP_V;
-  const QUAD_H  = PAIR_H * 2 + GAP_P;
-  const SVG_H   = TOP + QUAD_H * 2 + GAP_Q + 100;
+  // ── Columnas (izquierda → derecha) ───────────────────────────
+  const C_R16L  = 10;
+  const C_OCTL  = C_R16L + CW + CONN;
+  const C_QFL   = C_OCTL + SW + CONN;
+  const C_SFL   = C_QFL  + SW + CONN;
+  const C_FIN   = C_SFL  + SW + CONN;
+  const SVG_MID = C_FIN  + FW / 2;
+  const C_SFR   = C_FIN  + FW + CONN;
+  const C_QFR   = C_SFR  + SW + CONN;
+  const C_OCTR  = C_QFR  + SW + CONN;
+  const C_R16R  = C_OCTR + SW + CONN;
+  const SVG_W   = C_R16R + CW + 10;
 
-  // ── Helpers ───────────────────────────────────────────────────
+  // ── Helpers SVG ───────────────────────────────────────────────
   function el(tag, attrs, parent) {
     const e = document.createElementNS('http://www.w3.org/2000/svg', tag);
     Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, v));
     if (parent) parent.appendChild(e);
     return e;
   }
-
-  function hline(svg, x1, x2, y, color) {
+  function hline(x1, x2, y, color) {
     el('line', { x1, y1: y, x2, y2: y, stroke: color || LINE1, 'stroke-width': '1' }, svg);
   }
-  function vline(svg, x, y1, y2, color) {
+  function vline(x, y1, y2, color) {
     el('line', { x1: x, y1, x2: x, y2, stroke: color || LINE1, 'stroke-width': '1' }, svg);
   }
-
   function trunc(s, max) {
     const str = s || '?';
     return str.length > max ? str.slice(0, max - 1) + '…' : str;
   }
-
   function matchWinner(m) {
     if (!m) return null;
     const h = Number(m.home_score), a = Number(m.away_score);
@@ -1192,23 +1218,19 @@ function renderR16Bracket() {
     if (a > h) return { flag: m.away_flag || '🏳️', name: m.away || '?' };
     return null;
   }
+  // Conectar dos midY a un slot central
+  function connector(fromX, toX, y0, y1, midY, color) {
+    const midX = (fromX + toX) / 2;
+    hline(fromX, midX, y0, color);
+    hline(fromX, midX, y1, color);
+    vline(midX, y0, y1, color);
+    hline(midX, toX, midY, color);
+  }
 
-  // ── Orden del bracket ─────────────────────────────────────────
+  // ── Índices de partidos ───────────────────────────────────────
   const byId = {};
   r16Matches.forEach(m => { byId[m.id] = m; });
-
-  // Lado izquierdo: BRACKET[0..3] = cuadrante top-left + bottom-left
-  // Lado derecho:   BRACKET[4..7] = cuadrante top-right + bottom-right
-  const BRACKET = [
-    { pair: [byId[200], byId[201]] }, // izq, cuad 0, par 0
-    { pair: [byId[202], byId[203]] }, // izq, cuad 0, par 1
-    { pair: [byId[204], byId[205]] }, // izq, cuad 1, par 0
-    { pair: [byId[206], byId[207]] }, // izq, cuad 1, par 1
-    { pair: [byId[208], byId[209]] }, // der, cuad 0, par 0
-    { pair: [byId[210], byId[211]] }, // der, cuad 0, par 1
-    { pair: [byId[212], byId[213]] }, // der, cuad 1, par 0
-    { pair: [byId[214], byId[215]] }, // der, cuad 1, par 1
-  ];
+  elimMatches.forEach(m => { byId[m.id] = m; });
 
   // ── Crear SVG ─────────────────────────────────────────────────
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -1218,122 +1240,120 @@ function renderR16Bracket() {
   svg.style.display  = 'block';
   svg.style.minWidth = SVG_W + 'px';
 
-  // Fondo
   el('rect', { x: 0, y: 0, width: SVG_W, height: SVG_H, fill: '#070d1e', rx: '10' }, svg);
 
   // Etiquetas de ronda
   [
-    { x: C_R16L + CW / 2,  label: '16AVOS'  },
-    { x: C_R8L  + SW / 2,  label: '8AVOS'   },
-    { x: C_QFL  + SW / 2,  label: 'CUARTOS' },
-    { x: C_SFL  + SW / 2,  label: 'SEMIS'   },
-    { x: C_FIN  + FW / 2,  label: 'FINAL'   },
-    { x: C_SFR  + SW / 2,  label: 'SEMIS'   },
-    { x: C_QFR  + SW / 2,  label: 'CUARTOS' },
-    { x: C_R8R  + SW / 2,  label: '8AVOS'   },
-    { x: C_R16R + CW / 2,  label: '16AVOS'  },
+    { x: C_R16L  + CW / 2,  label: '16AVOS'   },
+    { x: C_OCTL  + SW / 2,  label: 'OCTAVOS'  },
+    { x: C_QFL   + SW / 2,  label: 'CUARTOS'  },
+    { x: C_SFL   + SW / 2,  label: 'SEMIS'    },
+    { x: C_FIN   + FW / 2,  label: 'FINAL'    },
+    { x: C_SFR   + SW / 2,  label: 'SEMIS'    },
+    { x: C_QFR   + SW / 2,  label: 'CUARTOS'  },
+    { x: C_OCTR  + SW / 2,  label: 'OCTAVOS'  },
+    { x: C_R16R  + CW / 2,  label: '16AVOS'   },
   ].forEach(({ x, label }) => {
     const t = el('text', {
-      x, y: TOP - 18,
-      'font-size': '11', 'text-anchor': 'middle',
-      fill: 'rgba(255,255,255,.5)', 'font-family': FONT,
-      'font-weight': '700', 'letter-spacing': '1.5'
+      x, y: TOP - 20,
+      'font-size': '9', 'text-anchor': 'middle',
+      fill: 'rgba(255,255,255,.45)', 'font-family': FONT,
+      'font-weight': '700', 'letter-spacing': '1.2'
     }, svg);
     t.textContent = label;
   });
 
   // ══════════════════════════════════════════════════════════════
-  //  DRAW MATCH CARD
+  //  DRAW CARD — tarjeta de partido R16
   // ══════════════════════════════════════════════════════════════
-  function drawCard(m, x, y) {
-    if (!m) {
-      el('rect', { x, y, width: CW, height: CH, rx: '7',
+  function drawCard(matchId, x, y) {
+    const m = byId[matchId];
+    if (!m || (!m.home && !m.away)) {
+      el('rect', { x, y, width: CW, height: CH, rx: '6',
         fill: 'rgba(255,255,255,.02)', stroke: 'rgba(255,255,255,.06)',
         'stroke-width': '1', 'stroke-dasharray': '4 3' }, svg);
-      return { midY: y + CH / 2, x, rightX: x + CW, leftX: x };
+      return { midY: y + CH / 2, rightX: x + CW, leftX: x };
     }
 
-    const pred    = r16Preds[m.id] || {};
+    const pred    = r16Preds[matchId] || {};
     const predRes = pred.result || null;
     const locked  = isMatchLocked(m);
-    const mH      = (m.home_score !== null && m.home_score !== undefined) ? Number(m.home_score) : null;
-    const mA      = (m.away_score !== null && m.away_score !== undefined) ? Number(m.away_score) : null;
+    const mH      = m.home_score !== null && m.home_score !== undefined ? Number(m.home_score) : null;
+    const mA      = m.away_score !== null && m.away_score !== undefined ? Number(m.away_score) : null;
     const played  = mH !== null && mA !== null;
     const winSide = played ? (mH > mA ? '1' : mA > mH ? '2' : null) : null;
-    const pts     = played ? calcR16Points(pred, m) : -1;
+    const pts     = played ? calcMatchPoints(pred, m) : -1;
 
-    const borderColor = played ? 'rgba(255,184,28,.4)'
+    const borderColor = played
+      ? 'rgba(255,184,28,.4)'
       : predRes ? 'rgba(58,232,176,.4)' : 'rgba(255,255,255,.1)';
 
-    el('rect', { x: x+1, y: y+2, width: CW, height: CH, rx: '7', fill: 'rgba(0,0,0,.4)' }, svg);
-    el('rect', { x, y, width: CW, height: CH, rx: '7',
+    el('rect', { x: x+1, y: y+2, width: CW, height: CH, rx: '6', fill: 'rgba(0,0,0,.4)' }, svg);
+    el('rect', { x, y, width: CW, height: CH, rx: '6',
       fill: '#0d1b38', stroke: borderColor, 'stroke-width': '1' }, svg);
     el('line', { x1: x+1, y1: y+CH/2, x2: x+CW-1, y2: y+CH/2,
       stroke: 'rgba(255,255,255,.05)', 'stroke-width': '1' }, svg);
 
-    // Barra lateral
-    if (played && winSide === '1') el('rect', { x, y,        width: 3, height: CH/2, rx: '2', fill: 'rgba(255,184,28,.8)' }, svg);
+    // Barra lateral de resultado/predicción
+    if (played && winSide === '1') el('rect', { x, y,         width: 3, height: CH/2, rx: '2', fill: 'rgba(255,184,28,.8)' }, svg);
     if (played && winSide === '2') el('rect', { x, y: y+CH/2, width: 3, height: CH/2, rx: '2', fill: 'rgba(255,184,28,.8)' }, svg);
-    if (!played && predRes === '1') el('rect', { x, y,        width: 3, height: CH/2, rx: '2', fill: 'rgba(58,232,176,.8)' }, svg);
+    if (!played && predRes === '1') el('rect', { x, y,         width: 3, height: CH/2, rx: '2', fill: 'rgba(58,232,176,.8)' }, svg);
     if (!played && predRes === '2') el('rect', { x, y: y+CH/2, width: 3, height: CH/2, rx: '2', fill: 'rgba(58,232,176,.8)' }, svg);
 
-    // Equipos
+    // Filas home/away
     [
       { name: m.home, flag: m.home_flag || '🏳️', score: mH, isW: winSide==='1', isL: played && winSide!=='1' && winSide!==null, oy: y+CH/4, side: '1' },
       { name: m.away, flag: m.away_flag || '🏳️', score: mA, isW: winSide==='2', isL: played && winSide!=='2' && winSide!==null, oy: y+3*CH/4, side: '2' },
     ].forEach(({ name, flag, score, isW, isL, oy, side }) => {
-      const ft = el('text', { x: x+10, y: oy+4, 'font-size': '13', 'font-family': FONT }, svg);
+      const ft = el('text', { x: x+8, y: oy+4, 'font-size': '12', 'font-family': FONT }, svg);
       ft.textContent = flag;
 
-      const nt = el('text', { x: x+30, y: oy+5, 'font-size': '10', 'font-family': FONT,
+      const nt = el('text', { x: x+26, y: oy+5, 'font-size': '9.5', 'font-family': FONT,
         'font-weight': isW ? '700' : '400',
         fill: isW ? AMBER : isL ? 'rgba(255,255,255,.28)' : 'rgba(255,255,255,.82)' }, svg);
-      nt.textContent = trunc(name, 14);
+      nt.textContent = trunc(name, 13);
 
+      // Badge resultado o ✎ admin
       if (currentUser.role === 'admin') {
-        const bg = el('rect', { x: x+CW-28, y: oy-10, width: 24, height: 20, rx: '4',
+        const bg = el('rect', { x: x+CW-26, y: oy-10, width: 22, height: 20, rx: '4',
           fill: score!==null ? (isW?'rgba(255,184,28,.2)':'rgba(255,255,255,.08)') : 'rgba(108,172,228,.15)',
           stroke: score!==null ? (isW?'rgba(255,184,28,.4)':'rgba(255,255,255,.1)') : 'rgba(108,172,228,.3)',
           'stroke-width': '1', style: 'cursor:pointer' }, svg);
-        const bt = el('text', { x: x+CW-16, y: oy+5, 'font-size': '10', 'font-family': FONT,
+        const bt = el('text', { x: x+CW-15, y: oy+5, 'font-size': '10', 'font-family': FONT,
           'font-weight': '800', 'text-anchor': 'middle', style: 'cursor:pointer',
           fill: score!==null ? (isW?AMBER:'rgba(255,255,255,.5)') : 'rgba(108,172,228,.8)' }, svg);
         bt.textContent = score !== null ? score : '✎';
-        bg.addEventListener('click', e => { e.stopPropagation(); openR16AdminModal(m.id); });
-        bt.addEventListener('click', e => { e.stopPropagation(); openR16AdminModal(m.id); });
-      } else if (score !== null && score !== undefined) {
-        el('rect', { x: x+CW-26, y: oy-9, width: 22, height: 18, rx: '4',
+        [bg, bt].forEach(e => e.addEventListener('click', ev => { ev.stopPropagation(); openR16AdminModal(matchId); }));
+      } else if (score !== null) {
+        el('rect', { x: x+CW-24, y: oy-9, width: 20, height: 18, rx: '4',
           fill: isW?'rgba(255,184,28,.18)':'rgba(255,255,255,.05)',
           stroke: isW?'rgba(255,184,28,.4)':'rgba(255,255,255,.08)', 'stroke-width': '1' }, svg);
-        const st = el('text', { x: x+CW-15, y: oy+5, 'font-size': '11', 'font-family': FONT,
+        const st = el('text', { x: x+CW-14, y: oy+5, 'font-size': '10', 'font-family': FONT,
           'font-weight': '800', 'text-anchor': 'middle',
           fill: isW ? AMBER : 'rgba(255,255,255,.38)' }, svg);
         st.textContent = score;
       }
 
-      // Zona clickeable para votar
+      // Zona clickeable para votar (solo jugadores, partidos no bloqueados)
       if (!played && !locked && currentUser.role !== 'admin') {
         const zone = el('rect', { x, y: side==='1' ? y : y+CH/2,
-          width: CW, height: CH/2, fill: 'transparent',
-          rx: side==='1' ? '7' : '0' }, svg);
+          width: CW, height: CH/2, fill: 'transparent', rx: side==='1'?'6':'0' }, svg);
         zone.style.cursor = 'pointer';
-        zone.addEventListener('click', () => setR16Pred(m.id, side));
+        zone.addEventListener('click', () => setR16Pred(matchId, side));
       }
     });
 
-    // Puntos
+    // Puntos y fecha
     if (played && pts >= 0) {
-      const pt = el('text', { x: x+CW/2, y: y+CH+13, 'font-size': '8',
+      const pt = el('text', { x: x+CW/2, y: y+CH+12, 'font-size': '7.5',
         'text-anchor': 'middle', 'font-family': FONT, 'font-weight': '700',
         fill: pts >= 10 ? GREEN : 'rgba(255,80,80,.7)' }, svg);
       pt.textContent = pts >= 10 ? '✓ +10 pts' : '✗ 0 pts';
     }
-
-    // Fecha
     if (m.match_date) {
-      const subY = y + CH + (played && pts >= 0 ? 24 : 13);
-      const dt = el('text', { x: x+CW/2, y: subY, 'font-size': '7',
-        'text-anchor': 'middle', fill: 'rgba(255, 255, 255, 0.87)', 'font-family': FONT }, svg);
+      const subY = y + CH + (played && pts >= 0 ? 22 : 12);
+      const dt = el('text', { x: x+CW/2, y: subY, 'font-size': '6.5',
+        'text-anchor': 'middle', fill: 'rgba(255,255,255,.5)', 'font-family': FONT }, svg);
       dt.textContent = m.match_date + (m.time ? ' · ' + m.time + 'hs' : '');
     }
 
@@ -1341,222 +1361,321 @@ function renderR16Bracket() {
   }
 
   // ══════════════════════════════════════════════════════════════
-  //  DRAW SLOT (QF / SF)
+  //  DRAW SLOT — slot de Octavos / Cuartos / Semis
   // ══════════════════════════════════════════════════════════════
-  function drawSlot(x, y, teamA, teamB, label, matchId) {
+  function drawSlot(matchId, x, y, teamA, teamB, label) {
     const h = SH * 2 + 1;
+    const m = byId[matchId];
+
+    // Resolver equipos: primero ganadores calculados, luego datos de la DB
+    const resolvedA = teamA || (m?.home && m.home !== 'Por definir' ? { name: m.home, flag: m.home_flag || '🏳️' } : null);
+    const resolvedB = teamB || (m?.away && m.away !== 'Por definir' ? { name: m.away, flag: m.away_flag || '🏳️' } : null);
+
+    const mH      = m?.home_score !== null && m?.home_score !== undefined ? Number(m.home_score) : null;
+    const mA      = m?.away_score !== null && m?.away_score !== undefined ? Number(m.away_score) : null;
+    const played  = mH !== null && mA !== null;
+    const winSide = played ? (mH > mA ? '1' : mA > mH ? '2' : null) : null;
     const pred    = r16Preds[matchId] || {};
     const predRes = pred.result || null;
+    const locked  = m ? isMatchLocked(m) : true;
+    const pts     = played ? calcMatchPoints(pred, m) : -1;
 
-    if (teamA || teamB) {
+    if (resolvedA || resolvedB) {
       el('rect', { x: x+1, y: y+2, width: SW, height: h, rx: '6', fill: 'rgba(0,0,0,.35)' }, svg);
       el('rect', { x, y, width: SW, height: h, rx: '6',
-        fill: '#0d1b38', stroke: 'rgba(255,184,28,.45)', 'stroke-width': '1' }, svg);
+        fill: '#0d1b38',
+        stroke: played ? 'rgba(255,184,28,.45)' : predRes ? 'rgba(58,232,176,.4)' : 'rgba(255,184,28,.3)',
+        'stroke-width': '1' }, svg);
       el('line', { x1: x+1, y1: y+SH, x2: x+SW-1, y2: y+SH,
         stroke: 'rgba(255,255,255,.05)', 'stroke-width': '1' }, svg);
 
-      [teamA, teamB].forEach((team, i) => {
+      [resolvedA, resolvedB].forEach((team, i) => {
         const oy   = y + SH / 2 + i * SH;
         const side = i === 0 ? '1' : '2';
-        if (predRes === side) {
-          el('rect', { x: x+1, y: y+i*SH+1, width: SW-2, height: SH-1,
-            rx: i===0?'5':'0', fill: 'rgba(58,232,176,.12)' }, svg);
-        }
+        const isW  = played && winSide === side;
+        const isL  = played && winSide !== side && winSide !== null;
+
         if (team) {
           el('rect', { x, y: y+i*SH, width: 3, height: SH, rx: '2',
-            fill: predRes===side ? 'rgba(58,232,176,.8)' : 'rgba(255,184,28,.7)' }, svg);
-          const ft = el('text', { x: x+10, y: oy+4, 'font-size': '12', 'font-family': FONT }, svg);
+            fill: isW ? 'rgba(255,184,28,.8)' : predRes===side ? 'rgba(58,232,176,.8)' : 'rgba(255,184,28,.4)' }, svg);
+          const ft = el('text', { x: x+9, y: oy+4, 'font-size': '11', 'font-family': FONT }, svg);
           ft.textContent = team.flag || '🏳️';
-          const nt = el('text', { x: x+28, y: oy+5, 'font-size': '10',
-            'font-family': FONT, 'font-weight': '700',
-            fill: predRes===side ? '#3ae8b0' : AMBER }, svg);
-          nt.textContent = trunc(team.name, 11);
+          const nt = el('text', { x: x+26, y: oy+5, 'font-size': '9', 'font-family': FONT,
+            'font-weight': isW ? '700' : '400',
+            fill: isW ? AMBER : isL ? 'rgba(255,255,255,.28)' : predRes===side ? '#3ae8b0' : 'rgba(255,255,255,.82)' }, svg);
+          nt.textContent = trunc(team.name, 10);
         } else {
           const qt = el('text', { x: x+SW/2, y: oy+5, 'font-size': '8',
-            'text-anchor': 'middle', fill: 'rgba(255,255,255,.18)', 'font-family': FONT }, svg);
+            'text-anchor': 'middle', fill: 'rgba(255,255,255,.2)', 'font-family': FONT }, svg);
           qt.textContent = '?';
         }
-        // Zona clickeable
-        if (matchId && currentUser.role !== 'admin') {
+
+        // Score badge (admin)
+        if (currentUser.role === 'admin' && m) {
+          const score = i === 0 ? mH : mA;
+          const bg = el('rect', { x: x+SW-22, y: oy-9, width: 18, height: 18, rx: '4',
+            fill: score!==null ? (isW?'rgba(255,184,28,.2)':'rgba(255,255,255,.08)') : 'rgba(108,172,228,.15)',
+            stroke: score!==null ? (isW?'rgba(255,184,28,.4)':'rgba(255,255,255,.1)') : 'rgba(108,172,228,.3)',
+            'stroke-width': '1', style: 'cursor:pointer' }, svg);
+          const bt = el('text', { x: x+SW-13, y: oy+5, 'font-size': '9', 'font-family': FONT,
+            'font-weight': '800', 'text-anchor': 'middle', style: 'cursor:pointer',
+            fill: score!==null ? (isW?AMBER:'rgba(255,255,255,.5)') : 'rgba(108,172,228,.8)' }, svg);
+          bt.textContent = score !== null ? score : '✎';
+          [bg, bt].forEach(e => e.addEventListener('click', ev => { ev.stopPropagation(); openR16AdminModal(matchId); }));
+        }
+
+        // Zona clickeable para votar
+        if (!played && !locked && currentUser.role !== 'admin' && team) {
           const zone = el('rect', { x, y: y+i*SH, width: SW, height: SH, fill: 'transparent' }, svg);
           zone.style.cursor = 'pointer';
           zone.addEventListener('click', () => setR16Pred(matchId, side));
         }
       });
+
+      // Puntos del slot si está jugado
+      if (played && pts >= 0) {
+        const pt = el('text', { x: x+SW/2, y: y+h+11, 'font-size': '7',
+          'text-anchor': 'middle', 'font-family': FONT, 'font-weight': '700',
+          fill: pts >= 10 ? GREEN : 'rgba(255,80,80,.7)' }, svg);
+        pt.textContent = pts >= 10 ? '✓ +10' : '✗ 0';
+      }
     } else {
+      // Slot vacío
       el('rect', { x, y, width: SW, height: h, rx: '6',
         fill: 'rgba(255,255,255,.02)', stroke: 'rgba(255,255,255,.07)',
         'stroke-width': '1', 'stroke-dasharray': '4 3' }, svg);
       if (label) {
         const lt = el('text', { x: x+SW/2, y: y+h/2+4, 'font-size': '8',
-          'text-anchor': 'middle', fill: 'rgba(255,255,255,.18)', 'font-family': FONT }, svg);
+          'text-anchor': 'middle', fill: 'rgba(255,255,255,.15)', 'font-family': FONT }, svg);
         lt.textContent = label;
       }
     }
 
-    // Badge admin ✎
-    if (currentUser.role === 'admin' && matchId) {
-      const bg = el('rect', { x: x+SW-22, y: y+2, width: 18, height: 16, rx: '4',
+    // Badge ✎ admin siempre visible
+    if (currentUser.role === 'admin') {
+      const bg = el('rect', { x: x+SW-20, y: y+2, width: 16, height: 14, rx: '3',
         fill: 'rgba(108,172,228,.15)', stroke: 'rgba(108,172,228,.3)',
         'stroke-width': '1', style: 'cursor:pointer' }, svg);
-      const bt = el('text', { x: x+SW-13, y: y+13, 'font-size': '10',
-        'font-family': FONT, fill: 'rgba(108,172,228,.8)',
-        'text-anchor': 'middle', style: 'cursor:pointer' }, svg);
+      const bt = el('text', { x: x+SW-12, y: y+12, 'font-size': '9', 'font-family': FONT,
+        fill: 'rgba(108,172,228,.8)', 'text-anchor': 'middle', style: 'cursor:pointer' }, svg);
       bt.textContent = '✎';
-      bg.addEventListener('click', e => { e.stopPropagation(); openR16AdminModal(matchId); });
-      bt.addEventListener('click', e => { e.stopPropagation(); openR16AdminModal(matchId); });
+      [bg, bt].forEach(e => e.addEventListener('click', ev => { ev.stopPropagation(); openR16AdminModal(matchId); }));
     }
 
-    return { midY: y + SH };
+    return { midY: y + SH, rightX: x + SW, leftX: x };
   }
 
   // ══════════════════════════════════════════════════════════════
-  //  DRAW QUADRANT
-  //  cuadIdx: 0 = superior, 1 = inferior
-  //  side: 'left' | 'right'
-  //  bIdx: índice base en BRACKET[]
+  //  LAYOUT — posiciones Y de cada elemento
+  //
+  //  El bracket tiene 2 grupos por lado (superior e inferior).
+  //  Cada grupo tiene 2 pares de R16 → 1 slot de Octavos.
+  //  2 slots de Octavos → 1 slot de Cuartos.
+  //  2 slots de Cuartos → 1 slot de Semis.
+  //  2 Semis → Final.
   // ══════════════════════════════════════════════════════════════
-  // ── drawQuadrant: dibuja R16 cards + QF slot, devuelve midY del QF ──
-  function drawQuadrant(cuadIdx, side, bIdx) {
-    const isLeft = side === 'left';
-    const cardX  = isLeft ? C_R16L : C_R16R;
-    const r8X    = isLeft ? C_R8L  : C_R8R;
-    const qfX    = isLeft ? C_QFL  : C_QFR;
-    const cuadY  = TOP + cuadIdx * (QUAD_H + GAP_Q);
-    const r8MidYs = [];
 
-    for (let p = 0; p < 2; p++) {
-      const matchA = BRACKET[bIdx + p]?.pair[0];
-      const matchB = BRACKET[bIdx + p]?.pair[1];
+  // Y de cada card de R16 (hay 4 grupos de 2 pares = 8 pares total por lado)
+  // Grupo 0 (superior): pares 0 y 1
+  // Grupo 1 (inferior): pares 2 y 3
+  const GRP_GAP = 55; // gap extra entre grupo superior e inferior
 
-      const yA = cuadY + p * (PAIR_H + GAP_P);
-      const yB = yA + CH + GAP_V;
-
-      const cA = drawCard(matchA, cardX, yA);
-      const cB = drawCard(matchB, cardX, yB);
-
-      const pairMidY = (cA.midY + cB.midY) / 2;
-
-      // Conector R16 → 8avos
-      const midXconn = isLeft ? C_R16L + CW + CONN/2 : C_R16R - CONN/2;
-      hline(svg, isLeft ? cA.rightX : midXconn, isLeft ? midXconn : cA.leftX, cA.midY, LINE1);
-      hline(svg, isLeft ? cB.rightX : midXconn, isLeft ? midXconn : cB.leftX, cB.midY, LINE1);
-      vline(svg, midXconn, cA.midY, cB.midY, LINE1);
-      hline(svg, isLeft ? midXconn : r8X + SW, isLeft ? r8X : midXconn, pairMidY, LINE1);
-
-      // Slot 8avos (216-223)
-      const r8MatchId = 216 + (bIdx + p);
-      const r8Match   = elimMatches.find(m => m.id === r8MatchId);
-      const wA = matchWinner(matchA);
-      const wB = matchWinner(matchB);
-      const r8TeamA = wA || (r8Match?.home && r8Match.home !== 'Por definir' ? { name: r8Match.home, flag: r8Match.home_flag||'🏳️' } : null);
-      const r8TeamB = wB || (r8Match?.away && r8Match.away !== 'Por definir' ? { name: r8Match.away, flag: r8Match.away_flag||'🏳️' } : null);
-      const r8SlotY = pairMidY - SH;
-      const r8Slot  = drawSlot(r8X, r8SlotY, r8TeamA, r8TeamB, 'Por definir', r8MatchId);
-      r8MidYs.push(r8Slot.midY);
-    }
-
-    // Conector 8avos → cuartos
-    const qfMidY  = (r8MidYs[0] + r8MidYs[1]) / 2;
-    const midXqf  = isLeft ? C_R8L + SW + CONN/2 : C_R8R - CONN/2;
-    hline(svg, isLeft ? C_R8L + SW : midXqf, isLeft ? midXqf : C_R8R, r8MidYs[0], LINE2);
-    hline(svg, isLeft ? C_R8L + SW : midXqf, isLeft ? midXqf : C_R8R, r8MidYs[1], LINE2);
-    vline(svg, midXqf, r8MidYs[0], r8MidYs[1], LINE2);
-    hline(svg, isLeft ? midXqf : C_QFR + SW, isLeft ? C_QFL : midXqf, qfMidY, LINE2);
-
-    // Slot cuartos (224=izqCuad0, 225=derCuad0, 226=izqCuad1, 227=derCuad1)
-    const qfMatchId = 224 + cuadIdx * 2 + (isLeft ? 0 : 1);
-    const qfMatch   = elimMatches.find(m => m.id === qfMatchId);
-    const r8w0 = matchWinner(elimMatches.find(m => m.id === (216 + bIdx)));
-    const r8w1 = matchWinner(elimMatches.find(m => m.id === (216 + bIdx + 1)));
-    const qfTeamA = r8w0 || (qfMatch?.home && qfMatch.home !== 'Por definir' ? { name: qfMatch.home, flag: qfMatch.home_flag||'🏳️' } : null);
-    const qfTeamB = r8w1 || (qfMatch?.away && qfMatch.away !== 'Por definir' ? { name: qfMatch.away, flag: qfMatch.away_flag||'🏳️' } : null);
-    const qfSlotY = qfMidY - SH;
-    const qfSlot  = drawSlot(qfX, qfSlotY, qfTeamA, qfTeamB, 'Por definir', qfMatchId);
-
-    // Conector cuartos → semis
-    const sfMidY = qfSlot.midY;
-    const midXsf = isLeft ? C_QFL + SW + CONN/2 : C_QFR - CONN/2;
-    hline(svg, isLeft ? C_QFL + SW : midXsf, isLeft ? midXsf : C_QFR, sfMidY, LINE2);
-    hline(svg, isLeft ? midXsf : C_SFR + SW, isLeft ? C_SFL : midXsf, sfMidY, LINE2);
-
-    return sfMidY;
+  function cardY(grp, pair, row) {
+    const grpY = TOP + grp * (GRP_H + GRP_GAP);
+    return grpY + pair * (PAIR_H + 45) + row * (CH + GAP);
   }
 
-  // ── Dibujar los 4 cuadrantes ──────────────────────────────
-  // Izquierda: cuads 0 y 1 usan BRACKET[0..3]
-  // Derecha:   cuads 0 y 1 usan BRACKET[4..7]
-  const qfL0 = drawQuadrant(0, 'left',  0); // R16: 200-203, QF: 216-217
-  const qfL1 = drawQuadrant(1, 'left',  2); // R16: 204-207, QF: 218-219
-  const qfR0 = drawQuadrant(0, 'right', 4); // R16: 208-211, QF: 220-221
-  const qfR1 = drawQuadrant(1, 'right', 6); // R16: 212-215, QF: 222-223
+  // ── Dibujar lado izquierdo ────────────────────────────────────
+  // IDs R16: 200-207 (2 grupos de 2 pares)
+  // IDs Oct: 216-219
+  // IDs QF:  224-225
+  // ID SF:   228
 
-  // ── SF izquierdo (junta qfL0 y qfL1) ────────────────────
-  const sfLMidY = (qfL0 + qfL1) / 2;
-  const sfLY    = sfLMidY - SH;
-  const sfLMatch = elimMatches.find(m => m.id === 224);
-  const sfLTeamA = sfLMatch?.home && sfLMatch.home !== 'Por definir' ? { name: sfLMatch.home, flag: sfLMatch.home_flag||'🏳️' } : null;
-  const sfLTeamB = sfLMatch?.away && sfLMatch.away !== 'Por definir' ? { name: sfLMatch.away, flag: sfLMatch.away_flag||'🏳️' } : null;
-  const sfLSlot  = drawSlot(C_SFL, sfLY, sfLTeamA, sfLTeamB, 'SF', 224);
+  const octMidYsL = [];
+  const r16IdsL = [200, 201, 202, 203, 204, 205, 206, 207];
 
-  // ── SF derecho (junta qfR0 y qfR1) ──────────────────────
-  const sfRMidY = (qfR0 + qfR1) / 2;
-  const sfRY    = sfRMidY - SH;
-  const sfRMatch = elimMatches.find(m => m.id === 225);
-  const sfRTeamA = sfRMatch?.home && sfRMatch.home !== 'Por definir' ? { name: sfRMatch.home, flag: sfRMatch.home_flag||'🏳️' } : null;
-  const sfRTeamB = sfRMatch?.away && sfRMatch.away !== 'Por definir' ? { name: sfRMatch.away, flag: sfRMatch.away_flag||'🏳️' } : null;
-  const sfRSlot  = drawSlot(C_SFR, sfRY, sfRTeamA, sfRTeamB, 'SF', 225);
+  for (let grp = 0; grp < 2; grp++) {
+    const pairMidYsInGrp = [];
 
-  // ── Connectors SF → Final ────────────────────────────────
-  const finMidY = (sfLSlot.midY + sfRSlot.midY) / 2;
-  const finY    = finMidY - FH/2;
+    for (let pair = 0; pair < 2; pair++) {
+      const idA = r16IdsL[grp * 4 + pair * 2];
+      const idB = r16IdsL[grp * 4 + pair * 2 + 1];
+      const yA  = cardY(grp, pair, 0);
+      const yB  = cardY(grp, pair, 1);
 
-  const midXfinL = C_SFL + SW + CONN/2;
-  hline(svg, C_SFL + SW, midXfinL, sfLSlot.midY, LINE3);
-  hline(svg, midXfinL, C_FIN, finMidY, LINE3);
+      const cA = drawCard(idA, C_R16L, yA);
+      const cB = drawCard(idB, C_R16L, yB);
 
-  const midXfinR = C_SFR - CONN/2;
-  hline(svg, midXfinR, C_SFR, sfRSlot.midY, LINE3);
-  hline(svg, C_FIN + FW, midXfinR, finMidY, LINE3);
+      const pMid = (cA.midY + cB.midY) / 2;
+      pairMidYsInGrp.push(pMid);
+
+      // Conectores R16 → Oct
+      connector(cA.rightX, C_OCTL, cA.midY, cB.midY, pMid, LINE1);
+    }
+
+    // Slot Octavos
+    const octId   = 216 + grp * 2 + (0); // 216,218 para grupos 0,1 izq
+    // Corrección: Oct-216 = par(200,201), Oct-217 = par(202,203), Oct-218 = par(204,205), Oct-219 = par(206,207)
+    const octIdReal = 216 + grp * 2;
+    const octIdReal2 = 216 + grp * 2 + 1;
+
+    const wA0  = matchWinner(byId[r16IdsL[grp*4 + 0]]);
+    const wB0  = matchWinner(byId[r16IdsL[grp*4 + 1]]);
+    const wA1  = matchWinner(byId[r16IdsL[grp*4 + 2]]);
+    const wB1  = matchWinner(byId[r16IdsL[grp*4 + 3]]);
+
+    const oct0MidY = pairMidYsInGrp[0];
+    const oct1MidY = pairMidYsInGrp[1];
+    const grpMid   = (oct0MidY + oct1MidY) / 2;
+
+    const slot0 = drawSlot(octIdReal,  C_OCTL, oct0MidY - SH, wA0, wB0, 'Oct');
+    const slot1 = drawSlot(octIdReal2, C_OCTL, oct1MidY - SH, wA1, wB1, 'Oct');
+
+    // Conectores Oct → QF
+    const qfId   = 224 + grp;
+    const wOct0  = matchWinner(byId[octIdReal]);
+    const wOct1  = matchWinner(byId[octIdReal2]);
+    connector(C_OCTL + SW, C_QFL, slot0.midY, slot1.midY, grpMid, LINE2);
+
+    const qfSlot = drawSlot(qfId, C_QFL, grpMid - SH, wOct0, wOct1, 'QF');
+    octMidYsL.push(qfSlot.midY);
+  }
+
+  // Conectores QF → SF izq
+  const sfMidL = (octMidYsL[0] + octMidYsL[1]) / 2;
+  const wQF_L0 = matchWinner(byId[224]);
+  const wQF_L1 = matchWinner(byId[225]);
+  connector(C_QFL + SW, C_SFL, octMidYsL[0], octMidYsL[1], sfMidL, LINE3);
+  const sfSlotL = drawSlot(228, C_SFL, sfMidL - SH, wQF_L0, wQF_L1, 'SF');
+
+  // ── Dibujar lado derecho (espejo) ────────────────────────────
+  const octMidYsR = [];
+  const r16IdsR = [208, 209, 210, 211, 212, 213, 214, 215];
+
+  for (let grp = 0; grp < 2; grp++) {
+    const pairMidYsInGrp = [];
+
+    for (let pair = 0; pair < 2; pair++) {
+      const idA = r16IdsR[grp * 4 + pair * 2];
+      const idB = r16IdsR[grp * 4 + pair * 2 + 1];
+      const yA  = cardY(grp, pair, 0);
+      const yB  = cardY(grp, pair, 1);
+
+      const cA = drawCard(idA, C_R16R, yA);
+      const cB = drawCard(idB, C_R16R, yB);
+
+      const pMid = (cA.midY + cB.midY) / 2;
+      pairMidYsInGrp.push(pMid);
+
+      // Conectores R16 → Oct (derecha, van hacia la izquierda)
+      connector(cA.leftX, C_OCTR + SW, cA.midY, cB.midY, pMid, LINE1);
+    }
+
+    // Slots Octavos derecha: 220,221 (grp0), 222,223 (grp1)
+    const octIdReal  = 220 + grp * 2;
+    const octIdReal2 = 220 + grp * 2 + 1;
+
+    const wA0 = matchWinner(byId[r16IdsR[grp*4 + 0]]);
+    const wB0 = matchWinner(byId[r16IdsR[grp*4 + 1]]);
+    const wA1 = matchWinner(byId[r16IdsR[grp*4 + 2]]);
+    const wB1 = matchWinner(byId[r16IdsR[grp*4 + 3]]);
+
+    const oct0MidY = pairMidYsInGrp[0];
+    const oct1MidY = pairMidYsInGrp[1];
+    const grpMid   = (oct0MidY + oct1MidY) / 2;
+
+    const slot0 = drawSlot(octIdReal,  C_OCTR, oct0MidY - SH, wA0, wB0, 'Oct');
+    const slot1 = drawSlot(octIdReal2, C_OCTR, oct1MidY - SH, wA1, wB1, 'Oct');
+
+    // Conectores Oct → QF derecha
+    const qfId  = 226 + grp;
+    const wOct0 = matchWinner(byId[octIdReal]);
+    const wOct1 = matchWinner(byId[octIdReal2]);
+    connector(C_OCTR, C_QFR + SW, slot0.midY, slot1.midY, grpMid, LINE2);
+
+    const qfSlot = drawSlot(qfId, C_QFR, grpMid - SH, wOct0, wOct1, 'QF');
+    octMidYsR.push(qfSlot.midY);
+  }
+
+  // Conectores QF → SF derecha
+  const sfMidR = (octMidYsR[0] + octMidYsR[1]) / 2;
+  const wQF_R0 = matchWinner(byId[226]);
+  const wQF_R1 = matchWinner(byId[227]);
+  connector(C_QFR, C_SFR + SW, octMidYsR[0], octMidYsR[1], sfMidR, LINE3);
+  const sfSlotR = drawSlot(229, C_SFR, sfMidR - SH, wQF_R0, wQF_R1, 'SF');
 
   // ── Final ─────────────────────────────────────────────────────
+  const finMidY = (sfSlotL.midY + sfSlotR.midY) / 2;
+  const finY    = finMidY - FH / 2;
+
+  // Conectores SF → Final
+  connector(C_SFL + SW, C_FIN,      sfSlotL.midY, sfSlotL.midY, sfSlotL.midY, LINE4);
+  connector(C_SFR,      C_FIN + FW, sfSlotR.midY, sfSlotR.midY, sfSlotR.midY, LINE4);
+
+  // Línea SF izq → Final
+  hline(C_SFL + SW, C_FIN, sfSlotL.midY, LINE4);
+  // Línea SF der → Final
+  hline(C_FIN + FW, C_SFR, sfSlotR.midY, LINE4);
+
+  // Caja Final
+  const mFin    = byId[230];
+  const finHome = mFin?.home && mFin.home !== 'Por definir' ? mFin.home : null;
+  const finAway = mFin?.away && mFin.away !== 'Por definir' ? mFin.away : null;
+  const wSF_L   = matchWinner(byId[228]);
+  const wSF_R   = matchWinner(byId[229]);
+  const finTeamA = wSF_L || (finHome ? { name: finHome, flag: mFin.home_flag || '🏳️' } : null);
+  const finTeamB = wSF_R || (finAway ? { name: finAway, flag: mFin.away_flag || '🏳️' } : null);
+
   el('rect', { x: C_FIN+1, y: finY+2, width: FW, height: FH, rx: '9', fill: 'rgba(0,0,0,.4)' }, svg);
   el('rect', { x: C_FIN, y: finY, width: FW, height: FH, rx: '9',
-    fill: '#0a1226', stroke: 'rgba(255,184,28,.3)', 'stroke-width': '1.5',
-    'stroke-dasharray': '6 3' }, svg);
-  const ftxt1 = el('text', { x: C_FIN+FW/2, y: finY+20, 'font-size': '8',
-    'text-anchor': 'middle', fill: 'rgba(255,255,255,.2)',
-    'font-family': FONT, 'letter-spacing': '2' }, svg);
-  ftxt1.textContent = 'GRAN FINAL';
-  const ftxt2 = el('text', { x: C_FIN+FW/2, y: finY+40, 'font-size': '12',
-    'text-anchor': 'middle', fill: 'rgba(255,255,255,.12)', 'font-family': FONT }, svg);
-  ftxt2.textContent = '? vs ?';
+    fill: '#0a1226', stroke: 'rgba(255,184,28,.35)', 'stroke-width': '1.5',
+    'stroke-dasharray': finTeamA ? 'none' : '6 3' }, svg);
 
+  if (finTeamA && finTeamB) {
+    el('line', { x1: C_FIN+1, y1: finY+FH/2, x2: C_FIN+FW-1, y2: finY+FH/2,
+      stroke: 'rgba(255,255,255,.05)', 'stroke-width': '1' }, svg);
+    [finTeamA, finTeamB].forEach((team, i) => {
+      const oy = finY + FH / 4 + i * FH / 2;
+      const ft = el('text', { x: C_FIN+10, y: oy+4, 'font-size': '12', 'font-family': FONT }, svg);
+      ft.textContent = team.flag;
+      const nt = el('text', { x: C_FIN+28, y: oy+5, 'font-size': '9.5', 'font-family': FONT,
+        'font-weight': '700', fill: AMBER }, svg);
+      nt.textContent = trunc(team.name, 10);
+    });
+  } else {
+    const gt = el('text', { x: C_FIN+FW/2, y: finY+18, 'font-size': '7.5',
+      'text-anchor': 'middle', fill: 'rgba(255,255,255,.18)',
+      'font-family': FONT, 'letter-spacing': '2' }, svg);
+    gt.textContent = 'GRAN FINAL';
+    const vt = el('text', { x: C_FIN+FW/2, y: finY+38, 'font-size': '11',
+      'text-anchor': 'middle', fill: 'rgba(255,255,255,.1)', 'font-family': FONT }, svg);
+    vt.textContent = '? vs ?';
+  }
+
+  // Badge ✎ admin en Final
   if (currentUser.role === 'admin') {
-    const bg = el('rect', { x: C_FIN+FW-22, y: finY+4, width: 18, height: 16, rx: '4',
+    const bg = el('rect', { x: C_FIN+FW-20, y: finY+4, width: 16, height: 14, rx: '3',
       fill: 'rgba(108,172,228,.15)', stroke: 'rgba(108,172,228,.3)',
       'stroke-width': '1', style: 'cursor:pointer' }, svg);
-    const bt = el('text', { x: C_FIN+FW-13, y: finY+15, 'font-size': '10',
+    const bt = el('text', { x: C_FIN+FW-12, y: finY+14, 'font-size': '9',
       'font-family': FONT, fill: 'rgba(108,172,228,.8)',
       'text-anchor': 'middle', style: 'cursor:pointer' }, svg);
     bt.textContent = '✎';
-    bg.addEventListener('click', e => { e.stopPropagation(); openR16AdminModal(228); });
-    bt.addEventListener('click', e => { e.stopPropagation(); openR16AdminModal(228); });
+    [bg, bt].forEach(e => e.addEventListener('click', ev => { ev.stopPropagation(); openR16AdminModal(230); }));
   }
 
   // Copa
   el('image', {
     href: 'copa.png',
-    x: SVG_W / 2 - 65,
-    y: finY + FH + 16,
-    width: 130, height: 130,
+    x: SVG_W / 2 - 60, y: finY + FH + 20,
+    width: 120, height: 120,
   }, svg);
 
+  // ── Montar SVG ────────────────────────────────────────────────
   container.innerHTML = '';
   twemoji.parse(container);
   container.appendChild(svg);
 }
-
 // ── Predicción R16 ───────────────────────────────────────────
 
 // ── Resultado admin R16 ───────────────────────────────────────
