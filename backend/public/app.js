@@ -1466,7 +1466,23 @@ function renderR16Bracket() {
     vline(svg, midXqf, r8MidYs[0], r8MidYs[1], LINE2);
     hline(svg, isLeft ? midXqf : C_QFR + SW, isLeft ? C_QFL : midXqf, qfMidY, LINE2);
 
-    return qfMidY;
+    // Slot cuartos (224=izqCuad0, 225=derCuad0, 226=izqCuad1, 227=derCuad1)
+    const qfMatchId = 224 + cuadIdx * 2 + (isLeft ? 0 : 1);
+    const qfMatch   = elimMatches.find(m => m.id === qfMatchId);
+    const r8w0 = matchWinner(elimMatches.find(m => m.id === (216 + bIdx)));
+    const r8w1 = matchWinner(elimMatches.find(m => m.id === (216 + bIdx + 1)));
+    const qfTeamA = r8w0 || (qfMatch?.home && qfMatch.home !== 'Por definir' ? { name: qfMatch.home, flag: qfMatch.home_flag||'🏳️' } : null);
+    const qfTeamB = r8w1 || (qfMatch?.away && qfMatch.away !== 'Por definir' ? { name: qfMatch.away, flag: qfMatch.away_flag||'🏳️' } : null);
+    const qfSlotY = qfMidY - SH;
+    const qfSlot  = drawSlot(qfX, qfSlotY, qfTeamA, qfTeamB, 'Por definir', qfMatchId);
+
+    // Conector cuartos → semis
+    const sfMidY = qfSlot.midY;
+    const midXsf = isLeft ? C_QFL + SW + CONN/2 : C_QFR - CONN/2;
+    hline(svg, isLeft ? C_QFL + SW : midXsf, isLeft ? midXsf : C_QFR, sfMidY, LINE2);
+    hline(svg, isLeft ? midXsf : C_SFR + SW, isLeft ? C_SFL : midXsf, sfMidY, LINE2);
+
+    return sfMidY;
   }
 
   // ── Dibujar los 4 cuadrantes ──────────────────────────────
