@@ -1423,8 +1423,8 @@ function renderR16Bracket() {
     const pairMidYs = [];
 
     for (let p = 0; p < 2; p++) {
-      const matchA = BRACKET[bIdx + p]?.[0];
-      const matchB = BRACKET[bIdx + p]?.[1];
+      const matchA = BRACKET[bIdx + p]?.pair[0];
+      const matchB = BRACKET[bIdx + p]?.pair[1];
 
       const yA = cuadY + p * (PAIR_H + GAP_P);
       const yB = yA + CH + GAP_V;
@@ -1500,7 +1500,7 @@ function renderR16Bracket() {
   const midXfinR = C_SFR - CONN/2;
   hline(svg, midXfinR, C_SFR, sfRSlot.midY, LINE3);
   hline(svg, C_FIN + FW, midXfinR, finMidY, LINE3);
-  
+
   // ── Final ─────────────────────────────────────────────────────
   el('rect', { x: C_FIN+1, y: finY+2, width: FW, height: FH, rx: '9', fill: 'rgba(0,0,0,.4)' }, svg);
   el('rect', { x: C_FIN, y: finY, width: FW, height: FH, rx: '9',
