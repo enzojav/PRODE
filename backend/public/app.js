@@ -1047,9 +1047,7 @@ async function renderR16() {
     elimMatches    = await api('GET', '/prode/matches/elim');  // ← AGREGAR
     const predsArr = await api('GET', '/prode/predictions');
     r16Preds = {};
-    predsArr.forEach(p => {
-      if (r16Matches.find(m => m.id === p.match_id)) r16Preds[p.match_id] = p;
-    });
+    predsArr.forEach(p => { r16Preds[p.match_id] = p; });
   } catch(e) { console.error('Error cargando R16:', e); return; }
 
   let myPts = 0;
