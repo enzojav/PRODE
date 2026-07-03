@@ -479,130 +479,254 @@ function render() {
   const svg = document.getElementById('bsvg');
   svg.innerHTML = '';
 
-  const ROWS = 8;
-  const LEFT_X   = 16;
-  const H_CONN   = 60;
-  const H_TREE   = 44;
-  const CENTER_GAP = 80;
+  // Dimensiones
+  const CW = 110, CH = 36; // card width/height por equipo (total card = CH*2+1)
+  const GAP = 10;           // gap entre las 2 cards de un par
+  const CONN = 28;          // conector horizontal
+  const TOP = 40;
+  const ROWS = 8;           // 8 pares de R16
 
-  const rightX = LEFT_X + W + H_CONN + H_TREE + CENTER_GAP + H_TREE + H_CONN;
-  const centerX = LEFT_X + W + H_CONN + H_TREE + CENTER_GAP/2;
-  const svgW = rightX + W + 20;
-  const rowH_base = H * 2 + GAP + 16;
-  const totalH = ROWS * rowH_base + 30;
+  // IDs por ronda
+  const R16L  = [200,201,202,203,204,205,206,207];
+  const R16R  = [208,209,210,211,212,213,214,215];
+  const QFL   = [216,217,218,219];
+  const QFR   = [220,221,222,223];
+  const SFL   = [224,225];
+  const SFR   = [226,227];
+  const FIN   = [228];
 
-  svg.setAttribute('width', svgW);
-  svg.setAttribute('height', totalH);
-  svg.setAttribute('viewBox', `0 0 ${svgW} ${totalH}`);
-  svg.style.minWidth = svgW + 'px';
+  // Altura de una card completa (2 equipos)
+  const CARD_H = CH * 2 + 1;
+  // Altura de una fila de R16
+  const ROW_H = CARD_H + GAP + 20; // +20 para fecha
+  const SVG_H = TOP + ROWS * ROW_H + 60;
 
-  const rowH = (totalH - 40) / ROWS;
-  function getMatchY(idx) { return 20 + idx * rowH + rowH/2 - H; }
+  // Columnas
+  const C_R16L = 12;
+  const C_QFL  = C_R16L + CW + CONN;
+  const C_SFL  = C_QFL  + CW + CONN;
+  const C_FIN  = C_SFL  + CW + CONN;
+  const C_SFR  = C_FIN  + CW + CONN;
+  const C_QFR  = C_SFR  + CW + CONN;
+  const C_R16R = C_QFR  + CW + CONN;
+  const SVG_W  = C_R16R + CW + 12;
 
-  // ── LEFT R16
-  leftIds.forEach((id, i) => {
-    const m = matches.find(x => x.id === id);
-    const y = getMatchY(i);
-    drawMatch(svg, m || null, LEFT_X, y);
-    if (m) { line(svg, LEFT_X + W, y + H, LEFT_X + W + H_CONN, y + H); }
+  svg.setAttribute('width', SVG_W);
+  svg.setAttribute('height', SVG_H);
+  svg.setAttribute('viewBox', `0 0 ${SVG_W} ${SVG_H}`);
+  svg.style.minWidth = SVG_W + 'px';
+
+  // Fondo
+  const bg = svgEl('rect', { x:0, y:0, width:SVG_W, height:SVG_H, fill:'#070d1e', rx:'10' });
+  svg.appendChild(bg);
+
+  // Etiquetas
+  const labels = [
+    { x: C_R16L + CW/2, t: '16AVOS'  },
+    { x: C_QFL  + CW/2, t: '8AVOS'   },
+    { x: C_SFL  + CW/2, t: 'CUARTOS' },
+    { x: C_FIN  + CW/2, t: 'FINAL'   },
+    { x: C_SFR  + CW/2, t: 'CUARTOS' },
+    { x: C_QFR  + CW/2, t: '8AVOS'   },
+    { x: C_R16R + CW/2, t: '16AVOS'  },
+  ];
+  labels.forEach(({ x, t }) => {
+    const el = svgEl('text', { x, y: TOP - 14, 'font-size': '9',
+      'text-anchor': 'middle', fill: 'rgba(255,255,255,.4)',
+      'font-family': FONT, 'font-weight': '700', 'letter-spacing': '1.5' });
+    el.textContent = t;
+    svg.appendChild(el);
   });
 
-  // ── RIGHT R16
-  rightIds.forEach((id, i) => {
+  // Y position de cada fila de R16
+  function rowY(i) { return TOP + i * ROW_H; }
+  // midY de una card en fila i
+  function rowMidY(i) { return rowY(i) + CARD_H / 2; }
+
+  // ── Dibujar partido ──────────────────────────────────────
+  function drawMatch(m, x, y) {
+    const winner = m ? getWinner(m) : null;
+    const myPred = m?.my_prediction || null;
+    const hasPred = myPred !== null;
+    const hasResult = m && m.home_score !== null && m.home_score !== undefined;
+
+    const g = svgEl('g', m ? { style: 'cursor:pointer' } : {});
+    if (m) g.addEventListener('click', () => openModal(m.id));
+
+    // Sombra
+    g.appendChild(svgEl('rect', { x: x+1, y: y+2, width: CW, height: CARD_H, rx: '7', fill: 'rgba(0,0,0,.4)' }));
+
+    // Fondo
+    const stroke = hasResult ? 'rgba(255,184,28,.3)' : hasPred ? 'rgba(58,232,176,.3)' : 'rgba(255,255,255,.07)';
+    g.appendChild(svgEl('rect', { x, y, width: CW, height: CARD_H, rx: '7',
+      fill: '#0d1b38', stroke, 'stroke-width': '1' }));
+
+    // Divisor
+    g.appendChild(svgEl('line', { x1: x+1, y1: y+CH, x2: x+CW-1, y2: y+CH,
+      stroke: 'rgba(255,255,255,.05)', 'stroke-width': '1' }));
+
+    if (!m) {
+      const t = svgEl('text', { x: x+CW/2, y: y+CARD_H/2+4,
+        'font-size': '8', 'text-anchor': 'middle',
+        fill: 'rgba(255,255,255,.12)', 'font-family': FONT });
+      t.textContent = '?';
+      g.appendChild(t);
+      svg.appendChild(g);
+      return { midY: y + CARD_H/2 };
+    }
+
+    [
+      { name: m.home, flag: m.home_flag||'🏳️', score: m.home_score, side:'1', oy: y + CH/2 },
+      { name: m.away, flag: m.away_flag||'🏳️', score: m.away_score, side:'2', oy: y + CH + CH/2 },
+    ].forEach(({ name, flag, score, side, oy }) => {
+      const isW = winner === side;
+      const isL = winner && winner !== side;
+      const isPred = !winner && myPred === side;
+
+      if (isW) {
+        g.appendChild(svgEl('rect', { x, y: oy-CH/2, width: 3, height: CH, rx:'2', fill:'rgba(255,184,28,.7)' }));
+      } else if (isPred) {
+        g.appendChild(svgEl('rect', { x, y: oy-CH/2, width: 3, height: CH, rx:'2', fill:'rgba(58,232,176,.7)' }));
+      }
+
+      const ft = svgEl('text', { x: x+8, y: oy+4, 'font-size': '11' });
+      ft.textContent = flag;
+      g.appendChild(ft);
+
+      const nt = svgEl('text', { x: x+24, y: oy+4,
+        'font-size': '9', 'font-family': FONT,
+        'font-weight': (isW||isPred) ? '700' : '400',
+        fill: isW ? AMBER : isPred ? GREEN : isL ? 'rgba(255,255,255,.25)' : 'rgba(255,255,255,.8)' });
+      nt.textContent = truncate(name||'?', 9);
+      g.appendChild(nt);
+
+      if (score !== null && score !== undefined) {
+        g.appendChild(svgEl('rect', { x: x+CW-20, y: oy-8, width:16, height:16, rx:'3',
+          fill: isW?'rgba(255,184,28,.15)':'rgba(255,255,255,.05)',
+          stroke: isW?'rgba(255,184,28,.3)':'rgba(255,255,255,.08)', 'stroke-width':'1' }));
+        const st = svgEl('text', { x: x+CW-12, y: oy+4,
+          'font-size':'9', 'font-family':FONT, 'font-weight':'800',
+          'text-anchor':'middle', fill: isW?AMBER:'rgba(255,255,255,.4)' });
+        st.textContent = score;
+        g.appendChild(st);
+      }
+
+      if (hasPred && !winner) {
+        g.appendChild(svgEl('circle', { cx: x+CW-5, cy: y+5, r:'3', fill:'rgba(58,232,176,.7)' }));
+      }
+    });
+
+    if (m.match_date) {
+      const dt = svgEl('text', { x: x+CW/2, y: y+CARD_H+10,
+        'font-size':'7', 'text-anchor':'middle',
+        fill:'rgba(255,255,255,.2)', 'font-family':FONT });
+      dt.textContent = m.match_date + (m.time?' · '+m.time+'hs':'');
+      g.appendChild(dt);
+    }
+
+    svg.appendChild(g);
+    return { midY: y + CARD_H/2 };
+  }
+
+  // ── Línea horizontal ────────────────────────────────────
+  function hline(x1, x2, y, color) {
+    const l = svgEl('line', { x1, y1:y, x2, y2:y,
+      stroke: color||'rgba(108,172,228,.2)', 'stroke-width':'1' });
+    svg.appendChild(l);
+  }
+  function vline(x, y1, y2, color) {
+    const l = svgEl('line', { x1:x, y1, x2:x, y2,
+      stroke: color||'rgba(108,172,228,.2)', 'stroke-width':'1' });
+    svg.appendChild(l);
+  }
+
+  // ── Dibujar R16 y recolectar midYs ──────────────────────
+  const midYsL = [], midYsR = [];
+
+  R16L.forEach((id, i) => {
     const m = matches.find(x => x.id === id);
-    const y = getMatchY(i);
-    drawMatch(svg, m || null, rightX, y);
-    if (m) { line(svg, rightX - H_CONN, y + H, rightX, y + H); }
+    const y = rowY(i);
+    const r = drawMatch(m||null, C_R16L, y);
+    midYsL.push(r.midY);
+    hline(C_R16L + CW, C_QFL, r.midY);
   });
 
-  // ── LEFT TREE (R16 → QF)
-  const lSeeds = [];
-  for (let i = 0; i < 4; i++) {
-    const top = getMatchY(i * 2) + H;
-    const bot = getMatchY(i * 2 + 1) + H;
-    const midY = (top + bot) / 2;
-    const x1 = LEFT_X + W + H_CONN;
-    const x2 = x1 + H_TREE;
-    line(svg, x1, top, x1, bot);
-    line(svg, x1, midY, x2, midY);
-    lSeeds.push({midY, x: x2});
-  }
+  R16R.forEach((id, i) => {
+    const m = matches.find(x => x.id === id);
+    const y = rowY(i);
+    const r = drawMatch(m||null, C_R16R, y);
+    midYsR.push(r.midY);
+    hline(C_QFR + CW, C_R16R, r.midY);
+  });
 
-  // ── RIGHT TREE
-  const rSeeds = [];
-  for (let i = 0; i < 4; i++) {
-    const top = getMatchY(i * 2) + H;
-    const bot = getMatchY(i * 2 + 1) + H;
-    const midY = (top + bot) / 2;
-    const x1 = rightX - H_CONN;
-    const x2 = x1 - H_TREE;
-    line(svg, x1, top, x1, bot);
-    line(svg, x2, midY, x1, midY);
-    rSeeds.push({midY, x: x2});
-  }
+  // ── QF (8avos) ──────────────────────────────────────────
+  const midYsQFL = [], midYsQFR = [];
 
-  // ── LEFT SEMI (QF → SF)
-  const lSemi = [];
-  for (let i = 0; i < 2; i++) {
-    const top = lSeeds[i*2].midY;
-    const bot = lSeeds[i*2+1].midY;
-    const midY = (top + bot) / 2;
-    const x1 = lSeeds[i*2].x;
-    const x2 = x1 + 22;
-    line(svg, x1, top, x1, bot);
-    line(svg, x1, midY, x2, midY);
-    lSemi.push({midY, x: x2});
-  }
+  QFL.forEach((id, i) => {
+    const top = midYsL[i*2];
+    const bot = midYsL[i*2+1];
+    const midY = (top+bot)/2;
+    vline(C_QFL, top, bot);
+    const m = matches.find(x => x.id === id);
+    const y = midY - CARD_H/2;
+    const r = drawMatch(m||null, C_QFL, y);
+    midYsQFL.push(r.midY);
+    hline(C_QFL + CW, C_SFL, r.midY);
+  });
 
-  // ── RIGHT SEMI
-  const rSemi = [];
-  for (let i = 0; i < 2; i++) {
-    const top = rSeeds[i*2].midY;
-    const bot = rSeeds[i*2+1].midY;
-    const midY = (top + bot) / 2;
-    const x1 = rSeeds[i*2].x;
-    const x2 = x1 - 22;
-    line(svg, x1, top, x1, bot);
-    line(svg, x2, midY, x1, midY);
-    rSemi.push({midY, x: x2});
-  }
+  QFR.forEach((id, i) => {
+    const top = midYsR[i*2];
+    const bot = midYsR[i*2+1];
+    const midY = (top+bot)/2;
+    vline(C_QFR, top, bot);
+    const m = matches.find(x => x.id === id);
+    const y = midY - CARD_H/2;
+    const r = drawMatch(m||null, C_QFR, y);
+    midYsQFR.push(r.midY);
+    hline(C_SFR + CW, C_QFR, r.midY);
+  });
 
-  // ── CENTER / FINAL
-  const finalMidY = (lSemi[0].midY + lSemi[1].midY) / 2;
-  const lFinalX = lSemi[0].x;
-  line(svg, lFinalX, lSemi[0].midY, lFinalX, lSemi[1].midY);
-  line(svg, lFinalX, finalMidY, centerX - 30, finalMidY);
-  const rFinalX = rSemi[0].x;
-  line(svg, rFinalX, rSemi[0].midY, rFinalX, rSemi[1].midY);
-  line(svg, centerX + 30, finalMidY, rFinalX, finalMidY);
+  // ── SF (cuartos) ─────────────────────────────────────────
+  const midYsSFL = [], midYsSFR = [];
+
+  SFL.forEach((id, i) => {
+    const top = midYsQFL[i*2];
+    const bot = midYsQFL[i*2+1];
+    const midY = (top+bot)/2;
+    vline(C_SFL, top, bot);
+    const m = matches.find(x => x.id === id);
+    const y = midY - CARD_H/2;
+    const r = drawMatch(m||null, C_SFL, y);
+    midYsSFL.push(r.midY);
+    hline(C_SFL + CW, C_FIN, r.midY);
+  });
+
+  SFR.forEach((id, i) => {
+    const top = midYsQFR[i*2];
+    const bot = midYsQFR[i*2+1];
+    const midY = (top+bot)/2;
+    vline(C_SFR, top, bot);
+    const m = matches.find(x => x.id === id);
+    const y = midY - CARD_H/2;
+    const r = drawMatch(m||null, C_SFR, y);
+    midYsSFR.push(r.midY);
+    hline(C_FIN + CW, C_SFR, r.midY);
+  });
+
+  // ── Final ────────────────────────────────────────────────
+  const finMidY = (midYsSFL[0] + midYsSFL[1] + midYsSFR[0] + midYsSFR[1]) / 4;
+  vline(C_FIN, midYsSFL[0], midYsSFL[1]);
+  vline(C_FIN + CW, midYsSFR[0], midYsSFR[1]);
+
+  const finM = matches.find(x => x.id === 228);
+  const finY = finMidY - CARD_H/2;
+  drawMatch(finM||null, C_FIN, finY);
 
   // Trophy
-  const defs = svgEl('defs', {});
-  const filter = svgEl('filter', {id: 'glow', x: '-50%', y: '-50%', width: '200%', height: '200%'});
-  const feBlur = svgEl('feGaussianBlur', {stdDeviation: '3', result: 'blur'});
-  const feMerge = svgEl('feMerge', {});
-  feMerge.appendChild(svgEl('feMergeNode', {in: 'blur'}));
-  feMerge.appendChild(svgEl('feMergeNode', {in: 'SourceGraphic'}));
-  filter.appendChild(feBlur); filter.appendChild(feMerge);
-  defs.appendChild(filter);
-  const grad = svgEl('radialGradient', {id: 'trophyGrad', cx: '40%', cy: '35%'});
-  grad.appendChild(svgEl('stop', {'offset': '0%', 'stop-color': '#1a3a6e'}));
-  grad.appendChild(svgEl('stop', {'offset': '100%', 'stop-color': '#091420'}));
-  defs.appendChild(grad);
-  svg.appendChild(defs);
-
-  const R = 30;
-  svg.appendChild(svgEl('circle', { cx: centerX, cy: finalMidY, r: R + 8, fill: 'none', stroke: 'rgba(255,184,28,.1)', 'stroke-width': '1', 'stroke-dasharray': '3 4' }));
-  svg.appendChild(svgEl('circle', { cx: centerX, cy: finalMidY, r: R, fill: 'url(#trophyGrad)', stroke: 'rgba(255,184,28,.35)', 'stroke-width': '1.5', filter: 'url(#glow)' }));
-  const tT = svgEl('text', { x: centerX, y: finalMidY - 4, 'font-size': '22', 'text-anchor': 'middle' });
+  const tT = svgEl('text', { x: C_FIN + CW/2, y: finY - 12,
+    'font-size':'18', 'text-anchor':'middle' });
   tT.textContent = '🏆';
   svg.appendChild(tT);
-  const fT = svgEl('text', { x: centerX, y: finalMidY + 17, 'font-size': '7', 'font-family': "'Bebas Neue', sans-serif", fill: AMBER, 'text-anchor': 'middle', 'letter-spacing': '2' });
-  fT.textContent = 'GRAN FINAL';
-  svg.appendChild(fT);
-  const dT = svgEl('text', { x: centerX, y: finalMidY + 28, 'font-size': '6', 'font-family': FONT, fill: 'rgba(255,255,255,.3)', 'text-anchor': 'middle' });
-  dT.textContent = '19 Jul · MetLife NJ';
-  svg.appendChild(dT);
 
   updateStats();
 }
