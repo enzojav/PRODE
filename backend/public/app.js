@@ -1451,17 +1451,6 @@ function renderR16Bracket() {
       }
     }
 
-    // Badge ✎ admin siempre visible
-    if (currentUser.role === 'admin') {
-      const bg = el('rect', { x: x+SW-20, y: y+2, width: 16, height: 14, rx: '3',
-        fill: 'rgba(108,172,228,.15)', stroke: 'rgba(108,172,228,.3)',
-        'stroke-width': '1', style: 'cursor:pointer' }, svg);
-      const bt = el('text', { x: x+SW-12, y: y+12, 'font-size': '9', 'font-family': FONT,
-        fill: 'rgba(108,172,228,.8)', 'text-anchor': 'middle', style: 'cursor:pointer' }, svg);
-      bt.textContent = '✎';
-      [bg, bt].forEach(e => e.addEventListener('click', ev => { ev.stopPropagation(); openR16AdminModal(matchId); }));
-    }
-
     return { midY: y + SH, rightX: x + SW, leftX: x };
   }
 
