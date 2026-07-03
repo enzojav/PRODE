@@ -1147,13 +1147,15 @@ function renderR16Bracket() {
   const TOP    = 50;          // margen superior
 
   // ── Columnas (de izq a der) ───────────────────────────────────
-  const C_R16L  = 12;                          // cards izq
-  const C_QFL   = C_R16L + CW + CONN;          // slots QF izq
-  const C_SFL   = C_QFL  + SW + CONN;          // slots SF izq
-  const C_FIN   = C_SFL  + SW + CONN;          // final (centro)
-  const C_SFR   = C_FIN  + FW + CONN;          // slots SF der
-  const C_QFR   = C_SFR  + SW + CONN;          // slots QF der
-  const C_R16R  = C_QFR  + SW + CONN;          // cards der
+  const C_R16L  = 12;
+  const C_R8L   = C_R16L + CW + CONN;          // 8avos izq
+  const C_QFL   = C_R8L  + SW + CONN;          // cuartos izq
+  const C_SFL   = C_QFL  + SW + CONN;          // semis izq
+  const C_FIN   = C_SFL  + SW + CONN;          // final
+  const C_SFR   = C_FIN  + FW + CONN;          // semis der
+  const C_QFR   = C_SFR  + SW + CONN;          // cuartos der
+  const C_R8R   = C_QFR  + SW + CONN;          // 8avos der
+  const C_R16R  = C_R8R  + SW + CONN;          // cards der
   const SVG_W   = C_R16R + CW + 12;
 
   // ── Altura total ──────────────────────────────────────────────
@@ -1224,11 +1226,13 @@ function renderR16Bracket() {
   // Etiquetas de ronda
   [
     { x: C_R16L + CW / 2,  label: '16AVOS'  },
+    { x: C_R8L  + SW / 2,  label: '8AVOS'   },
     { x: C_QFL  + SW / 2,  label: 'CUARTOS' },
     { x: C_SFL  + SW / 2,  label: 'SEMIS'   },
     { x: C_FIN  + FW / 2,  label: 'FINAL'   },
     { x: C_SFR  + SW / 2,  label: 'SEMIS'   },
     { x: C_QFR  + SW / 2,  label: 'CUARTOS' },
+    { x: C_R8R  + SW / 2,  label: '8AVOS'   },
     { x: C_R16R + CW / 2,  label: '16AVOS'  },
   ].forEach(({ x, label }) => {
     const t = el('text', {
@@ -1418,9 +1422,10 @@ function renderR16Bracket() {
   function drawQuadrant(cuadIdx, side, bIdx) {
     const isLeft = side === 'left';
     const cardX  = isLeft ? C_R16L : C_R16R;
+    const r8X    = isLeft ? C_R8L  : C_R8R;
     const qfX    = isLeft ? C_QFL  : C_QFR;
     const cuadY  = TOP + cuadIdx * (QUAD_H + GAP_Q);
-    const pairMidYs = [];
+    const r8MidYs = [];
 
     for (let p = 0; p < 2; p++) {
       const matchA = BRACKET[bIdx + p]?.pair[0];
@@ -1434,33 +1439,32 @@ function renderR16Bracket() {
 
       const pairMidY = (cA.midY + cB.midY) / 2;
 
-      // Conector cards → QF
+      // Conector R16 → 8avos
       const midXconn = isLeft ? C_R16L + CW + CONN/2 : C_R16R - CONN/2;
       hline(svg, isLeft ? cA.rightX : midXconn, isLeft ? midXconn : cA.leftX, cA.midY, LINE1);
       hline(svg, isLeft ? cB.rightX : midXconn, isLeft ? midXconn : cB.leftX, cB.midY, LINE1);
       vline(svg, midXconn, cA.midY, cB.midY, LINE1);
-      hline(svg, isLeft ? midXconn : qfX + SW, isLeft ? qfX : midXconn, pairMidY, LINE1);
+      hline(svg, isLeft ? midXconn : r8X + SW, isLeft ? r8X : midXconn, pairMidY, LINE1);
 
-      // QF slot
-      const qfMatchId = 216 + (bIdx + p);
-      const qfMatch   = elimMatches.find(m => m.id === qfMatchId);
+      // Slot 8avos (216-223)
+      const r8MatchId = 216 + (bIdx + p);
+      const r8Match   = elimMatches.find(m => m.id === r8MatchId);
       const wA = matchWinner(matchA);
       const wB = matchWinner(matchB);
-      const qfTeamA = wA || (qfMatch?.home && qfMatch.home !== 'Por definir' ? { name: qfMatch.home, flag: qfMatch.home_flag||'🏳️' } : null);
-      const qfTeamB = wB || (qfMatch?.away && qfMatch.away !== 'Por definir' ? { name: qfMatch.away, flag: qfMatch.away_flag||'🏳️' } : null);
-
-      const qfSlotY = pairMidY - SH;
-      const qfSlot  = drawSlot(qfX, qfSlotY, qfTeamA, qfTeamB, 'Por definir', qfMatchId);
-      pairMidYs.push(qfSlot.midY);
+      const r8TeamA = wA || (r8Match?.home && r8Match.home !== 'Por definir' ? { name: r8Match.home, flag: r8Match.home_flag||'🏳️' } : null);
+      const r8TeamB = wB || (r8Match?.away && r8Match.away !== 'Por definir' ? { name: r8Match.away, flag: r8Match.away_flag||'🏳️' } : null);
+      const r8SlotY = pairMidY - SH;
+      const r8Slot  = drawSlot(r8X, r8SlotY, r8TeamA, r8TeamB, 'Por definir', r8MatchId);
+      r8MidYs.push(r8Slot.midY);
     }
 
-    // Conector QF → afuera (para que SF lo junte)
-    const qfMidY  = (pairMidYs[0] + pairMidYs[1]) / 2;
-    const midXsf  = isLeft ? C_QFL + SW + CONN/2 : C_QFR - CONN/2;
-    hline(svg, isLeft ? C_QFL + SW : midXsf, isLeft ? midXsf : C_QFR, pairMidYs[0], LINE2);
-    hline(svg, isLeft ? C_QFL + SW : midXsf, isLeft ? midXsf : C_QFR, pairMidYs[1], LINE2);
-    vline(svg, midXsf, pairMidYs[0], pairMidYs[1], LINE2);
-    hline(svg, isLeft ? midXsf : C_SFR + SW, isLeft ? C_SFL : midXsf, qfMidY, LINE2);
+    // Conector 8avos → cuartos
+    const qfMidY  = (r8MidYs[0] + r8MidYs[1]) / 2;
+    const midXqf  = isLeft ? C_R8L + SW + CONN/2 : C_R8R - CONN/2;
+    hline(svg, isLeft ? C_R8L + SW : midXqf, isLeft ? midXqf : C_R8R, r8MidYs[0], LINE2);
+    hline(svg, isLeft ? C_R8L + SW : midXqf, isLeft ? midXqf : C_R8R, r8MidYs[1], LINE2);
+    vline(svg, midXqf, r8MidYs[0], r8MidYs[1], LINE2);
+    hline(svg, isLeft ? midXqf : C_QFR + SW, isLeft ? C_QFL : midXqf, qfMidY, LINE2);
 
     return qfMidY;
   }
