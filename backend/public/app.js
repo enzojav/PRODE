@@ -1414,19 +1414,18 @@ function renderR16Bracket() {
   //  side: 'left' | 'right'
   //  bIdx: índice base en BRACKET[]
   // ══════════════════════════════════════════════════════════════
+  // ── drawQuadrant: dibuja R16 cards + QF slot, devuelve midY del QF ──
   function drawQuadrant(cuadIdx, side, bIdx) {
-    const isLeft  = side === 'left';
-    const cardX   = isLeft ? C_R16L : C_R16R;
-    const qfX     = isLeft ? C_QFL  : C_QFR;
-    const sfX     = isLeft ? C_SFL  : C_SFR;
-    const cuadY   = TOP + cuadIdx * (QUAD_H + GAP_Q);
-    const qfMidYs = [];
+    const isLeft = side === 'left';
+    const cardX  = isLeft ? C_R16L : C_R16R;
+    const qfX    = isLeft ? C_QFL  : C_QFR;
+    const cuadY  = TOP + cuadIdx * (QUAD_H + GAP_Q);
+    const pairMidYs = [];
 
     for (let p = 0; p < 2; p++) {
-      const matchA = BRACKET[bIdx + p]?.pair[0];
-      const matchB = BRACKET[bIdx + p]?.pair[1];
+      const matchA = BRACKET[bIdx + p]?.[0];
+      const matchB = BRACKET[bIdx + p]?.[1];
 
-      // Y de las dos cards del par
       const yA = cuadY + p * (PAIR_H + GAP_P);
       const yB = yA + CH + GAP_V;
 
@@ -1435,82 +1434,73 @@ function renderR16Bracket() {
 
       const pairMidY = (cA.midY + cB.midY) / 2;
 
-      // ── Conector cards → QF ──────────────────────────────────
-      // midX = punto vertical donde confluyen las dos líneas horizontales
-      const midXconn = isLeft
-        ? C_R16L + CW + CONN / 2
-        : C_R16R - CONN / 2;
-
-      hline(svg, isLeft ? cA.rightX : cA.leftX, midXconn, cA.midY, LINE1);
-      hline(svg, isLeft ? cB.rightX : cB.leftX, midXconn, cB.midY, LINE1);
+      // Conector cards → QF
+      const midXconn = isLeft ? C_R16L + CW + CONN/2 : C_R16R - CONN/2;
+      hline(svg, isLeft ? cA.rightX : midXconn, isLeft ? midXconn : cA.leftX, cA.midY, LINE1);
+      hline(svg, isLeft ? cB.rightX : midXconn, isLeft ? midXconn : cB.leftX, cB.midY, LINE1);
       vline(svg, midXconn, cA.midY, cB.midY, LINE1);
-      hline(svg, midXconn, isLeft ? qfX : qfX + SW, pairMidY, LINE1);
+      hline(svg, isLeft ? midXconn : qfX + SW, isLeft ? qfX : midXconn, pairMidY, LINE1);
 
-      // ── Slot QF ──────────────────────────────────────────────
-      const qfSlotY  = pairMidY - SH;
+      // QF slot
       const qfMatchId = 216 + (bIdx + p);
-      const qfMatch  = elimMatches.find(m => m.id === qfMatchId);
+      const qfMatch   = elimMatches.find(m => m.id === qfMatchId);
       const wA = matchWinner(matchA);
       const wB = matchWinner(matchB);
-      const qfTeamA = wA || (qfMatch?.home && qfMatch.home !== 'Por definir'
-        ? { name: qfMatch.home, flag: qfMatch.home_flag || '🏳️' } : null);
-      const qfTeamB = wB || (qfMatch?.away && qfMatch.away !== 'Por definir'
-        ? { name: qfMatch.away, flag: qfMatch.away_flag || '🏳️' } : null);
+      const qfTeamA = wA || (qfMatch?.home && qfMatch.home !== 'Por definir' ? { name: qfMatch.home, flag: qfMatch.home_flag||'🏳️' } : null);
+      const qfTeamB = wB || (qfMatch?.away && qfMatch.away !== 'Por definir' ? { name: qfMatch.away, flag: qfMatch.away_flag||'🏳️' } : null);
 
-      const qfSlot = drawSlot(qfX, qfSlotY, qfTeamA, qfTeamB, 'Por definir', qfMatchId);
-      qfMidYs.push(qfSlot.midY);
+      const qfSlotY = pairMidY - SH;
+      const qfSlot  = drawSlot(qfX, qfSlotY, qfTeamA, qfTeamB, 'Por definir', qfMatchId);
+      pairMidYs.push(qfSlot.midY);
     }
 
-    // ── Conector QF → SF ─────────────────────────────────────
-    const sfMidY  = (qfMidYs[0] + qfMidYs[1]) / 2;
-    const sfSlotY = sfMidY - SH;
+    // Conector QF → afuera (para que SF lo junte)
+    const qfMidY  = (pairMidYs[0] + pairMidYs[1]) / 2;
+    const midXsf  = isLeft ? C_QFL + SW + CONN/2 : C_QFR - CONN/2;
+    hline(svg, isLeft ? C_QFL + SW : midXsf, isLeft ? midXsf : C_QFR, pairMidYs[0], LINE2);
+    hline(svg, isLeft ? C_QFL + SW : midXsf, isLeft ? midXsf : C_QFR, pairMidYs[1], LINE2);
+    vline(svg, midXsf, pairMidYs[0], pairMidYs[1], LINE2);
+    hline(svg, isLeft ? midXsf : C_SFR + SW, isLeft ? C_SFL : midXsf, qfMidY, LINE2);
 
-    const midXsf = isLeft
-      ? C_QFL + SW + CONN / 2
-      : C_QFR - CONN / 2;
-
-    hline(svg, isLeft ? qfX + SW : qfX, midXsf, qfMidYs[0], LINE2);
-    hline(svg, isLeft ? qfX + SW : qfX, midXsf, qfMidYs[1], LINE2);
-    vline(svg, midXsf, qfMidYs[0], qfMidYs[1], LINE2);
-    hline(svg, midXsf, isLeft ? sfX : sfX + SW, sfMidY, LINE2);
-
-    // ── Slot SF ──────────────────────────────────────────────
-    const sfMatchId = 224 + cuadIdx * 2 + (isLeft ? 0 : 1);
-    const sfMatch   = elimMatches.find(m => m.id === sfMatchId);
-    const sfTeamA   = sfMatch?.home && sfMatch.home !== 'Por definir'
-      ? { name: sfMatch.home, flag: sfMatch.home_flag || '🏳️' } : null;
-    const sfTeamB   = sfMatch?.away && sfMatch.away !== 'Por definir'
-      ? { name: sfMatch.away, flag: sfMatch.away_flag || '🏳️' } : null;
-
-    drawSlot(sfX, sfSlotY, sfTeamA, sfTeamB, 'SF', sfMatchId);
-
-    return sfMidY;
+    return qfMidY;
   }
 
-  // ── Dibujar los 4 cuadrantes ──────────────────────────────────
-  const sfL0 = drawQuadrant(0, 'left',  0);
-  const sfL1 = drawQuadrant(1, 'left',  2);
-  const sfR0 = drawQuadrant(0, 'right', 4);
-  const sfR1 = drawQuadrant(1, 'right', 6);
+  // ── Dibujar los 4 cuadrantes ──────────────────────────────
+  // Izquierda: cuads 0 y 1 usan BRACKET[0..3]
+  // Derecha:   cuads 0 y 1 usan BRACKET[4..7]
+  const qfL0 = drawQuadrant(0, 'left',  0); // R16: 200-203, QF: 216-217
+  const qfL1 = drawQuadrant(1, 'left',  2); // R16: 204-207, QF: 218-219
+  const qfR0 = drawQuadrant(0, 'right', 4); // R16: 208-211, QF: 220-221
+  const qfR1 = drawQuadrant(1, 'right', 6); // R16: 212-215, QF: 222-223
 
-  // ── Connectors SF → Final ─────────────────────────────────────
-  const finMidY = (sfL0 + sfL1) / 2;
-  const finY    = finMidY - FH / 2;
+  // ── SF izquierdo (junta qfL0 y qfL1) ────────────────────
+  const sfLMidY = (qfL0 + qfL1) / 2;
+  const sfLY    = sfLMidY - SH;
+  const sfLMatch = elimMatches.find(m => m.id === 224);
+  const sfLTeamA = sfLMatch?.home && sfLMatch.home !== 'Por definir' ? { name: sfLMatch.home, flag: sfLMatch.home_flag||'🏳️' } : null;
+  const sfLTeamB = sfLMatch?.away && sfLMatch.away !== 'Por definir' ? { name: sfLMatch.away, flag: sfLMatch.away_flag||'🏳️' } : null;
+  const sfLSlot  = drawSlot(C_SFL, sfLY, sfLTeamA, sfLTeamB, 'SF', 224);
 
-  // SF izq → Final
-  const midXfinL = C_SFL + SW + CONN / 2;
-  hline(svg, C_SFL + SW, midXfinL, sfL0, LINE3);
-  hline(svg, C_SFL + SW, midXfinL, sfL1, LINE3);
-  vline(svg, midXfinL, sfL0, sfL1, LINE3);
+  // ── SF derecho (junta qfR0 y qfR1) ──────────────────────
+  const sfRMidY = (qfR0 + qfR1) / 2;
+  const sfRY    = sfRMidY - SH;
+  const sfRMatch = elimMatches.find(m => m.id === 225);
+  const sfRTeamA = sfRMatch?.home && sfRMatch.home !== 'Por definir' ? { name: sfRMatch.home, flag: sfRMatch.home_flag||'🏳️' } : null;
+  const sfRTeamB = sfRMatch?.away && sfRMatch.away !== 'Por definir' ? { name: sfRMatch.away, flag: sfRMatch.away_flag||'🏳️' } : null;
+  const sfRSlot  = drawSlot(C_SFR, sfRY, sfRTeamA, sfRTeamB, 'SF', 225);
+
+  // ── Connectors SF → Final ────────────────────────────────
+  const finMidY = (sfLSlot.midY + sfRSlot.midY) / 2;
+  const finY    = finMidY - FH/2;
+
+  const midXfinL = C_SFL + SW + CONN/2;
+  hline(svg, C_SFL + SW, midXfinL, sfLSlot.midY, LINE3);
   hline(svg, midXfinL, C_FIN, finMidY, LINE3);
 
-  // SF der → Final
-  const midXfinR = C_SFR - CONN / 2;
-  hline(svg, midXfinR, C_SFR, sfR0, LINE3);
-  hline(svg, midXfinR, C_SFR, sfR1, LINE3);
-  vline(svg, midXfinR, sfR0, sfR1, LINE3);
+  const midXfinR = C_SFR - CONN/2;
+  hline(svg, midXfinR, C_SFR, sfRSlot.midY, LINE3);
   hline(svg, C_FIN + FW, midXfinR, finMidY, LINE3);
-
+  
   // ── Final ─────────────────────────────────────────────────────
   el('rect', { x: C_FIN+1, y: finY+2, width: FW, height: FH, rx: '9', fill: 'rgba(0,0,0,.4)' }, svg);
   el('rect', { x: C_FIN, y: finY, width: FW, height: FH, rx: '9',
