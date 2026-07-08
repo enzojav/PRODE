@@ -564,6 +564,7 @@ const groupMatches = localMatches.filter(m => m.phase !== 'R16' && m.phase !== '
 
   await renderStandings();
   twemoji.parse(document.getElementById('matches-day'));
+  twemoji.parse(document.getElementById('r16-bracket'));
 }
 
 function calcMyPoints() {
@@ -1662,8 +1663,8 @@ function renderR16Bracket() {
 
   // ── Montar SVG ────────────────────────────────────────────────
   container.innerHTML = '';
-  twemoji.parse(container);
   container.appendChild(svg);
+  twemoji.parse(container);
 }
 // ── Predicción R16 ───────────────────────────────────────────
 
