@@ -1592,27 +1592,27 @@ function renderR16Bracket() {
   const wQF_R0 = matchWinner(byId[226]);
   const wQF_R1 = matchWinner(byId[227]);
   connector(C_QFR, C_SFR + SW, octMidYsR[0], octMidYsR[1], sfMidR, LINE3);
-  const sfSlotR = drawSlot(229, C_SFR, sfMidR - SH, wQF_R0, wQF_R1, 'SF');
+  const sfSlotR = drawSlot(231, C_SFR, sfMidR - SH, wQF_R0, wQF_R1, 'SF');
 
-  // ── Final ─────────────────────────────────────────────────────
+  // ── SEMI CORRECIÓN Final ─────────────────────────────────────────────────────
   const finMidY = (sfSlotL.midY + sfSlotR.midY) / 2;
   const finY    = finMidY - FH / 2;
 
-  // Conectores SF → Final
+  // Conectores SF → SEMI CORRECIÓN Final
   connector(C_SFL + SW, C_FIN,      sfSlotL.midY, sfSlotL.midY, sfSlotL.midY, LINE4);
   connector(C_SFR,      C_FIN + FW, sfSlotR.midY, sfSlotR.midY, sfSlotR.midY, LINE4);
 
-  // Línea SF izq → Final
+  // Línea SF izq → SEMI CORRECIÓN Final
   hline(C_SFL + SW, C_FIN, sfSlotL.midY, LINE4);
   // Línea SF der → Final
   hline(C_FIN + FW, C_SFR, sfSlotR.midY, LINE4);
 
-  // Caja Final
-  const mFin    = byId[230];
+  // SEMI CORRECIÓN Final
+  const mFin = byId[232];
   const finHome = mFin?.home && mFin.home !== 'Por definir' ? mFin.home : null;
   const finAway = mFin?.away && mFin.away !== 'Por definir' ? mFin.away : null;
   const wSF_L   = matchWinner(byId[228]);
-  const wSF_R   = matchWinner(byId[229]);
+  const wSF_R = matchWinner(byId[231]);
   const finTeamA = wSF_L || (finHome ? { name: finHome, flag: mFin.home_flag || '🏳️' } : null);
   const finTeamB = wSF_R || (finAway ? { name: finAway, flag: mFin.away_flag || '🏳️' } : null);
 
@@ -1651,7 +1651,7 @@ function renderR16Bracket() {
       'font-family': FONT, fill: 'rgba(108,172,228,.8)',
       'text-anchor': 'middle', style: 'cursor:pointer' }, svg);
     bt.textContent = '✎';
-    [bg, bt].forEach(e => e.addEventListener('click', ev => { ev.stopPropagation(); openR16AdminModal(230); }));
+    [bg, bt].forEach(e => e.addEventListener('click', ev => { ev.stopPropagation(); openR16AdminModal(232); }));
   }
 
   // Copa
