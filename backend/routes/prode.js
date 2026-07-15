@@ -131,6 +131,11 @@ const SF_MAP = {
   226: [220, 221], 227: [222, 223],
 };
 
+const REAL_SF_MAP = {
+  228: [224, 225],
+  231: [226, 227],
+};
+
 const FINAL_SF_MAP = {
   232: [228, 231],
 };
@@ -216,10 +221,10 @@ async function updateQFBracket() {
 }
 
 async function updateSFBracket() {
-  const { rows: qf } = await db.query("SELECT * FROM prode_matches WHERE phase='QF'");
+  const { rows: qf } = await db.query("SELECT * FROM prode_matches WHERE id IN (224,225,226,227)");
   const byId = {};
   qf.forEach(m => { byId[m.id] = m; });
-  for (const [sfIdStr, qfIds] of Object.entries(SF_MAP)) {
+  for (const [sfIdStr, qfIds] of Object.entries(REAL_SF_MAP)) {
     const sfId = parseInt(sfIdStr);
     const wA = matchWinner(byId[qfIds[0]]);
     const wB = matchWinner(byId[qfIds[1]]);
