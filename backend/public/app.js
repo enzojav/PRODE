@@ -1612,9 +1612,11 @@ function renderR16Bracket() {
   const finHome = mFin?.home && mFin.home !== 'Por definir' ? mFin.home : null;
   const finAway = mFin?.away && mFin.away !== 'Por definir' ? mFin.away : null;
   const mSF_L = byId[228];
-const mSF_R = byId[231];
-const wSF_L = mSF_L?.home && mSF_L.home !== 'Por definir' ? { name: mSF_L.home, flag: mSF_L.home_flag || '🏳️' } : null;
-const wSF_R = mSF_R?.home && mSF_R.home !== 'Por definir' ? { name: mSF_R.home, flag: mSF_R.home_flag || '🏳️' } : null;
+  const mSF_R = byId[231];
+  const wSF_L = mSF_L?.home && mSF_L.home !== 'Por definir' ? { name: mSF_L.home, flag: mSF_L.home_flag || '🏳️' } : null;
+  const wSF_R = mSF_R?.home && mSF_R.home !== 'Por definir' ? { name: mSF_R.home, flag: mSF_R.home_flag || '🏳️' } : null;
+  const finTeamA = wSF_L || (finHome ? { name: finHome, flag: mFin?.home_flag || '🏳️' } : null);
+  const finTeamB = wSF_R || (finAway ? { name: finAway, flag: mFin?.away_flag || '🏳️' } : null);
 
   el('rect', { x: C_FIN+1, y: finY+2, width: FW, height: FH, rx: '9', fill: 'rgba(0,0,0,.4)' }, svg);
   el('rect', { x: C_FIN, y: finY, width: FW, height: FH, rx: '9',
