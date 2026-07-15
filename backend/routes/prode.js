@@ -241,18 +241,16 @@ async function updateSFBracket() {
 }
 
 async function updateFinalBracket() {
-  const { rows: sf } = await db.query("SELECT * FROM prode_matches WHERE id IN (228, 231)");
+  const { rows: sf } = await db.query("SELECT * FROM prode_matches WHERE id IN (228,231)");
   const byId = {};
   sf.forEach(m => { byId[m.id] = m; });
-  const w228 = matchWinner(byId[228]);
-  const w231 = matchWinner(byId[231]);
-  const homeTeam = w228 || null;
-  const awayTeam = w231 || null;
-  if (!homeTeam && !awayTeam) return;
+  const wA = matchWinner(byId[228]);
+  const wB = matchWinner(byId[231]);
+  if (!wA && !wB) return;
   const updates = [], vals = [];
   let i = 1;
-  if (homeTeam) { updates.push(`home=$${i++}, home_flag=$${i++}`); vals.push(homeTeam.name, homeTeam.flag); }
-  if (awayTeam) { updates.push(`away=$${i++}, away_flag=$${i++}`); vals.push(awayTeam.name, awayTeam.flag); }
+  if (wA) { updates.push(`home=$${i++}, home_flag=$${i++}`); vals.push(wA.name, wA.flag); }
+  if (wB) { updates.push(`away=$${i++}, away_flag=$${i++}`); vals.push(wB.name, wB.flag); }
   vals.push(232);
   await db.query(`UPDATE prode_matches SET ${updates.join(', ')} WHERE id=$${i}`, vals);
   console.log('✅ Bracket Final actualizado');
