@@ -1625,6 +1625,7 @@ function renderR16Bracket() {
     el('line', { x1: C_FIN+1, y1: finY+FH/2, x2: C_FIN+FW-1, y2: finY+FH/2,
       stroke: 'rgba(255,255,255,.05)', 'stroke-width': '1' }, svg);
     [finTeamA, finTeamB].forEach((team, i) => {
+    if (!team) return;
       const oy = finY + FH / 4 + i * FH / 2;
       const ft = el('text', { x: C_FIN+10, y: oy+4, 'font-size': '12', 'font-family': FONT }, svg);
       ft.textContent = team.flag;
