@@ -1621,7 +1621,7 @@ function renderR16Bracket() {
     fill: '#0a1226', stroke: 'rgba(255,184,28,.35)', 'stroke-width': '1.5',
     'stroke-dasharray': finTeamA ? 'none' : '6 3' }, svg);
 
-  if (finTeamA && finTeamB) {
+  if (finTeamA || finTeamB) {
     el('line', { x1: C_FIN+1, y1: finY+FH/2, x2: C_FIN+FW-1, y2: finY+FH/2,
       stroke: 'rgba(255,255,255,.05)', 'stroke-width': '1' }, svg);
     [finTeamA, finTeamB].forEach((team, i) => {
