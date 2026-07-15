@@ -131,6 +131,10 @@ const SF_MAP = {
   226: [220, 221], 227: [222, 223],
 };
 
+const FINAL_SF_MAP = {
+  232: [228, 231],
+};
+
 async function calcGroupStandings() {
   const { rows: matches } = await db.query(
     "SELECT * FROM prode_matches WHERE phase='Group Stage' AND home_score IS NOT NULL"
