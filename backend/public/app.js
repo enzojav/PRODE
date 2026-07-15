@@ -1611,10 +1611,8 @@ function renderR16Bracket() {
   const mFin = byId[232];
   const finHome = mFin?.home && mFin.home !== 'Por definir' ? mFin.home : null;
   const finAway = mFin?.away && mFin.away !== 'Por definir' ? mFin.away : null;
-  const mSF_L = byId[228];
-  const mSF_R = byId[231];
-  const wSF_L = mSF_L?.home && mSF_L.home !== 'Por definir' ? { name: mSF_L.home, flag: mSF_L.home_flag || '🏳️' } : null;
-  const wSF_R = mSF_R?.home && mSF_R.home !== 'Por definir' ? { name: mSF_R.home, flag: mSF_R.home_flag || '🏳️' } : null;
+  const wSF_L = matchWinner(byId[228]);
+  const wSF_R = matchWinner(byId[231]);
   const finTeamA = wSF_L || (finHome ? { name: finHome, flag: mFin?.home_flag || '🏳️' } : null);
   const finTeamB = wSF_R || (finAway ? { name: finAway, flag: mFin?.away_flag || '🏳️' } : null);
 
