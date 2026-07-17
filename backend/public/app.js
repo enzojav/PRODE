@@ -1621,18 +1621,34 @@ function renderR16Bracket() {
     fill: '#0a1226', stroke: 'rgba(255,184,28,.35)', 'stroke-width': '1.5',
     'stroke-dasharray': finTeamA ? 'none' : '6 3' }, svg);
 
-  if (finTeamA || finTeamB) {
+  if (finTeamA && finTeamB) {
     el('line', { x1: C_FIN+1, y1: finY+FH/2, x2: C_FIN+FW-1, y2: finY+FH/2,
       stroke: 'rgba(255,255,255,.05)', 'stroke-width': '1' }, svg);
+    const mFin232   = byId[232];
+    const finPlayed = mFin232?.home_score !== null && mFin232?.home_score !== undefined;
+    const finLocked = mFin232 ? isMatchLocked(mFin232) : false;
+    const finPred   = r16Preds[232] || {};
+    const finPredRes = finPred.result || null;
     [finTeamA, finTeamB].forEach((team, i) => {
-    if (!team) return;
-      const oy = finY + FH / 4 + i * FH / 2;
+      const oy   = finY + FH / 4 + i * FH / 2;
+      const side = i === 0 ? '1' : '2';
       const ft = el('text', { x: C_FIN+10, y: oy+4, 'font-size': '12', 'font-family': FONT }, svg);
       ft.textContent = team.flag;
       const nt = el('text', { x: C_FIN+28, y: oy+5, 'font-size': '9.5', 'font-family': FONT,
-        'font-weight': '700', fill: AMBER }, svg);
+        'font-weight': finPredRes === side ? '700' : '700',
+        fill: finPredRes === side ? GREEN : AMBER }, svg);
       nt.textContent = trunc(team.name, 10);
+      if (!finPlayed && !finLocked && currentUser.role !== 'admin') {
+        const zone = el('rect', {
+          x: C_FIN, y: finY + i * (FH / 2),
+          width: FW, height: FH / 2,
+          fill: 'transparent'
+        }, svg);
+        zone.style.cursor = 'pointer';
+        zone.addEventListener('click', () => setR16Pred(232, side));
+      }
     });
+    
   } else {
     const gt = el('text', { x: C_FIN+FW/2, y: finY+18, 'font-size': '7.5',
       'text-anchor': 'middle', fill: 'rgba(255,255,255,.18)',
