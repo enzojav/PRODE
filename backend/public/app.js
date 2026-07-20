@@ -1652,6 +1652,13 @@ function renderR16Bracket() {
         zone.addEventListener('click', () => setR16Pred(232, side));
       }
     });
+    if (finPlayed) {
+      const finPts = calcMatchPoints(finPred, mFin232);
+      const pt = el('text', { x: C_FIN+FW/2, y: finY+FH+13, 'font-size': '7.5',
+        'text-anchor': 'middle', 'font-family': FONT, 'font-weight': '700',
+        fill: finPts >= 10 ? GREEN : 'rgba(255,80,80,.7)' }, svg);
+      pt.textContent = finPts >= 10 ? '✓ +10 pts' : '✗ 0 pts';
+    }
     
   } else {
     const gt = el('text', { x: C_FIN+FW/2, y: finY+18, 'font-size': '7.5',
