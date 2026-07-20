@@ -1395,6 +1395,10 @@ function renderR16Bracket() {
         const side = i === 0 ? '1' : '2';
         const isW  = played && winSide === side;
         const isL  = played && winSide !== side && winSide !== null;
+        if (isW && matchId === 232) {
+        const cup = el('text', { x: x+SW-12, y: oy+5, 'font-size': '14', 'font-family': FONT }, svg);
+        cup.textContent = '🏆';
+        }
 
         if (team) {
           el('rect', { x, y: y+i*SH, width: 3, height: SH, rx: '2',
